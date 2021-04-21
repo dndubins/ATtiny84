@@ -22,7 +22,7 @@ Timer 0 (controls Pins PB2 and PA7)
 As I said in my notes for the mega328 and the tiny85, before you do this, know that messing with Timer 0 will screw with your delay() and millis() functions, which you can account for, but it's another headache.
 
 Some structural details: OCR0A and OCR0B are the compare registers for Timer 0, and like the ATtiny85, they are 8 bits long, so they can count up to 255 and that's it.
-*************************************************I STOPPED HERE
+*************************************************I STOPPED HERE: this work in progress! Stop reading here. Check back for updates.
 
 The code for Pin PB2 only, using Timer 0:
 ```
