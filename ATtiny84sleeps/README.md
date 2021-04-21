@@ -1,0 +1,1 @@
+This file is the ATtiny84 version of the sleep sketch I wrote for the ATtiny85. I used to think that pin 0 was the only pin on the ATtiny84 capable of waking it from deep sleep. Not true! Have a look at these sweet routines.
