@@ -147,7 +147,7 @@ TCCR1B |= _BV(CS11) |  _BV(CS10); // prescaler=64
 //TCCR1B |= _BV(CS12) |  _BV(CS10); // prescaler=1024
 ICR1=100;  //enter a value from 0-32,767
 OCR1A=50;  //duty cycle = (ICR1-OCR1A)/ICR1
-
+```
 In this mode (mode 14), ICR1 is used to set the frequency of the PWM signal, and OCR1A is used to set the duty cycle, using the formula: duty cycle=(ICR1-OCR1A)/ICR1). OCR1A should be less than ICR1. There's a LOT of latitude here, ICR1 and OCR1A are 16-bit numbers, meaning that you can enter values from 0-32,767 for each of them!
 
 This gives rise to the following awesome table, assuming an 8MHz clock speed:
