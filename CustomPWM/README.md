@@ -151,6 +151,7 @@ In this mode (mode 14), ICR1 is used to set the frequency of the PWM signal, and
 This gives rise to the following awesome table, assuming an 8MHz clock speed:
 
  | ICR1 | 	1 | 	8 | 	64 | 	256 | 	1024 | 
+| --- |	--- |	--- |	--- |	--- |	--- |
  | 1 | 	4000000 | 	500000 | 	62500 | 	15625 | 	3906.3 | 
  | 2 | 	2666666.7 | 	333333.3 | 	41666.7 | 	10416.7 | 	2604.2 | 
  | 5 | 	1333333.3 | 	166666.7 | 	20833.3 | 	5208.3 | 	1302.1 | 
