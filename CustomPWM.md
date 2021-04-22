@@ -1,7 +1,9 @@
 I stumbled on the ATtiny84 by chance as a happy medium between the ATtiny85 and the ATmega328P-PU. It has many more digital pins than the ATtiny85, without the big real estate needed by the DIP version of the 328. I know, life would be a lot easier if I just went surface mount, but damn it, I'm not ready! I just like PDIP, ok? :)
 
 In any event, one of the more important tasks I have needed with my projects is supreme control over PWM frequencies. There exists a point in many of my projects where I want to calibrate something, or send a specific signal to a device, and customizing the PWM frequency ends up being the answer. Nothing I've been doing so far requires an inverted wave, or symmetrical PWM - these are modes I don't tend to explore. The day that I need them, I'm sure I will. But till then, there's this beautiful little problem I've solved for two MCUs so far:
+
 https://playground.arduino.cc/Code/FastPWM/
+
 https://github.com/dndubins/ATtiny85/tree/main/CustomPWM
 
 Now on to the third!
