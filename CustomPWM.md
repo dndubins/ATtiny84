@@ -127,8 +127,6 @@ Timer 1 is a bit different on the ATtiny84. It's a 16-bit timer, with lots of be
 
 ### "I want a custom PWM signal on PA6 only, using Timer 1."
 
-32767
-
 Timer 1 is controlled by the TCCR1A and TCCR1B Timer/Counter1 Control Registers.
 
 To set the frequency in this mode, the following equation is used: frequency=fclk/((OCR1C+1)*N). OCR1A is used to set the duty cycle. This equation will hold for all of the following examples. This makes life slightly less confusing! Here is the code for PB0 only, using Timer 1:
@@ -215,9 +213,11 @@ OCR1B=75;  //duty cycle PA5 = (ICR1-OCR1B)/ICR1 (this example is a 25% duty cycl
 ```
 
 Well, that wasn't too bad. I will hunt through and hopefully find typos above that I will catch over time. If you find one, let me know!! Special thanks to the people who posted sketches at the following links, which guided me in the right direction:
+
 Andreas Rochner wrote this AMAZING tutorial, written in 2015:
 https://andreasrohner.at/posts/Electronics/How-to-set-the-PWM-frequency-for-the-Attiny84/
-Very useful post, this saved me hours:
+
+This very useful post saved me hours:
 https://stackoverflow.com/questions/59160802/how-do-i-output-a-compare-match-to-oc1b-in-fast-pwm-mode-on-the-attiny84
 
 And also (of course) special thanks go to the attiny84 datasheet.
