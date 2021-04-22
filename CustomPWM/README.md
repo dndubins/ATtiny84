@@ -1,3 +1,5 @@
+#Fast PWM on the ATtiny84
+
 I stumbled on the ATtiny84 by chance as a happy medium between the ATtiny85 and the ATmega328. It has many more digital pins than the ATtiny85, without the big real estate needed by the DIP version of the 328. I know, life would be a lot easier if I just went surface mount, but damn it, I'm not ready! I just like PDIP, ok? :) My printed circuits look great - provided you just stepped out of the 70s.
 
 In any event, one of the more important tasks I have needed with many of my projects is more (or any) control over PWM frequencies. There exists a point in many of my projects where I want to calibrate something, or send a specific signal to a device, and customizing the PWM frequency ends up being the answer. Nothing I've been doing so far requires considering phase inversion, or wave symmetry - these are modes I don't tend to explore. The day that I need them, I'm sure I will start caring. But until then, there's this beautiful little problem I've solved for two MCUs so far:
