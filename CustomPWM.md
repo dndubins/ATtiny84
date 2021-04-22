@@ -8,9 +8,6 @@ https://github.com/dndubins/ATtiny85/tree/main/CustomPWM
 
 Now on to the third!
 
-As I write this, my eyes are comparing my sketches to this amazing article by Andreas Rochner, written in 2015:
-https://andreasrohner.at/posts/Electronics/How-to-set-the-PWM-frequency-for-the-Attiny84/
-
 My goal for this exercise was to generate the same one-stop set of instructions for the ATtiny84. Here goes!!!
 
 The ATtiny84, like the 85, has two timers: Timer 0 (responsible for the delay() and millis() functions), and Timer 1. There are only 4 pins on the ATtiny84 that are PWM-capable. PB2 and PA7 (physical pins 5 and 6) are controlled by Timer 0. Pins PA6 and PA5 (physical pins 7 and 8) are controlled by Timer 1. 
@@ -218,7 +215,9 @@ OCR1B=75;  //duty cycle PA5 = (ICR1-OCR1B)/ICR1 (this example is a 25% duty cycl
 ```
 
 Well, that wasn't too bad. I will hunt through and hopefully find typos above that I will catch over time. If you find one, let me know!! Special thanks to the people who posted sketches at the following links, which guided me in the right direction:
+Andreas Rochner wrote this AMAZING tutorial, written in 2015:
 https://andreasrohner.at/posts/Electronics/How-to-set-the-PWM-frequency-for-the-Attiny84/
+Very useful post, this saved me hours:
 https://stackoverflow.com/questions/59160802/how-do-i-output-a-compare-match-to-oc1b-in-fast-pwm-mode-on-the-attiny84
 
-And also to the attiny84 datasheet.
+And also (of course) special thanks go to the attiny84 datasheet.
