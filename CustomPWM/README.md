@@ -1,4 +1,4 @@
-#Fast PWM on the ATtiny84
+# Fast PWM on the ATtiny84
 
 I stumbled on the ATtiny84 by chance as a happy medium between the ATtiny85 and the ATmega328. It has many more digital pins than the ATtiny85, without the big real estate needed by the DIP version of the 328. I know, life would be a lot easier if I just went surface mount, but damn it, I'm not ready! I just like PDIP, ok? :) My printed circuits look great - provided you just stepped out of the 70s.
 
