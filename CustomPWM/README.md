@@ -179,7 +179,7 @@ int ICR1n=32000;
 ICR1H=ICR1n>>8; //move high byte to ICR1H
 ICR1L=ICR1n&&0xff; //move low byte to ICR1L
 ```
-You may or may not need to do this. Probably not, but it's just worth noting.
+You may or may not need to do this. Probably not, but it's just worth noting. You know in an interview, when they ask you if there is one person you would like to have dinner with, who would it be? My answer is David Mellis. His code and posts have been so helpful to me, that at the very least that deserves a great dinner!
 
 
 ### "I want a custom PWM signal on PA5 only, using Timer 1."
