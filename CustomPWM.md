@@ -98,9 +98,9 @@ This gives rise to the following frequency table (in Hz) assuming an 8MHz clock 
 | 200 | 	39801 | 	4975 | 	622 | 	155 | 	39 | 
 | 255 | 	31250 | 	3906 | 	488 | 	122 | 	31 | 
 
-### "I want a custom PWM signal on Pins PB0 and PB1 at the same time, using Timer 0."
+### "I want a custom PWM signal on Pins PB2 and PA7 at the same time, using Timer 0."
 
-Well, you can do this, but your options are a bit more limited. The frequency is set using the prescaler value only, calculated using the formula: frequency=fclk/(N*256). OCR0A and OCR0B are used to control the duty cycles of PB0 and PB1, respectively, using the formula: duty cycle=OCR0X/255. Here is the code:
+Well, you can do this, but your options are a bit more limited. The frequency is set using the prescaler value only, calculated using the formula: frequency=fclk/(N*256). OCR0A and OCR0B are used to control the duty cycles of PB2 and PA7, respectively, using the formula: duty cycle=OCR0X/255. Here is the code:
 ```
   // Custom PWM on Pin PB2 and PA7 together, using Timer 0: (Page84 on ATtiny85 full datasheet)
   //Formula: wave frequency= fclk /(N x 510)
@@ -194,7 +194,7 @@ OCR1B=50;  //duty cycle = (ICR1-OCR1B)/ICR1
 ```
 The frequency is set again by ICR1 according to the formula: frequency=fclk/((ICR1+1)*N), and the duty cycle again is just inverted (ICR1-OCR1B)/ICR1. The same frequency table above applies, as it is the same method.
 
-### "I want a custom PWM signal on both pins PB0 and PB1, using Timer 1."
+### "I want a custom PWM signal on both pins PA6 and PA5, using Timer 1."
 
 Similarly, you just need to set all of the COM1XX bits high in TCCR1A to get a custom PWM signal on both pins, and control their duty cycles with OCR1x:
 
