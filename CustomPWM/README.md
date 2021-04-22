@@ -172,7 +172,7 @@ This gives rise to the following awesome table, assuming an 8MHz clock speed:
  | 20000 | 	400 | 	50 | 	6.2 | 	1.6 | 	0.4 | 
  | 32767 | 	244.1 | 	30.5 | 	3.8 | 	1 | 	0.2 | 
 
-A small application note is that according to the datasheet, you have to take care in sending 16-bit numbers to the registers. When writing to the registers, it does it in two goes, first the high-bit and then the low-bit. I am using the David Mellis version of the Attiny board manager, and his library takes care of it all in one line, so when I write (for example) ICR1=32000; it just works. However, if you are using a different build, consider heeding these instructions if you get wonky behaviour. I would suggest the following (doing the same for OCR1AH and OCR1AL):
+A small application note is that according to the datasheet, you have to take care in sending 16-bit numbers to the registers. When writing to the registers, it does it in two goes, first the high-bit and then the low-bit. I am using the David Mellis version of the Attiny board manager (https://github.com/damellis/attiny), and his library takes care of it all in one line, so when I write (for example) ICR1=32000; it just works. However, if you are using a different manager, consider heeding these instructions if you get wonky behaviour. I would suggest the following (doing the same for OCR1AH and OCR1AL):
 
 ```
 int ICR1n=32000;
