@@ -217,5 +217,6 @@ OCR1B=75;  //duty cycle PA5 = (ICR1-OCR1B)/ICR1 (this example is a 25% duty cycl
 
 Well, that wasn't too bad. I will hunt through and hopefully find typos above that I will catch over time. If you find one, let me know!! Special thanks to the people who posted sketches at the following links, which guided me in the right direction:
 https://andreasrohner.at/posts/Electronics/How-to-set-the-PWM-frequency-for-the-Attiny84/
+https://stackoverflow.com/questions/59160802/how-do-i-output-a-compare-match-to-oc1b-in-fast-pwm-mode-on-the-attiny84
 
-And also to the attiny85 datasheet. Long, but useful!
+And also to the attiny84 datasheet.
