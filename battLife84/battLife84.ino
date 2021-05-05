@@ -36,6 +36,10 @@ SoftwareSerial mySerial(rxPin, txPin);
 //define the classic bit functions:
 #define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
 #define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
+#define bit_is_set(sfr, bit) (_SFR_BYTE(sfr) & _BV(bit))
+#define bit_is_clear(sfr, bit) (!(_SFR_BYTE(sfr) & _BV(bit)))
+#define loop_until_bit_is_set(sfr, bit) do { } while (bit_is_clear(sfr, bit))
+#define loop_until_bit_is_clear(sfr, bit) do { } while (bit_is_set(sfr, bit))
 
 void setup(){
   mySerial.begin(9600);                       // start the serial monitor
