@@ -50,7 +50,7 @@ void loop(){
 }
 
 long readVcc(){                               // back-calculates voltage (in mV) applied to Vcc of ATtiny84
-  sbi(ADCSRA,ADEN);                           // enable ADC (comment out if already on)
+  //sbi(ADCSRA,ADEN);                           // enable ADC (comment out if already on)
   delay(50);                                  // wait for ADC to warm up 
   byte ADMUX_P = ADMUX;                       // store present values of these two registers
   byte ADCSRA_P = ADCSRA;
@@ -64,7 +64,7 @@ long readVcc(){                               // back-calculates voltage (in mV)
   result = 1125300L / result;                 // Calculate Vcc (in mV); 1125300 = 1.1*1023*1000
   ADMUX=ADMUX_P;                              // restore original values of these two registers
   ADCSRA=ADCSRA_P;
-  cbi(ADCSRA,ADEN);                           // disable ADC to save power (comment out to leave ADC on)
+  //cbi(ADCSRA,ADEN);                           // disable ADC to save power (comment out to leave ADC on)
   delay(2);                                   // wait a bit
   return result;                              // Vcc in millivolts
 }
