@@ -37,14 +37,14 @@ SoftwareSerial mySerial(rxPin, txPin);
 #define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
 
 void setup(){
-  mySerial.begin(9600);                  // start the serial monitor
+  mySerial.begin(9600);                       // start the serial monitor
 }
 
 void loop(){
   int slope=(HIGHBATT-LOWBATT)/100;
   int intercept=0-LOWBATT/slope;
-  int battLife=constrain((readVcc()/slope)+intercept,0,100); // calculate remaining battery life
-  mySerial.println(battLife);                  // print remaining battery life in percent to serial monitor
+  int battLife=constrain((readVcc()/slope)+intercept,0,100); // calculate remaining battery life (in percent)
+  mySerial.println(battLife);                 // print remaining battery life in percent to serial monitor
   delay(1000);
 }
 
