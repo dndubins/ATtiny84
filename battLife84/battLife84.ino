@@ -2,25 +2,26 @@
  * Author: D. Dubins
  * Date: 5-May-21
  * This sketch assumes the ATtiny84 is powered using a 3.2V CR2032 battery.
+ * From: https://forum.arduino.cc/index.php?topic=416934.0
+ * And:  https://provideyourown.com/2012/secret-arduino-voltmeter-measure-battery-voltage/
  * 
+ * The following are the ATtiny84 pins by function:
+ * ------------------------------------------------
+ * Pin 1: Vcc (1.8-5.5V)
+ * Pin 2: 10/XTAL1/PCINT8/PB0
+ * Pin 3: 9/XTAL2/PCINT9/PB1
+ * Pin 4: dW/RESET/PCINT11/PB3
+ * Pin 5: PWM/OC0A/7/A7/PCINT7/PA7
+ * Pin 6: PWM/ICP/OC0B/7/A7/ADC7/PCINT7/PA7
+ * Pin 7: PWM/MOSI/SDA/OC1A/6/A6/ADC6/PCINT6/PA6
  * 
-The following are the ATtiny84 pins by function:
-------------------------------------------------
-Pin 1: Vcc (1.8-5.5V)
-Pin 2: 10/XTAL1/PCINT8/PB0
-Pin 3: 9/XTAL2/PCINT9/PB1
-Pin 4: dW/RESET/PCINT11/PB3
-Pin 5: PWM/OC0A/7/A7/PCINT7/PA7
-Pin 6: PWM/ICP/OC0B/7/A7/ADC7/PCINT7/PA7
-Pin 7: PWM/MOSI/SDA/OC1A/6/A6/ADC6/PCINT6/PA6
-
-Pin 8: PWM/D0/OC1B/MISO/5/A5/ADC5/PCINT5/PA5
-Pin 9: T1/SCL/SCK/4/A4/ADC4/PCINT4/PA4
-Pin 10: 3/A3/ADC3/PCINT3/PA3
-Pin 11: 2/A2/ADC2/PCINT2/PA2
-Pin 12: 1/A1/ADC1/PCINT1/PA1
-Pin 13: AREF/0/A0/ADC0/PCINT0/PA0
-Pin 14: GND
+ * Pin 8: PWM/D0/OC1B/MISO/5/A5/ADC5/PCINT5/PA5
+ * Pin 9: T1/SCL/SCK/4/A4/ADC4/PCINT4/PA4
+ * Pin 10: 3/A3/ADC3/PCINT3/PA3
+ * Pin 11: 2/A2/ADC2/PCINT2/PA2
+ * Pin 12: 1/A1/ADC1/PCINT1/PA1
+ * Pin 13: AREF/0/A0/ADC0/PCINT0/PA0
+ * Pin 14: GND
  */
  
 #define HIGHBATT 3200  // 3200 mV for "full" battery
