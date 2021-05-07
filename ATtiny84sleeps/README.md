@@ -1,4 +1,4 @@
-This file is the ATtiny84 version of the sleep sketch I wrote for the ATtiny85. I used to think that pin 0 was the only pin on the ATtiny84 capable of waking it from deep sleep. Not true! Have a look at these sweet routines.
+This file is the ATtiny84 version of the sleep sketch I wrote for the ATtiny85, for timed (watchdog timer) and interrupt sleep modes. I used to think that pin 0 was the only pin on the ATtiny84 capable of waking it from deep sleep. Not true! Have a look at these sweet routines. 
 
 Normally with a microprocessor plugged in to a laptop with a USB cable, you typically might not care at all about conserving power. However, the ATtiny chips are so small that they are fantastic for battery-powered projects. Since an MCU spends most of its time waiting anyway, it makes sense to put it to sleep rather than to have it wasting precious battery life in a delay() statement. In deep sleep mode, the ATtiny85 uses only about 85 microamps. This means that your battery-powered project really doesn't even need a power switch - you can put it to sleep instead.
 
