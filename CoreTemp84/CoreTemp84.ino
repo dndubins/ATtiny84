@@ -1,6 +1,6 @@
 /* Core temperature reading for the ATtiny84 
  * Author: D. Dubins
- * Date: 16-May-21
+ * Date: 15-May-21
  * 
  * Adapted from: https://github.com/mharizanov/TinySensor/blob/master/TinySensor_InternalTemperatureSensor/TinySensor_InternalTemperatureSensor.ino
  * (Martin Harizanov)
@@ -74,12 +74,22 @@ float readCoreTemp(int n){                    // Calculates and reports the chip
     loop_until_bit_is_clear(ADCSRA,ADSC);     // ADSC will read as one as long as a conversion is in progress. When the conversion is complete, it returns a zero. This waits until the ADSC conversion is done.
     uint8_t low  = ADCL;                      // read ADCL first (17.13.3.1 ATtiny85 datasheet)
     uint8_t high = ADCH;                      // read ADCL second (17.13.3.1 ATtiny85 datasheet)
-    long Tkelv=KVAL*((high<<8)|low)+TOS;       // Temperature formula, p149 of datasheet
+    long Tkelv=KVAL*((high<<8)|low)+TOS;      // Temperature formula, p149 of datasheet
     avg+=(Tkelv-avg)/(i+1);                   // Calculate iterative mean
   }
   ADMUX=ADMUX_P;                              // restore original values of these two registers
   ADCSRA=ADCSRA_P;
   //cbi(ADCSRA,ADEN);                         // disable ADC to save power (comment out to leave ADC on)
   delay(2);                                   // wait a bit
-  return avg-273.15;                          // Temperature in degC
+  
+  // According to Table 16-2 in the ATtiny84 datasheet, the function to change the ADC reading to 
+  // temperature is linear. A best-fit line for the data in Table 16-2 yields the following equation:
+  //
+  //  Temperature (degC) = 0.8929 * ADC - 244.5
+  //
+  // However, it is worth mentioning here that this is just two linear fits
+  // in series, which could be more efficiently replaced by one linear fit directly
+  // to degrees C, using 2-point calibration.
+  
+  return (avg*0.8929-244.5);                  // return temperature in degC
 }
