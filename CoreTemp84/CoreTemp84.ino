@@ -35,10 +35,6 @@
 #define loop_until_bit_is_set(sfr, bit) do { } while (bit_is_clear(sfr, bit))
 #define loop_until_bit_is_clear(sfr, bit) do { } while (bit_is_set(sfr, bit))
   
-// Tempearture Calibration Data
-#define KVAL 1.0            // k value fixed-slope coefficient (default: 1.0). Adjust for manual 2-point calibration.
-#define TOS 12.5            // Temperature offset (default: 0.0). Adjust for manual calibration.
-
 // Serial monitor if needed:
 #include <SoftwareSerial.h>
 #define rxPin 4   // PA4 is PP 9
@@ -56,8 +52,11 @@ void loop() {
 }
 
 float readCoreTemp(int n){                    // Calculates and reports the chip temperature of ATtiny84
+  // Tempearture Calibration Data
+  float kVal=1.0;                             // k value fixed-slope coefficient (default: 1.0). Adjust for manual 2-point calibration.
+  float Tos=12.5;                             // Temperature offset (default: 0.0). Adjust for manual calibration.
+  
   float avg=0.0;                              // To calculate mean of n readings
-
   //sbi(ADCSRA,ADEN);                         // enable ADC (comment out if already on)
   delay(50);                                  // wait for ADC to warm up 
   byte ADMUX_P = ADMUX;                       // store present values of these two registers
@@ -74,7 +73,7 @@ float readCoreTemp(int n){                    // Calculates and reports the chip
     loop_until_bit_is_clear(ADCSRA,ADSC);     // ADSC will read as one as long as a conversion is in progress. When the conversion is complete, it returns a zero. This waits until the ADSC conversion is done.
     uint8_t low  = ADCL;                      // read ADCL first (17.13.3.1 ATtiny85 datasheet)
     uint8_t high = ADCH;                      // read ADCL second (17.13.3.1 ATtiny85 datasheet)
-    long Tkelv=KVAL*((high<<8)|low)+TOS;      // Temperature formula, p149 of datasheet
+    long Tkelv=kVal*((high<<8)|low)+Tos;      // Temperature formula, p149 of datasheet
     avg+=(Tkelv-avg)/(i+1);                   // Calculate iterative mean
   }
   ADMUX=ADMUX_P;                              // restore original values of these two registers
