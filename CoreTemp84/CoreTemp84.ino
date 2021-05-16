@@ -53,9 +53,8 @@ void loop() {
 
 float readCoreTemp(int n){                    // Calculates and reports the chip temperature of ATtiny84
   // Tempearture Calibration Data
-  float kVal=0.8929;                          // k value fixed-slope coefficient (default: 1.0). Adjust for manual 2-point calibration.
-  float Tos=-244.5+12.5;                      // Temperature offset (default: 0.0). Adjust for manual calibration. Second number is the fudge factor.
-  float avg=0.0;                              // To calculate mean of n readings
+  float kVal=0.8929;                          // k-value fixed-slope coefficient (default: 1.0). Adjust for manual 2-point calibration.
+  float Tos=-244.5+12.5;                      // temperature offset (default: 0.0). Adjust for manual calibration. Second number is the fudge factor.
 
   //sbi(ADCSRA,ADEN);                         // enable ADC (comment out if already on)
   delay(50);                                  // wait for ADC to warm up 
@@ -65,21 +64,21 @@ float readCoreTemp(int n){                    // Calculates and reports the chip
   cbi(ADMUX,ADLAR);                           // Right-adjust result
   sbi(ADMUX,REFS1);
   cbi(ADMUX,REFS0);                           // set internal ref to 1.1V
-  delay(2);                                   // Wait for Vref to settle
+  delay(2);                                   // wait for Vref to settle
   cbi(ADCSRA,ADATE);                          // disable autotrigger
   cbi(ADCSRA,ADIE);                           // disable interrupt
+  float avg=0.0;                              // to calculate mean of n readings
   for(int i=0;i<n;i++){  
-    sbi(ADCSRA,ADSC);                         // Single conversion or free-running mode: write this bit to one to start a conversion.
+    sbi(ADCSRA,ADSC);                         // single conversion or free-running mode: write this bit to one to start a conversion.
     loop_until_bit_is_clear(ADCSRA,ADSC);     // ADSC will read as one as long as a conversion is in progress. When the conversion is complete, it returns a zero. This waits until the ADSC conversion is done.
     uint8_t low  = ADCL;                      // read ADCL first (17.13.3.1 ATtiny85 datasheet)
     uint8_t high = ADCH;                      // read ADCL second (17.13.3.1 ATtiny85 datasheet)
-    long Tkelv=kVal*((high<<8)|low)+Tos;      // Temperature formula, p149 of datasheet
-    avg+=(Tkelv-avg)/(i+1);                   // Calculate iterative mean
+    long Tkelv=kVal*((high<<8)|low)+Tos;      // remperature formula, p149 of datasheet
+    avg+=(Tkelv-avg)/(i+1);                   // calculate iterative mean
   }
   ADMUX=ADMUX_P;                              // restore original values of these two registers
   ADCSRA=ADCSRA_P;
   //cbi(ADCSRA,ADEN);                         // disable ADC to save power (comment out to leave ADC on)
-  delay(2);                                   // wait a bit
   
   // According to Table 16-2 in the ATtiny84 datasheet, the function to change the ADC reading to 
   // temperature is linear. A best-fit line for the data in Table 16-2 yields the following equation:
@@ -87,7 +86,7 @@ float readCoreTemp(int n){                    // Calculates and reports the chip
   //  Temperature (degC) = 0.8929 * ADC - 244.5
   //
   // These coefficients can be replaced by performing a 2-point calibration, and fitting a straight line
-  // to solve kVal and Tos to convert the ADC reading to degrees C (or another temperature unit).
+  // to solve for kVal and Tos. These are used to convert the ADC reading to degrees Celsius (or another temperature unit).
   
   return avg;                  // return temperature in degC
 }
