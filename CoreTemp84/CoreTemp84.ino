@@ -53,10 +53,10 @@ void loop() {
 
 float readCoreTemp(int n){                    // Calculates and reports the chip temperature of ATtiny84
   // Tempearture Calibration Data
-  float kVal=1.0;                             // k value fixed-slope coefficient (default: 1.0). Adjust for manual 2-point calibration.
-  float Tos=12.5;                             // Temperature offset (default: 0.0). Adjust for manual calibration.
-  
+  float kVal=0.8929;                          // k value fixed-slope coefficient (default: 1.0). Adjust for manual 2-point calibration.
+  float Tos=-244.5+12.5;                      // Temperature offset (default: 0.0). Adjust for manual calibration. Second number is the fudge factor.
   float avg=0.0;                              // To calculate mean of n readings
+
   //sbi(ADCSRA,ADEN);                         // enable ADC (comment out if already on)
   delay(50);                                  // wait for ADC to warm up 
   byte ADMUX_P = ADMUX;                       // store present values of these two registers
@@ -86,9 +86,8 @@ float readCoreTemp(int n){                    // Calculates and reports the chip
   //
   //  Temperature (degC) = 0.8929 * ADC - 244.5
   //
-  // However, it is worth mentioning here that this is just two linear fits
-  // in series, which could be more efficiently replaced by one linear fit directly
-  // to degrees C, using 2-point calibration.
+  // These coefficients can be replaced by performing a 2-point calibration, and fitting a straight line
+  // to solve kVal and Tos to convert the ADC reading to degrees C (or another temperature unit).
   
-  return (avg*0.8929-244.5);                  // return temperature in degC
+  return avg;                  // return temperature in degC
 }
