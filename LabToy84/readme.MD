@@ -60,6 +60,8 @@ This is why I incorporated a USB port on this device. While plugged in, the cloc
 
 On batteries, this device works best when powered with an LR2032 battery - the rechargeable version of the CR2032. These little batteries give up to 4.0 V when fully charged (so nice!) so the brightness levels work much better, and the active buzzer is louder as well.
 
+One note here: the internal 1.1V reference wavers a bit depending on Vcc to the microprocessor, and temperature. If you switch between battery and USB, the core temperature it reports will be different. Since every MCU is a bit different here and those internal voltage references are approximate, my advice is to calibrate the temperature for one (either battery or USB - whichever you plan on using more), and ignore the other. Temperature here is a ballpark figure.
+
 
 ## User Beta-Testing:
 
