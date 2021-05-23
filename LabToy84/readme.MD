@@ -63,7 +63,7 @@ On batteries, this device works best when powered with an LR2032 battery - the r
 
 ## User Beta Testing:
 
-I sent a prototype of the timer to my father for his birthday. After opening the package, first he asked if it was some sort of prank or joke. Here is a rough transcript of the telephone conversation:
+I sent a prototype of the timer to my father for his birthday. After opening the package, first he asked if it was some sort of prank or joke. Here is a rough transcript of the telephone conversation that followed:
 
 ```
 Me: "No, Dad, it's a timer. You like to cook. You can use it for cooking."
