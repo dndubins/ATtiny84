@@ -66,7 +66,7 @@ On batteries, this device works best when powered with an LR2032 battery - the r
 I sent a prototype of the timer to my father for his birthday. After opening the package, first he asked if it was some sort of prank or joke. Here is a rough transcript of the telephone conversation that followed:
 
 ```
-Me: "No, Dad, it's a timer. You like to cook. You can use it for cooking."
+Me: "No, Dad, it's not a prank. It's a timer. I made it. You like to cook, I thought you can use it for cooking."
 Him: "How do I turn it on?"
 Me: "The sliding power switch?"
 Him: "Where's the switch>"
