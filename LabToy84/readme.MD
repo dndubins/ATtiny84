@@ -61,5 +61,27 @@ This is why I incorporated a USB port on this device. While plugged in, the cloc
 On batteries, this device works best when powered with an LR2032 battery - the rechargeable version of the CR2032. These little batteries give up to 4.0 V when fully charged (so nice!) so the brightness levels work much better, and the active buzzer is louder as well.
 
 
+## User Beta Testing:
 
+I sent a prototype of the timer to my father for his birthday. After opening the package, first he asked if it was some sort of prank or joke. Here is a rough transcript of the telephone conversation:
 
+```
+Me: "No, Dad, it's a timer. You like to cook. You can use it for cooking."
+Him: "How do I turn it on?"
+Me: "The sliding power switch?"
+Him: "Where's the switch>"
+Me: "It's behind the screen." (earlier version)
+Him: "What does it look like?"
+Me: "It looks like a switch."
+Him: "I can't find it."
+Me: "It's a small black sliding switch behind the number screen."
+Him: "Oh there it is.... wait, it says "OOI! Now it says 950..."
+Me: "Dad, you are looking at the screen upside-down."
+Him: "How do I set it?"
+Me: "You press the push button."
+Him: "Where's the button?"
+Me: "There's only one of them. Its to the right of the screen." (earlier version)
+Him: (after some silence) "I will look at this later."
+```
+
+Initial beta-testing was rated as a fail.
