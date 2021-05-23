@@ -2,6 +2,8 @@
 
 This fun project was my attempt at making a minimalist timer/stopwatch for collecting data points in my pharmaceutics labs. Many labs (e.g. USP dissolution) require the timed collection of samples. Every year, small battery-powered timers are somewhat of a consumable, both in terms of the batteries, and the timers themselves.
 
+<img src="https://github.com/dndubins/ATtiny84/blob/main/LabToy84/pics/image3.jpeg">
+
 What I really wanted was a small, energy efficient timer/stopwatch that was easy to program and use. Then the upgrades started. I added:
  - a clock mode, to keep track of the time
  - an alarm mode, to beep at a specific time of day (with silence feature)
