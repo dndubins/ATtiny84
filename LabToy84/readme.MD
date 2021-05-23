@@ -84,4 +84,4 @@ Me: "There's only one push button. Its a small round button to the right of the 
 Him: (after some silence) "I will look at this later."
 ```
 
-Initial beta-testing was rated as a fail.
+Initial user beta-testing was rated as a fail.
