@@ -13,7 +13,7 @@ What I really wanted was a small, energy efficient timer/stopwatch that was easy
 
 Here is a list of components for this project:
 
-### PCB Label - Circuit Diagram Code
+### PCB Label - Component Description
 - U1: ATtiny84V-10PU
 - C1: 100 uF capacitor (electrolytic)
 - X1: CRYSTAL 8.0000MHZ 18PF TH
