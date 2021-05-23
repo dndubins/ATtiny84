@@ -61,7 +61,7 @@ This is why I incorporated a USB port on this device. While plugged in, the cloc
 On batteries, this device works best when powered with an LR2032 battery - the rechargeable version of the CR2032. These little batteries give up to 4.0 V when fully charged (so nice!) so the brightness levels work much better, and the active buzzer is louder as well.
 
 
-## User Beta Testing:
+## User Beta-Testing:
 
 I sent a prototype of the timer to my father for his birthday. After opening the package, first he asked if it was some sort of prank or joke. Here is a rough transcript of the telephone conversation that followed:
 
