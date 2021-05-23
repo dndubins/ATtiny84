@@ -32,6 +32,12 @@ Here is a list of components for this project:
 - 4 x PCB Support Flat Spacer Plastic Rivet Nylon Natural Ø4mm
 - 1 x CR2032 battery (optional)
 
+## External Crystal
+
+The first version of this project used the internal 8 MHz oscillator on the ATtiny84. However, even after calibrating the oscillator using an oscilloscope (OSCCAL adjustment on the ATtiny84 datasheet), I found that the clock was still off by minutes per day. YUCK! If you want a good time clock, having to reset it once per day seems like a waste of time, no!? So I went with an external 8 MHz oscillator with 2x 22pf capacitors. This was a nice big hammer of a solution to this nail. Clock accuracy is no longer a problem.
+
+Another direction I could have gone, rather than using an external crystal, is using an RTC module. The ATtiny84 certainly could have handled this, BUT, requiring two batteries on one device seemed kind of silly. The RTC module would bulk up the nice compact size, and I'd still have that problem of not being able to display the time 24/7 regardless. I suppose I could have used a DIP RTC chip, but those require external oscillators as well, and I already used up my 40x40mm PCB footprint that I wanted to stick to. I wanted something small and uncomplicated.
+
 ## Power Consumption
 
 An interesting and important question for any battery-powered device is "how long will it last on fresh batteries"? This design was a little bit of a fail, in that I was hoping to run the ATtiny84 chip continously using a CR2032 3.2V battery. I ran several experiments using the finished board, and found that the current draw varied just about linearly with LED brightness setting, when powered using the 3.3V pin from an arduino Uno:
@@ -50,7 +56,7 @@ So then, the BEST case scenario for this device is to run for 210 mAh / 2.25 mA 
 
 I confirmed this by sacrificing some new CR2032 dollar-store grade batteries. They lasted about 2.5 days on the dimmest LED setting (0).
 
-This is why I incorporated a USB port on this device. While plugged in, the clock can run 24/7 with no worries of operating time. When switched to battery power, it is advisable to turn the clock off using the MODE button, and set the LED brightness to "OFF". This means that the device will only operate in temperature, timer, and stopwatch mode, will go to sleep in between uses, and will shut off the LED when not in use. In sleep mode, the device only registers using 0.17 microAmps, which would be virtually equivalent to the background drain rate of the battery (similar to turning it off).
+This is why I incorporated a USB port on this device. While plugged in, the clock can run 24/7 with no worries of operating time. When switched to battery power, it is advisable to turn the clock off using the MODE button, and set the LED brightness to "OFF". This means that the device will only operate in temperature, timer, and stopwatch mode, will go to sleep in between uses, and will shut off the LED when not in use. In sleep mode, the device only registers using 0.17 microAmps, which would be virtually equivalent to the background drain rate of the battery (similar to turning it off). The reason the clock needs to be turned off in sleep mode is not only to save batteries, but because the millis() function stops working in sleep mode regardless - so good luck keeping track of the time.
 
 On batteries, this device works best when powered with an LR2032 battery - the rechargeable version of the CR2032. These little batteries give up to 4.0 V when fully charged (so nice!) so the brightness levels work much better, and the active buzzer is louder as well.
 
