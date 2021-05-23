@@ -1,5 +1,5 @@
 /* Main LabToy Program for the ATtiny84
-   (clock function with day and date, temperature, timer, and stopwatch)
+   (clock function with day and date, alarm, temperature, timer, and stopwatch)
    Author: D. Dubins
    Date: 28-Apr-21
    This sketch uses the TM1637 library by Avishay Orpaz version 1.2.0
