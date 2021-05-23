@@ -29,3 +29,13 @@ Here is a list of components for this project:
 - 1 x 0.36" TM1637 7-Segment 4-digit White Digital Tube LED Display Module for Arduino
 - 4 x PCB Support Flat Spacer Plastic Rivet Nylon Natural Ø4mm
 - 1 x CR2032 battery (optional)
+
+### Power Consumption
+
+An interesting and important question for any battery-powered device is "how long will it last on fresh batteries"? This design was a little bit of a fail, in that I was hoping to run the ATtiny84 chip continously using a CR2032 3.2V battery. I ran several experiments using the finished board, and found that the current draw varied linearly with LED brightness, when powered using the 3.3V pin from an arduino Uno:
+
+
+
+
+
+
