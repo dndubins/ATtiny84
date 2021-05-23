@@ -8,6 +8,9 @@ What I really wanted was a small, energy efficient timer/stopwatch that was easy
  - a stopwatch mode
  - a temperature mode, by calibrating the onboard core temperature sensor on the ATtiny84
 
+### Circuit Diagram
+https://github.com/dndubins/ATtiny84/blob/main/LabToy84/pics/LabToy84_circuitdiag.png
+
 Here is a list of components for this project:
 
 ### PCB Label - Circuit Diagram Code
