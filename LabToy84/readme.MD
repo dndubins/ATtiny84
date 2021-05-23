@@ -1,4 +1,4 @@
-# ATtiny84 Lab Toy
+# LabToy84: an ATtiny84-based Lab Clock/Alarm/Temperature/Timer/Stopwatch
 
 This fun project was my attempt at making a minimalist timer/stopwatch for collecting data points in my pharmaceutics labs. Many labs (e.g. USP dissolution) require the timed collection of samples. Every year, small battery-powered timers are somewhat of a consumable, both in terms of the batteries, and the timers themselves. I thought it would be fun to make our own.
 
