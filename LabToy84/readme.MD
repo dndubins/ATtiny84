@@ -80,7 +80,7 @@ Me: "Dad, it's counting down. You are looking at the screen upside-down."
 Him: "How do I set it?"
 Me: "You press the push button."
 Him: "Where's the button?"
-Me: "There's only one of them. Its to the right of the screen." (earlier version)
+Me: "There's only one push button. Its a small round button to the right of the screen." (earlier version)
 Him: (after some silence) "I will look at this later."
 ```
 
