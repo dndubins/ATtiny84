@@ -52,6 +52,7 @@ I confirmed this by sacrificing some new CR2032 dollar-store grade batteries. Th
 
 This is why I incorporated a USB port on this device. While plugged in, the clock can run 24/7 with no worries of operating time. When switched to battery power, it is advisable to turn the clock off using the MODE button, and set the LED brightness to "OFF". This means that the device will only operate in temperature, timer, and stopwatch mode, will go to sleep in between uses, and will shut off the LED when not in use. In sleep mode, the device only registers using 0.17 microAmps, which would be virtually equivalent to the background drain rate of the battery (similar to turning it off).
 
+On batteries, this device works best when powered with an LR2032 battery - the rechargeable version of the CR2032. These little batteries give up to 4.0 V when fully charged (so nice!) so the brightness levels work much better, and the active buzzer is louder as well.
 
 
 
