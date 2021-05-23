@@ -30,18 +30,23 @@ Here is a list of components for this project:
 - 4 x PCB Support Flat Spacer Plastic Rivet Nylon Natural Ø4mm
 - 1 x CR2032 battery (optional)
 
-### Power Consumption
+## Power Consumption
 
 An interesting and important question for any battery-powered device is "how long will it last on fresh batteries"? This design was a little bit of a fail, in that I was hoping to run the ATtiny84 chip continously using a CR2032 3.2V battery. I ran several experiments using the finished board, and found that the current draw varied just about linearly with LED brightness setting, when powered using the 3.3V pin from an arduino Uno:
 
+### Current Draw Measurements:
+
 <img src="https://github.com/dndubins/ATtiny84/blob/main/LabToy84/pics/CurrentDraw.png">
 
-Here is a graph of the current draw:
-<img src="https://github.com/dndubins/ATtiny84/blob/main/LabToy84/pics/CurrentDraw.png">
+### Current Draw Graph:
+
+<img src="https://github.com/dndubins/ATtiny84/blob/main/LabToy84/pics/CurrentGraph.png">
 
 On the x-axis, -1 is the ATtiny84 powered up with the TM1637 module off, and -2 is the whole system in sleep mode. The TM1637 is a remarkably energy efficient device. When you subtract off the MCU, it requires between 0.67 mA (brightness=0) and 2.91 mA (brightness=7). Unfortunately, it's the microprocessor that kills us here. While not in sleep mode, the ATtiny84 uses about 2.25 mA in this circut. So even with the TM1637 off, we can do the math of how long a CR2032 battery should run this device. Although estimates range for the current capacity of a CR2032 battery, let's take a value of 210 mAh, published by Farnell: http://www.farnell.com/datasheets/1496885.pdf
 
 So then, the BEST case scenario for this device is to run for 210 mAh / 2.25 mA = 93.3 h, = 3.8 days. NOT GOOD! This means that we would need to change batteries more than once a week!!!!
+
+I confirmed this by sacrificing some new CR2032 dollar-store grade batteries. They lasted about 2.5 days on the dimmest LED setting (0).
 
 This is why I incorporated a USB port on this device. While plugged in, the clock can run 24/7 with no worries of operating time. When switched to battery power, it is advisable to turn the clock off using the MODE button, and set the LED brightness to "OFF". This means that the device will only operate in temperature, timer, and stopwatch mode, will go to sleep in between uses, and will shut off the LED when not in use. In sleep mode, the device only registers using 0.17 microAmps, which would be virtually equivalent to the background drain rate of the battery (similar to turning it off).
 
