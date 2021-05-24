@@ -124,7 +124,7 @@ byte h_AL = 7;      // #hr  (default: 7)
 byte m_AL = 30;     // #min (default: 30)
 byte h_SNOOZE = 0;  // #hr for snooze function
 byte m_SNOOZE = 0;  // #min for snooze function
-#define T_SNOOZE 1 // duration of snooze button (in minutes)
+#define T_SNOOZE 5  // duration of snooze button (in minutes)
 
 bool alarm = false; // alarm on(true) or off(false)? default:false
 
