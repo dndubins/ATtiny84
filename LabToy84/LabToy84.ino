@@ -96,10 +96,12 @@
 #define DIO 1               // use PA1 for DIO (physical pin 12)
 #define TMVCC 0             // use PA0 for Vcc of TM1637 (physical pin 13)
 
-byte mode = 0;              // mode=0: clock, mode=1: temperature, mode=2: timer, mode=3: stopwatch
-byte brightness = 3;        // brightness setting for TM1637 (0-7) (to save batteries, use a lower number). 8=keep module off normally (most power savings). Use 2 for rechargeable, 3 for alkaline
+// for USB version of this device: mode=0, brightness=3, clockmode=true
+// for non-USB version of this device: mode=2, brightness=8, clockMode=false
+byte mode = 2;              // mode=0: clock, mode=1: temperature, mode=2: timer, mode=3: stopwatch
+byte brightness = 8;        // brightness setting for TM1637 (0-7) (to save batteries, use a lower number). 8=keep module off normally (most power savings). Use 2 for rechargeable, 3 for alkaline
 bool flashcolon = false;    // true: flashes during regular time display, false: it doesn't
-bool clockMode = true;      // flag to turn on/off clock. To save battery, clock can be turned off and sleep mode used with timer and stopwatch (sleep mode interferes with millis() function).
+bool clockMode = false;      // flag to turn on/off clock. To save battery, clock can be turned off and sleep mode used with timer and stopwatch (sleep mode interferes with millis() function).
 
 TM1637Display display(CLK, DIO);
 
@@ -794,7 +796,7 @@ byte beepBuzz(byte pin, int n) {              // pin is digital pin wired to buz
 float readCoreTemp(int n) {                   // Calculates and reports the chip temperature of ATtiny84
   // Tempearture Calibration Data
   float kVal = 0.8929;                        // k-value fixed-slope coefficient (default: 1.0). Adjust for manual 2-point calibration.
-  float Tos = -244.5 + 0.0;                   // temperature offset (default: 0.0). Adjust for manual calibration. Second number is the fudge factor.
+  float Tos = -244.5 + 0.7;                   // temperature offset (default: 0.0). Adjust for manual calibration. Second number is the fudge factor.
 
   sbi(ADCSRA, ADEN);                          // enable ADC (comment out if already on)
   delay(50);                                  // wait for ADC to warm up
