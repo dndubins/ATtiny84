@@ -568,7 +568,8 @@ void showBoolState(bool a)  {                 // time in min
   }
 }
 
-void setItemByte(byte &item, byte lowLim, byte highLim, void (*f)(byte)){
+void setItemByte(byte &item, byte lowLim, byte highLim, void (*f)(byte)){ // sets an individual byte item during the setAll() routine
+  //(*f) passes function as argument (it's a function pointer)
   byte push=0;
   (*f)(item);                                 // show item on LCD
   while (push != 2) {
@@ -582,7 +583,8 @@ void setItemByte(byte &item, byte lowLim, byte highLim, void (*f)(byte)){
   } // end while (end of setting hrs)
 }
 
-void setItemBool(bool &item, void (*f)(byte)){
+void setItemBool(bool &item, void (*f)(bool)){ // sets an individual bool item during the setAll() routine
+  //(*f) passes function as argument (it's a function pointer)
   byte push=0;
   (*f)(item);                                 // show item on LCD
   while (push != 2) {
