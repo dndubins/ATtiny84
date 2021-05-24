@@ -4,13 +4,11 @@
 - The program distinguishes between a short push (<0.5 sec) and a long push (>0.5 sec) on each button.
 
 ## To Change Modes: 
-  - Pressing the MODE button (short push) will cycle between the following modes:
-  - Clock --> Temperature --> Timer --> Stopwatch
-  
-  - Pressing the MODE button (long push) will allow you to set the brightness of the LED 4-digit 7-segment display from (0-7), where 0: dimmest, 7: brightest
-  - A short push on SET cycles between the options 0-7 then OFF.
-  - A long push on SET accepts the current option displayed on the screen.
-  - "OFF" is a battery saving mode, where the LED display will use a brightness of 3, but only light up momentarily when you press a button. This prolongs battery life and would also be useful if the dimmest setting of the screen is keeping you awake at night.
+- Pressing the MODE button (short push) will cycle between the following modes: <b>Clock --> Temperature --> Timer --> Stopwatch</b>
+- Pressing the MODE button (long push) will allow you to set the brightness of the LED 4-digit 7-segment display from (0-7), where 0: dimmest, 7: brightest
+- A short push on SET cycles between the options 0-7 then OFF.
+- A long push on SET accepts the current option displayed on the screen.
+- "OFF" is a battery saving mode, where the LED display will use a brightness of 3, but only light up momentarily when you press a button. This prolongs battery life and would also be useful if the dimmest setting of the screen is keeping you awake at night.
 
   The method described here to set a number is true for the rest of the options in general: a short SET button push cycles the options, and a long SET button push accepts the current option displayed.
   
