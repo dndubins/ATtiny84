@@ -10,22 +10,21 @@
   - Pressing the MODE button (long push) will allow you to set the brightness of the LED 4-digit 7-segment display from (0-7), where 0: dimmest, 7: brightest
   - A short push on SET cycles between the options 0-7 then OFF.
   - A long push on SET accepts the current option displayed on the screen.
-  - "OFF" is a battery saving mode, where the LED display will use a brightness of 3, but only light up momentarily when you press a button.
-  This prolongs battery life and would also be useful if the dimmest setting of the screen is keeping you awake at night.
+  - "OFF" is a battery saving mode, where the LED display will use a brightness of 3, but only light up momentarily when you press a button. This prolongs battery life and would also be useful if the dimmest setting of the screen is keeping you awake at night.
 
-  This method of setting a number is true for the rest of the options in general: a short push on the SET button cycles, and a long push on the SET button accepts.
+  The method described here to set a number is true for the rest of the options in general: a short SET button push cycles the options, and a long SET button push accepts the current option displayed.
   
 ## To Set The Clock:
-   While in Clock mode, a long push on the SET button enters "set all" mode
-   Use the SET button for each push below: (short push to advance number, long push to accept)
-   set HRS with short push, accept with long push (screen will prompt with am and pm)
-   set MIN with short push, accept with long push
-   set DAY with short push, accept with long push
-   set MONTH with short push, accept with long push
-   set ALARM on/off with short push, accept with long push
-   if ALARM on:
-   set ALARM HRS with short push, accept with long push
-   set ALARM MIN with short push, accept with long push
+   - While in Clock mode, a long push on the SET button enters "set all" mode
+   - Use the SET button for each push below: (short push to advance number, long push to accept)
+   - set HRS with short push, accept with long push (screen will prompt with am and pm)
+   - set MIN with short push, accept with long push
+   - set DAY with short push, accept with long push
+   - set MONTH with short push, accept with long push
+   - set ALARM on/off with short push, accept with long push
+   - if ALARM on:
+      - set ALARM HRS with short push, accept with long push
+      - set ALARM MIN with short push, accept with long push
 
 ### To Snooze or Silence Clock Alarm:
    - When the ALARM rings, the MODE button will stop the alarm from ringing. Alarm mode stays ON (will ring the next day). 
