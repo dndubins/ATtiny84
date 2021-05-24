@@ -775,7 +775,7 @@ byte anyKeyWait(unsigned long dly) {          // delay that is interruptable by 
   if (millis() - timer1 < dly) {
     beeped = true;                            // silence alarm here
     if (!sw1State)ret = 1;                    // if user pressed sw1 button to interrupt delay, return 1
-    if (!sw1State)ret = 2;                    // if user pressed sw2 button to interrupt delay, return 2
+    if (!sw2State)ret = 2;                    // if user pressed sw2 button to interrupt delay, return 2
   } else {
     ret = 0;                                  // if the delay ended without a button push, return 0
   }
