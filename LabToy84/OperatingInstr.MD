@@ -28,12 +28,12 @@ The program distinguishes between a short push (<0.5 sec) and a long push (>0.5 
    set ALARM HRS with short push, accept with long push
    set ALARM MIN with short push, accept with long push
 
-## To Snooze or Silence Clock Alarm:
+### To Snooze or Silence Clock Alarm:
    - When the ALARM rings, the MODE button will stop the alarm from ringing. Alarm mode stays ON (will ring the next day). 
    - The SET button is a 5-minute snooze bar. You can keep pressing the SET button to sound the alarm 5 minutes later.
    - If you allow the alarm to ring and miss the snooze bar, alarm mode will stay on, and ring the next day.
 
-## Brightness Menu: to Set LED brightness, and to Disable Clock Mode
+### Brightness Menu: to Set LED brightness, and to Disable Clock Mode
 Setting the brightness lower will save battery life.
 Setting the clock mode to "OFF" will put the microprocessor to sleep when not using the other modes. This will also save battery life.
 
@@ -49,7 +49,7 @@ Setting the clock mode to "OFF" will put the microprocessor to sleep when not us
   - To leave this mode, press the MODE button.
   - The SET button does nothing here.
 
-# Timer Mode
+## Timer Mode
   - "PUSH" will be displayed on the LED screen.
   - To start the timer, add time by pressing the SET button.
   - Each time you press the SET button, more time is added (+1 min increments, then as you keep pressing, the increments increase). 
@@ -60,7 +60,7 @@ Setting the clock mode to "OFF" will put the microprocessor to sleep when not us
   - To reset the timer, hold down the SET button (long push), or press the MODE button to change modes.
   - The timer will not continue if you change modes. You need to stay in the Timer mode to use the timer.
 
-# Stopwatch Mode
+## Stopwatch Mode
   - "00" will be displayed on the LED screen.
   - To start the stopwatch, short press the SET button.
   - To reset the stopwatch, long press the SET button.
