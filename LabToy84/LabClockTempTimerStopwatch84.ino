@@ -164,6 +164,7 @@ byte cal[12] = { // to hold # days in each month
   31  // Dec  month 12
 };
 
+// Special text to display on 4-digit, 7-segment LED:
 const byte SEG_12A[] = {
   SEG_B | SEG_C,                                   // 1
   SEG_A | SEG_B | SEG_G | SEG_E | SEG_D,           // 2
