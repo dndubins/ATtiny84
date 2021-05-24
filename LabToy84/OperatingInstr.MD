@@ -28,7 +28,12 @@ The program distinguishes between a short push (<0.5 sec) and a long push (>0.5 
    set ALARM HRS with short push, accept with long push
    set ALARM MIN with short push, accept with long push
 
-## Brightness Menu: to Set LED brightness, and to Disable Clock Mode:
+## To Snooze or Silence Clock Alarm:
+   - When the ALARM rings, the MODE button will stop the alarm from ringing. Alarm mode stays ON (will ring the next day). 
+   - The SET button is a 5-minute snooze bar. You can keep pressing the SET button to sound the alarm 5 minutes later.
+   - If you allow the alarm to ring and miss the snooze bar, alarm mode will stay on, and ring the next day.
+
+## Brightness Menu: to Set LED brightness, and to Disable Clock Mode
 Setting the brightness lower will save battery life.
 Setting the clock mode to "OFF" will put the microprocessor to sleep when not using the other modes. This will also save battery life.
 
@@ -38,11 +43,6 @@ Setting the clock mode to "OFF" will put the microprocessor to sleep when not us
    --> OFF option keeps LED off unless a button is pushed (battery saving)
    - Set CLOCK on/off with short push, accept with long push
    --> BATT status will display (in %). If using USB, this will just display 100%.
-   
-## While Clock Alarm is Ringing (if Alarm is set to ON):
-   - When the ALARM rings, the MODE button will stop the alarm from ringing. Alarm mode stays ON (will ring the next day). 
-   - The SET button is a 5-minute snooze bar. You can keep pressing the SET button to sound the alarm 5 minutes later.
-   - If you allow the alarm to ring and miss the snooze bar, alarm mode will stay on, and ring the next day.
 
 ## Temperature Mode
   - Temperature will report every 5 seconds.
