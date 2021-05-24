@@ -6,7 +6,7 @@ This fun project was my attempt at making a minimalist timer/stopwatch for colle
 
 What I really wanted was a small, energy efficient timer/stopwatch that was easy to program and use. Then the upgrades started. I added:
  - a clock mode, to keep track of the time
- - an alarm mode, to beep at a specific time of day (with silence feature)
+ - an alarm mode, to beep at a specific time of day (with snooze feature for hard-to-wake-up lab mornings)
  - a stopwatch mode
  - a temperature mode, by calibrating the onboard core temperature sensor on the ATtiny84
 
