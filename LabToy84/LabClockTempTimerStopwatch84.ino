@@ -86,10 +86,10 @@
 //define the classic bit functions:
 #define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
 #define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
-#define bit_is_set(sfr, bit) (_SFR_BYTE(sfr) & _BV(bit))
-#define bit_is_clear(sfr, bit) (!(_SFR_BYTE(sfr) & _BV(bit)))
-#define loop_until_bit_is_set(sfr, bit) do { } while (bit_is_clear(sfr, bit))
-#define loop_until_bit_is_clear(sfr, bit) do { } while (bit_is_set(sfr, bit))
+//#define bit_is_set(sfr, bit) (_SFR_BYTE(sfr) & _BV(bit))
+//#define bit_is_clear(sfr, bit) (!(_SFR_BYTE(sfr) & _BV(bit)))
+//#define loop_until_bit_is_set(sfr, bit) do { } while (bit_is_clear(sfr, bit))
+//#define loop_until_bit_is_clear(sfr, bit) do { } while (bit_is_set(sfr, bit))
 
 #include <TM1637Display.h>  // For TM1637 display
 #define CLK 2               // use PA2 for CLK (physical pin 11)
@@ -147,7 +147,7 @@ unsigned long toffsetSW = 0UL; // to hold offset time for stopwatch
 //programmed delays
 #define DISPTIME_SLOW 800    // time to flash user information e.g. time, date
 #define DISPTIME_FAST 300    // time to flash menu item between clicks
-#define DEBOUNCE 40          // time to debounce a button
+#define DEBOUNCE 20          // time to debounce a button
 
 byte cal[12] = { // to hold # days in each month
   31, // Jan  month 1
@@ -348,12 +348,14 @@ void loop() {
           m_SNOOZE -= 60;                      // subtract 60 from minutes
         }
         if (h_AL + h_SNOOZE > 23)h_SNOOZE = 0; // overflow hours
-        flashcolon=true;                       // flash the colon to show snooze is active
+        //flashcolon=true;                       // flash the colon to show snooze is active
       } else {                                 // if x != 1, reset snooze function
         h_SNOOZE = 0;
         m_SNOOZE = 0;
-        flashcolon=false;                      // stop flashing the colon to show snooze is off
+        //flashcolon=false;                      // stop flashing the colon to show snooze is off
       }
+      buttonReset(sw1);                       // make sure sw1 isn't pressed
+      buttonReset(sw2);                       // make sure sw2 isn't pressed
     }
     p = buttonRead(sw1);                      // take a button reading
     if (p == 2) {                             // long push to set time
@@ -566,6 +568,33 @@ void showBoolState(bool a)  {                 // time in min
   }
 }
 
+void setItemByte(byte &item, byte lowLim, byte highLim, void (*f)(byte)){
+  byte push=0;
+  (*f)(item);                                 // show item on LCD
+  while (push != 2) {
+    push = buttonRead(sw1);                   // read button
+    if (push == 1) {                          // if there was a short push
+      item++;                                 // add 1 to hours
+      if (item > highLim)item = lowLim;       // wrap around hours
+      (*f)(item);                             // show updated item on LCD
+      buttonReset(sw1);                       // debounce sw1 and reset push      
+    } //end if
+  } // end while (end of setting hrs)
+}
+
+void setItemBool(bool &item, void (*f)(byte)){
+  byte push=0;
+  (*f)(item);                                 // show item on LCD
+  while (push != 2) {
+    push = buttonRead(sw1);                   // read button
+    if (push == 1) {                          // if there was a short push
+      item=!item;                             // invert item value
+      (*f)(item);                             // show updated item on LCD
+      buttonReset(sw1);                       // debounce sw1 and reset push      
+    } //end if
+  } // end while (end of setting hrs)
+}
+
 void setAll() {
   byte push = 0;                              // push will store button result (0: no push, 1: short push, 2: long push)
   buttonReset(sw1);                           // debounce sw1
@@ -577,102 +606,36 @@ void setAll() {
   //s=0;    // #sec (default: 0)
 
   // First set hours
-  showTimeHr(h);                              // show hrs on LCD
-  while (push != 2) {
-    push = buttonRead(sw1);                   // read button
-    if (push == 1) {                          // if there was a short push
-      h++;                                    // add 1 to hours
-      if (h > 23)h = 0;                       // wrap around hours
-      showTimeHr(h);
-      buttonReset(sw1);                       // debounce sw1 and reset push      
-    } //end if
-  } // end while (end of setting hrs)
-  push=0;
-
+  setItemByte(h,0,23,showTimeHr);                 // set h (lower limit 0, upper limit 23, use showTimeHr to display)
+  
   // Next set minutes
-  showTimeMin(m);                             // show min on LCD
-  while (push != 2) {
-    push = buttonRead(sw1);                   // read button
-    if (push == 1) {
-      m++;                                    // add 1 to minutes
-      if (m > 59)m = 0;                       // wrap minutes around to 0
-      showTimeMin(m);                         // show min on LCD
-      buttonReset(sw1);                       // debounce sw1 and reset push
-    } //end if
-  } // end while (end of setting min)
+  setItemByte(m,0,59,showTimeMin);                // set m (lower limit 0, upper limit 59, use showTimeMin to display)
+  
   toffset = (h * 3600UL) + (m * 60UL) + s;    // calculate new toffset
   tstart = millis() / 1000UL;                 // new start time for clock
-  push=0;
   
   display.setSegments(SEG_CAL);               // show "CAL" message
   delay(DISPTIME_SLOW);
+
   // Next set month
-  showTimeMo(mo);                             // show month on LCD
-  while (push != 2) {
-    push = buttonRead(sw1);                   // read button
-    if (push == 1) {                          // if there was a short push
-      mo++;                                   // add 1 to month
-      if (mo > 12)mo = 1;                     // wrap around to Jan after Dec
-      showTimeMo(mo);                         // show hrs on LCD
-      buttonReset(sw1);                       // debounce sw1 and reset push
-    } //end if
-  } // end while (end of setting hrs)
-  push=0;
+  setItemByte(mo,1,12,showTimeMo);                 // set moo (lower limit 1, upper limit 12, use showTimeMo to display)
   
   // Next set clock day
-  showTimeDay(dy);                            // show day on LCD
-  while (push != 2) {
-    push = buttonRead(sw1);                   // read button
-    if (push == 1) {
-      dy++;                                   // add 1 to days
-      if (dy > cal[mo - 1])dy = 1;            // wrap days around to 1
-      showTimeDay(dy);                        // show min on LCD
-      buttonReset(sw1);                       // debounce sw1 and reset push
-    } //end if
-  } // end while (end of setting min)
-  push=0;
+  setItemByte(dy,1,cal[mo - 1],showTimeDay);      // set dy (lower limit 1, upper limit largest that month, use showTimeDay to display)
   
   // Toggle alarm ON/OFF
   display.setSegments(SEG_AL);                // show "AL" message
   delay(DISPTIME_SLOW);
-  showBoolState(alarm);                       // show alarm state (on/off)
-  while (push != 2) {
-    push = buttonRead(sw1);                   // read button
-    if (push == 1) {
-      alarm = !alarm;                         // toggle alarm on/off
-      showBoolState(alarm);                   // show alarm state (on/off)
-      buttonReset(sw1);                       // debounce sw1 and reset push
-    } //end if
-  } // end while (end of setting min)
-  push=0;
+
+  setItemBool(alarm,showBoolState);       // set alarm state (lower limit 0, upper limit 1, use showBoolState to display)  
   
   if (alarm) {                                // only set alarm if user arms it
     // First set alarm hours
-    push = 0;                                 // to store button reading
-    showTimeHr(h_AL);                         // show hrs on LCD
-    while (push != 2) {
-      push = buttonRead(sw1);                 // read button
-      if (push == 1) {                        // if there was a short push
-        h_AL++;                               // add 1 to alarm hours
-        if (h_AL > 23)h_AL = 0;               // wrap around hours
-        showTimeHr(h_AL);
-        buttonReset(sw1);                     // debounce sw1 and reset push
-      } //end if
-    } // end while (end of setting hrs)
-    push=0;
+    setItemByte(h_AL,0,23,showTimeHr);            // set h_AL (lower limit 0, upper limit 23, use showTimeHr to display)    
     
     // Next set alarm minutes
-    showTimeMin(m_AL);                        // show min on LCD
-    while (push != 2) {
-      push = buttonRead(sw1);                 // read button
-      if (push == 1) {
-        m_AL++;                               // add 1 to alarm minutes
-        if (m_AL > 59)m_AL = 0;               // wrap minutes around to 0
-        showTimeMin(m_AL);                    // show min on LCD
-        buttonReset(sw1);                     // debounce sw1 and reset push
-      } //end if
-    } // end while (end of setting min)
-    push=0;
+    setItemByte(m_AL,0,59,showTimeMin);                // set m (lower limit 0, upper limit 59, use showTimeMin to display)
+
   } // end of setting alarm time
   delay(500);                                 // one last delay
 }
@@ -708,21 +671,13 @@ void setLED() {
   } // end while (end of setting hrs)
   buttonReset(sw1);                           // debounce sw1 and reset push
   push=0;
+
   // Toggle clock ON/OFF
   display.clear();
   display.setSegments(SEG_CLOC);              // show "CLOC" message
   delay(DISPTIME_SLOW);
-  showBoolState(clockMode);                   // show alarm state (on/off)
-  while (push != 2) {
-    push = buttonRead(sw1);                   // read button
-    if (push == 1) {
-      clockMode = !clockMode;                 // toggle alarm on/off
-      showBoolState(clockMode);               // show alarm state (on/off)
-      buttonReset(sw1);                       // debounce sw1 and reset push
-    } //end if
-  } // end while (end of setting min)
+  setItemBool(clockMode,showBoolState);  // set clock mode (lower limit 0, upper limit 1, use showBoolState to display)    
   if (!clockMode)mode = 1;                    // select something other than the clock if we've turned it off
-  push=0;
   display.setSegments(SEG_BATT);              // show "LED" message
   delay(DISPTIME_SLOW);
   int battLife = constrain((readVcc() / 12) - 167, 0, 100); // calculate remaining battery life
