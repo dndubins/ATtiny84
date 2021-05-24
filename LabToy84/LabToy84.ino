@@ -794,7 +794,7 @@ byte beepBuzz(byte pin, int n) {              // pin is digital pin wired to buz
 float readCoreTemp(int n) {                   // Calculates and reports the chip temperature of ATtiny84
   // Tempearture Calibration Data
   float kVal = 0.8929;                        // k-value fixed-slope coefficient (default: 1.0). Adjust for manual 2-point calibration.
-  float Tos = -244.5 + 0.7;                   // temperature offset (default: 0.0). Adjust for manual calibration. Second number is the fudge factor.
+  float Tos = -244.5 + 11.0;                   // temperature offset (default: 0.0). Adjust for manual calibration. Second number is the fudge factor.
 
   sbi(ADCSRA, ADEN);                          // enable ADC (comment out if already on)
   delay(50);                                  // wait for ADC to warm up
@@ -924,10 +924,10 @@ void showTimeSW(unsigned long msec) {         // show time (input argument: msec
 
 void stopWatch_pause() {
   unsigned long tnow = millis() - toffsetSW;  // calculate ending point
-  while (digitalRead(sw1) == LOW || digitalRead(sw2) == LOW) {} // wait for user to let go of buttons
+  while (!digitalRead(sw1) || !digitalRead(sw2)) {} // wait for user to let go of buttons
   delay(DEBOUNCE);
-  while (digitalRead(sw1) == HIGH && digitalRead(sw2) == HIGH); // wait for user to press a button again (HIGH=UNPUSHED)
-  if (digitalRead(sw2) == LOW) {              // if user presses the mode button here
+  while (digitalRead(sw1) && digitalRead(sw2)); // wait for user to press a button again (HIGH=UNPUSHED)
+  if (!digitalRead(sw2)) {                    // if user presses the mode button here
     toffsetSW = millis();                     // new starting point
     mode = 127;                               // change mode (will wrap around)
     return;                                   // get outta dodge
@@ -943,21 +943,23 @@ void stopWatch_pause() {
 void stopWatch_reset() {
   display.clear();
   display.showNumberDec(0, true, 2, 2);       // tell user clock is reset
-  while (digitalRead(sw1) == LOW);            // wait for user to let go of button
+  while (!digitalRead(sw1));                  // wait for user to let go of button
   delay(DEBOUNCE);                            // debounce. Pin should be in HIGH state now.
   delay(DISPTIME_FAST);                       // delay to show 00
   if (brightness == 8)TMVCCoff();             // turn off Vcc for the TM1637 display
   if (clockMode) {
-    while (digitalRead(sw1) == HIGH && digitalRead(sw2) == HIGH); // wait for user to press a button again (HIGH=UNPUSHED)
+    while (digitalRead(sw1) && digitalRead(sw2)); // wait for user to press a button again (HIGH=UNPUSHED)
   } else {
     TMVCCoff();                               // turn off Vcc for the TM1637 display
     sleep_interrupt();                        // sleep here to save battery life
     TMVCCon();                                // turn on Vcc for the TM1637 display
   }
-  if (digitalRead(sw2) == LOW) {
+  if (!digitalRead(sw2)) {
     mode = 127;                               // change mode
   }
   if (brightness == 8)TMVCCon();              // turn on Vcc for the TM1637 display
+  while (!digitalRead(sw1) || !digitalRead(sw2)); // make sure user is not touching button
+  delay(DEBOUNCE);
   toffsetSW = millis();                       // new starting point
 }
 
