@@ -1,4 +1,4 @@
-# Operating Instructions for LabToy84
+# User Guide for the LabToy84
   
 - There are two momentary switches on this device: a MODE button (called sw2 in the program) and a SET button (called sw1 in the program).
 - The program distinguishes between a short push (<0.5 sec) and a long push (>0.5 sec) on each button.
