@@ -580,8 +580,8 @@ void setItemByte(byte &item, byte lowLim, byte highLim, void (*f)(byte)){ // set
       if (item > highLim)item = lowLim;       // wrap around hours
       (*f)(item);                             // show updated item on LCD
       buttonReset(sw1);                       // debounce sw1 and reset push      
-    } //end if
-  } // end while (end of setting hrs)
+    }                                         // end if
+  }                                           // end while
 }
 
 void setItemBool(bool &item, void (*f)(bool)){ // sets an individual bool item during the setAll() routine
@@ -594,8 +594,8 @@ void setItemBool(bool &item, void (*f)(bool)){ // sets an individual bool item d
       item=!item;                             // invert item value
       (*f)(item);                             // show updated item on LCD
       buttonReset(sw1);                       // debounce sw1 and reset push      
-    } //end if
-  } // end while (end of setting hrs)
+    }                                         // end if
+  }                                           // end while
 }
 
 void setAll() {
