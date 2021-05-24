@@ -1,21 +1,20 @@
 # Operating Instructions for LabToy84
   
-There are two momentary switches on this device: a MODE button (called sw2 in the program) and a SET button (called sw1 in the program).
-The program distinguishes between a short push (<0.5 sec) and a long push (>0.5 sec) on each button.
+- There are two momentary switches on this device: a MODE button (called sw2 in the program) and a SET button (called sw1 in the program).
+- The program distinguishes between a short push (<0.5 sec) and a long push (>0.5 sec) on each button.
 
 ## To Change Modes: 
-  Pressing the MODE button (short push) will cycle between the following modes:
-  Clock --> Temperature --> Timer --> Stopwatch
+  - Pressing the MODE button (short push) will cycle between the following modes:
+  - Clock --> Temperature --> Timer --> Stopwatch
   
-  Pressing the MODE button (long push) will allow you to set the brightness of the LED 4-digit 7-segment display from (0-7), where 0: dimmest, 7: brightest
-  A short push on SET cycles between the options 0-7 then OFF.
-  A long push on SET accepts the current option displayed on the screen.
-  This is true for the rest of the options in general: a short push on the SET button cycles, and a long push on the SET button accepts.
-  
-  "OFF" is a battery saving mode, where the LED display will use a brightness of 3, but only light up momentarily when you press a button.
+  - Pressing the MODE button (long push) will allow you to set the brightness of the LED 4-digit 7-segment display from (0-7), where 0: dimmest, 7: brightest
+  - A short push on SET cycles between the options 0-7 then OFF.
+  - A long push on SET accepts the current option displayed on the screen.
+  - "OFF" is a battery saving mode, where the LED display will use a brightness of 3, but only light up momentarily when you press a button.
   This prolongs battery life and would also be useful if the dimmest setting of the screen is keeping you awake at night.
-  
 
+  This method of setting a number is true for the rest of the options in general: a short push on the SET button cycles, and a long push on the SET button accepts.
+  
 ## To Set The Clock:
    While in Clock mode, a long push on the SET button enters "set all" mode
    Use the SET button for each push below: (short push to advance number, long push to accept)
@@ -40,9 +39,9 @@ Setting the clock mode to "OFF" will put the microprocessor to sleep when not us
    - A long push on the MODE button enters "set brightness and LED on/off" menu. This menu is accessible from Clock and Timer modes.  
    - Set LED BRIGHTNESS with short push (SET button), accept with long push (SET button)
    - Options: 0(most dim) to 7 (most bright), then OFF
-   --> OFF option keeps LED off unless a button is pushed (battery saving)
+   - OFF option keeps LED off unless a button is pushed (battery saving)
    - Set CLOCK on/off with short push, accept with long push
-   --> BATT status will display (in %). If using USB, this will just display 100%.
+   - BATT status will display (in %). If using USB, this will just display 100%.
 
 ## Temperature Mode
   - Temperature will report every 5 seconds.
