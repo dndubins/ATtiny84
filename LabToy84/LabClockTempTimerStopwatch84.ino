@@ -124,6 +124,7 @@ byte h_AL = 7;      // #hr  (default: 7)
 byte m_AL = 30;     // #min (default: 30)
 byte h_SNOOZE = 0;  // #hr for snooze function
 byte m_SNOOZE = 0;  // #min for snooze function
+#define T_SNOOZE 1 // duration of snooze button (in minutes)
 
 bool alarm = false; // alarm on(true) or off(false)? default:false
 
@@ -339,22 +340,25 @@ void loop() {
       showTime(h, m, s, flashcolon, false);   // report the time
     }
     if (h == (h_AL + h_SNOOZE) && m == (m_AL + m_SNOOZE) && s == 0 && alarm) { // sound the alarm!
-      bool x = beepBuzz(buzzPin, 20);          // a longish alarm
+      byte x = beepBuzz(buzzPin, 20);          // a longish alarm
       if (x == 1) {                            // SET button will be the snooze button
-        m_SNOOZE += 5;                         // add 5 minutes to snooze
+        m_SNOOZE += T_SNOOZE;                  // add T_SNOOZE minutes to snooze
         if ((m_AL + m_SNOOZE) > 59) {
           h_SNOOZE++;                          // add 1 to hours
           m_SNOOZE -= 60;                      // subtract 60 from minutes
         }
         if (h_AL + h_SNOOZE > 23)h_SNOOZE = 0; // overflow hours
+        flashcolon=true;                       // flash the colon to show snooze is active
       } else {                                 // if x != 1, reset snooze function
         h_SNOOZE = 0;
         m_SNOOZE = 0;
+        flashcolon=false;                      // stop flashing the colon to show snooze is off
       }
     }
     p = buttonRead(sw1);                      // take a button reading
     if (p == 2) {                             // long push to set time
-      buttonReset(sw1, p);                    // debounce sw1, reset p
+      buttonReset(sw1);                       // debounce sw1
+      p=0;                                    // reset p
       flashTime();                            // show user flashing time (set mode)
       if (brightness == 8)TMVCCon();          // turn on Vcc for the TM1637 display
       setAll();                               // clock setting routine
@@ -476,7 +480,8 @@ void loop() {
     } else if (p == 2) {
       stopWatch_reset();
     }
-    buttonReset(sw1, p);
+    buttonReset(sw1);
+    p=0;
   }
 
 }
@@ -563,7 +568,7 @@ void showBoolState(bool a)  {                 // time in min
 
 void setAll() {
   byte push = 0;                              // push will store button result (0: no push, 1: short push, 2: long push)
-  buttonReset(sw1, push);                     // debounce sw1 and reset push
+  buttonReset(sw1);                           // debounce sw1
   //un-comment to reset the time and date when setting the time
   //mo=1;   // #month (default: 1)
   //dy=1;   // #day (default: 1)
@@ -579,9 +584,10 @@ void setAll() {
       h++;                                    // add 1 to hours
       if (h > 23)h = 0;                       // wrap around hours
       showTimeHr(h);
+      buttonReset(sw1);                       // debounce sw1 and reset push      
     } //end if
   } // end while (end of setting hrs)
-  buttonReset(sw1, push);                     // debounce sw1 and reset push
+  push=0;
 
   // Next set minutes
   showTimeMin(m);                             // show min on LCD
@@ -591,12 +597,13 @@ void setAll() {
       m++;                                    // add 1 to minutes
       if (m > 59)m = 0;                       // wrap minutes around to 0
       showTimeMin(m);                         // show min on LCD
+      buttonReset(sw1);                       // debounce sw1 and reset push
     } //end if
   } // end while (end of setting min)
   toffset = (h * 3600UL) + (m * 60UL) + s;    // calculate new toffset
   tstart = millis() / 1000UL;                 // new start time for clock
-  buttonReset(sw1, push);                     // debounce sw1 and reset push
-
+  push=0;
+  
   display.setSegments(SEG_CAL);               // show "CAL" message
   delay(DISPTIME_SLOW);
   // Next set month
@@ -607,10 +614,11 @@ void setAll() {
       mo++;                                   // add 1 to month
       if (mo > 12)mo = 1;                     // wrap around to Jan after Dec
       showTimeMo(mo);                         // show hrs on LCD
+      buttonReset(sw1);                       // debounce sw1 and reset push
     } //end if
   } // end while (end of setting hrs)
-  buttonReset(sw1, push);                     // debounce sw1 and reset push
-
+  push=0;
+  
   // Next set clock day
   showTimeDay(dy);                            // show day on LCD
   while (push != 2) {
@@ -619,10 +627,11 @@ void setAll() {
       dy++;                                   // add 1 to days
       if (dy > cal[mo - 1])dy = 1;            // wrap days around to 1
       showTimeDay(dy);                        // show min on LCD
+      buttonReset(sw1);                       // debounce sw1 and reset push
     } //end if
   } // end while (end of setting min)
-  buttonReset(sw1, push);                     // debounce sw1 and reset push
-
+  push=0;
+  
   // Toggle alarm ON/OFF
   display.setSegments(SEG_AL);                // show "AL" message
   delay(DISPTIME_SLOW);
@@ -632,10 +641,11 @@ void setAll() {
     if (push == 1) {
       alarm = !alarm;                         // toggle alarm on/off
       showBoolState(alarm);                   // show alarm state (on/off)
+      buttonReset(sw1);                       // debounce sw1 and reset push
     } //end if
   } // end while (end of setting min)
-  buttonReset(sw1, push);                     // debounce sw1 and reset push
-
+  push=0;
+  
   if (alarm) {                                // only set alarm if user arms it
     // First set alarm hours
     push = 0;                                 // to store button reading
@@ -646,10 +656,11 @@ void setAll() {
         h_AL++;                               // add 1 to alarm hours
         if (h_AL > 23)h_AL = 0;               // wrap around hours
         showTimeHr(h_AL);
+        buttonReset(sw1);                     // debounce sw1 and reset push
       } //end if
     } // end while (end of setting hrs)
-    buttonReset(sw1, push);                   // debounce sw1 and reset push
-
+    push=0;
+    
     // Next set alarm minutes
     showTimeMin(m_AL);                        // show min on LCD
     while (push != 2) {
@@ -658,9 +669,10 @@ void setAll() {
         m_AL++;                               // add 1 to alarm minutes
         if (m_AL > 59)m_AL = 0;               // wrap minutes around to 0
         showTimeMin(m_AL);                    // show min on LCD
+        buttonReset(sw1);                     // debounce sw1 and reset push
       } //end if
     } // end while (end of setting min)
-    buttonReset(sw1, push);                   // debounce sw1 and reset push
+    push=0;
   } // end of setting alarm time
   delay(500);                                 // one last delay
 }
@@ -668,7 +680,7 @@ void setAll() {
 void setLED() {
   if (brightness == 8)TMVCCon();              // turn on Vcc for the TM1637 display
   byte push = 0;                              // push will store button result (0: no push, 1: short push, 2: long push)
-  buttonReset(sw1, push);                     // debounce sw1 and reset push
+  buttonReset(sw1);                           // debounce sw1 and reset push
   //reset the brightness level (2-7)
   display.setSegments(SEG_LED);               // show "LED" message
   delay(DISPTIME_SLOW);
@@ -694,8 +706,8 @@ void setLED() {
       }
     } //end if (push==1)
   } // end while (end of setting hrs)
-  buttonReset(sw1, push);                     // debounce sw1 and reset push
-
+  buttonReset(sw1);                           // debounce sw1 and reset push
+  push=0;
   // Toggle clock ON/OFF
   display.clear();
   display.setSegments(SEG_CLOC);              // show "CLOC" message
@@ -706,11 +718,11 @@ void setLED() {
     if (push == 1) {
       clockMode = !clockMode;                 // toggle alarm on/off
       showBoolState(clockMode);               // show alarm state (on/off)
+      buttonReset(sw1);                       // debounce sw1 and reset push
     } //end if
   } // end while (end of setting min)
-  buttonReset(sw1, push);                     // debounce sw1 and reset push
   if (!clockMode)mode = 1;                    // select something other than the clock if we've turned it off
-
+  push=0;
   display.setSegments(SEG_BATT);              // show "LED" message
   delay(DISPTIME_SLOW);
   int battLife = constrain((readVcc() / 12) - 167, 0, 100); // calculate remaining battery life
@@ -718,7 +730,6 @@ void setLED() {
   display.showNumberDec(battLife, false);     // show user remaining battery life
   delay(DISPTIME_SLOW);                       // one last delay
   display.clear();                            // clear the display
-  buttonReset(sw1, push);                     // debounce sw1 and reset push
 }
 
 void atTinyTone(byte pin, unsigned long freq, int dur) {
@@ -745,17 +756,16 @@ byte buttonRead(byte pin) {
   unsigned long timer1 = millis();
   if (!digitalRead(pin)) {                    // if button is pushed down
     ret = 1;                                  // 1 means short push
-    while (!digitalRead(pin) && (millis() - timer1) < 500) {}; //short push <500 msec
+    while (!digitalRead(pin) && (millis() - timer1) < 600) {}; // 600 msec is timeout
     delay(DEBOUNCE);                          // debounce if button pushed
   }
-  if (millis() - timer1 > 490)ret = 2;
+  if (millis() - timer1 > 500)ret = 2;        // long push is > 500 msec
   return ret;
 }
 
-void buttonReset(byte pin, byte &p) {
+void buttonReset(byte pin) {
   while (!digitalRead(pin)) {};               // wait until user lets go of button
   delay(DEBOUNCE);                            // debounce
-  p = 0;                                      // to reset button reading
 }
 
 void safeWait(byte pin, unsigned long dly) {  // delay that is interruptable by button push on pin
@@ -764,7 +774,7 @@ void safeWait(byte pin, unsigned long dly) {  // delay that is interruptable by 
 }
 
 byte anyKeyWait(unsigned long dly) {          // delay that is interruptable by either button (program dependent routine)
-  bool ret = 0;
+  byte ret = 0;
   unsigned long timer1 = millis();
   bool sw1State = HIGH;
   bool sw2State = HIGH;
@@ -785,6 +795,7 @@ byte anyKeyWait(unsigned long dly) {          // delay that is interruptable by 
 }
 
 byte beepBuzz(byte pin, int n) {              // pin is digital pin wired to buzzer. n is number of series of beeps.
+  byte x=0;
   pinMode(pin, OUTPUT);                       // set pin to OUTPUT mode
   for (int j = 0; j < n; j++) {
     for (int i = 0; i < 3; i++) {             // 3 beeps
@@ -793,7 +804,7 @@ byte beepBuzz(byte pin, int n) {              // pin is digital pin wired to buz
       }
 #ifdef ACTIVEBUZZ
       digitalWrite(pin, HIGH);
-      byte x = anyKeyWait(BEEPTIME);          // interruptable wait
+      x = anyKeyWait(BEEPTIME);               // interruptable wait
       if (x > 0) {
         pinMode(pin, INPUT);
         return x;                             // leave routine here if user pressed button
@@ -803,7 +814,7 @@ byte beepBuzz(byte pin, int n) {              // pin is digital pin wired to buz
 #endif
       digitalWrite(pin, LOW);
       if (n > 1) {
-        byte x = anyKeyWait(BEEPTIME);        // interruptable wait
+        x = anyKeyWait(BEEPTIME);             // interruptable wait
         if (x > 0) {
           pinMode(pin, INPUT);
           return x;                           // leave routine here if user pressed button
@@ -811,7 +822,7 @@ byte beepBuzz(byte pin, int n) {              // pin is digital pin wired to buz
       }
     }
 
-    byte x = anyKeyWait(250);                 // final interruptable wait
+    x = anyKeyWait(250);                      // final interruptable wait
     if (x > 0) {
       pinMode(pin, INPUT);
       return x;                               // leave routine here if user pressed button
@@ -824,7 +835,7 @@ byte beepBuzz(byte pin, int n) {              // pin is digital pin wired to buz
 float readCoreTemp(int n) {                   // Calculates and reports the chip temperature of ATtiny84
   // Tempearture Calibration Data
   float kVal = 0.8929;                        // k-value fixed-slope coefficient (default: 1.0). Adjust for manual 2-point calibration.
-  float Tos = -244.5 + 10.68;                 // temperature offset (default: 0.0). Adjust for manual calibration. Second number is the fudge factor.
+  float Tos = -244.5 + 8.50;                  // temperature offset (default: 0.0). Adjust for manual calibration. Second number is the fudge factor.
 
   sbi(ADCSRA, ADEN);                          // enable ADC (comment out if already on)
   delay(50);                                  // wait for ADC to warm up
