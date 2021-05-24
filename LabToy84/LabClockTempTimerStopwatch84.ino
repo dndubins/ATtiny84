@@ -147,7 +147,7 @@ unsigned long toffsetSW = 0UL; // to hold offset time for stopwatch
 //programmed delays
 #define DISPTIME_SLOW 800    // time to flash user information e.g. time, date
 #define DISPTIME_FAST 300    // time to flash menu item between clicks
-#define DEBOUNCE 50          // time to debounce a button
+#define DEBOUNCE 40          // time to debounce a button
 
 byte cal[12] = { // to hold # days in each month
   31, // Jan  month 1
@@ -755,6 +755,7 @@ byte buttonRead(byte pin) {
   byte ret = 0;                               // byte the function will return
   unsigned long timer1 = millis();
   if (!digitalRead(pin)) {                    // if button is pushed down
+    delay(DEBOUNCE);                          // debounce if button pushed
     ret = 1;                                  // 1 means short push
     while (!digitalRead(pin) && (millis() - timer1) < 600) {}; // 600 msec is timeout
     delay(DEBOUNCE);                          // debounce if button pushed
