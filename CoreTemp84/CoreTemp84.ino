@@ -54,7 +54,7 @@ void loop() {
 float readCoreTemp(int n){                    // Calculates and reports the chip temperature of ATtiny84
   // Tempearture Calibration Data
   float kVal=0.8929;                          // k-value fixed-slope coefficient (default: 1.0). Adjust for manual 2-point calibration.
-  float Tos=-244.5+12.5;                      // temperature offset (default: 0.0). Adjust for manual calibration. Second number is the fudge factor.
+  float Tos=-244.5 + 0.0;                     // temperature offset (default: 0.0). Adjust for manual calibration. Second number is the fudge factor.
 
   //sbi(ADCSRA,ADEN);                         // enable ADC (comment out if already on)
   delay(50);                                  // wait for ADC to warm up 
