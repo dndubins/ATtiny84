@@ -98,10 +98,10 @@
 
 // for USB version of this device: mode=0, brightness=3, clockmode=true
 // for non-USB version of this device: mode=2, brightness=8, clockMode=false
-byte mode = 2;              // mode=0: clock, mode=1: temperature, mode=2: timer, mode=3: stopwatch
-byte brightness = 8;        // brightness setting for TM1637 (0-7) (to save batteries, use a lower number). 8=keep module off normally (most power savings). Use 2 for rechargeable, 3 for alkaline
+byte mode = 0;              // mode=0: clock, mode=1: temperature, mode=2: timer, mode=3: stopwatch
+byte brightness = 3;        // brightness setting for TM1637 (0-7) (to save batteries, use a lower number). 8=keep module off normally (most power savings). Use 2 for rechargeable, 3 for alkaline
 bool flashcolon = false;    // true: flashes during regular time display, false: it doesn't
-bool clockMode = false;      // flag to turn on/off clock. To save battery, clock can be turned off and sleep mode used with timer and stopwatch (sleep mode interferes with millis() function).
+bool clockMode = true;      // flag to turn on/off clock. To save battery, clock can be turned off and sleep mode used with timer and stopwatch (sleep mode interferes with millis() function).
 
 TM1637Display display(CLK, DIO);
 
@@ -285,10 +285,11 @@ void setup() {
 }
 
 void loop() {
-  byte p = 0;                               // to store value returned by the readButton() function
-  p = buttonRead(sw2);
+  bool resetTimer=false;                    // if true, reset the timer
+  byte p = buttonRead(sw2);                 // read MODE button and store to p
+  buttonReset(sw2);                         // user should let go of MODE button   
+
   if (p == 1 || mode == 127) {              // if mode button pushed (short) or if you left a routine early by pushing the mode button
-    delay(DEBOUNCE);                        // debounce
     mode++;                                 // change the mode
     if (mode > 3) {                         // wrap around the mode. Skip clock if clockMode is false.
       clockMode ? mode = 0 : mode = 1;      // ternary operator (condition?then:else;)
@@ -304,21 +305,18 @@ void loop() {
     if (mode == 1) {                        // mode=1: temperature mode
       if (brightness == 8)TMVCCon();        // turn on Vcc to the TM1637 display
       showTemp(readCoreTemp(100));          // show avg of 100 core temperature readings
-      delay(DISPTIME_SLOW);                 // show the time for DISPTIME
+      safeWait(sw2,DISPTIME_SLOW);          // show the time for DISPTIME
       if (brightness == 8)TMVCCoff();       // turn off power to the TM1637 display
     }
 
     if (mode == 2) {                        // mode=2: timer
-      tDur = 0;                             // reset timer on mode change (comment out if you'd like to change this)
-      tEnd = millis();
-      beeped = true;                        // disarm buzzer until time added
+      resetTimer=true;
     }
-    while (!digitalRead(sw2));              // wait for user to let go of button
+
     if (mode == 3) {                        // mode=3: stopwatch
       stopWatch_reset();                    // reset stopwatch on mode change
     }
 
-    delay(DEBOUNCE);                        // debounce
   } else if (p == 2) {                      // if long push on mode button
     setLED();                               // set brightness
   }
@@ -343,19 +341,19 @@ void loop() {
       showTime(h, m, s, flashcolon, false);   // report the time
     }
     if (h == (h_AL + h_SNOOZE) && m == (m_AL + m_SNOOZE) && s == 0 && alarm) { // sound the alarm!
-      byte x = beepBuzz(buzzPin, 20);          // a longish alarm
-      if (x == 1) {                            // SET button will be the snooze button
-        m_SNOOZE += T_SNOOZE;                  // add T_SNOOZE minutes to snooze
+      byte x = beepBuzz(buzzPin, 20);         // a longish alarm
+      if (x == 1) {                           // SET button will be the snooze button
+        m_SNOOZE += T_SNOOZE;                 // add T_SNOOZE minutes to snooze
         if ((m_AL + m_SNOOZE) > 59) {
-          h_SNOOZE++;                          // add 1 to hours
-          m_SNOOZE -= 60;                      // subtract 60 from minutes
+          h_SNOOZE++;                         // add 1 to hours
+          m_SNOOZE -= 60;                     // subtract 60 from minutes
         }
         if (h_AL + h_SNOOZE > 23)h_SNOOZE = 0; // overflow hours
-        //flashcolon=true;                       // flash the colon to show snooze is active
-      } else {                                 // if x != 1, reset snooze function
+        //flashcolon=true;                    // flash the colon to show snooze is active
+      } else {                                // if x != 1, reset snooze function
         h_SNOOZE = 0;
         m_SNOOZE = 0;
-        //flashcolon=false;                      // stop flashing the colon to show snooze is off
+        //flashcolon=false;                   // stop flashing the colon to show snooze is off
       }
       buttonReset(sw1);                       // make sure sw1 isn't pressed
       buttonReset(sw2);                       // make sure sw2 isn't pressed
@@ -402,16 +400,11 @@ void loop() {
 
   if (mode == 1) {                            // mode=1 is temperature mode
     if (brightness == 8 && !digitalRead(sw1)) {  // battery saver mode
-      if (clockMode) {                        // no sleep in clockMode
-        TMVCCon();                            // turn on Vcc to the TM1637 display
-        showTemp(readCoreTemp(100));          // show avg of 100 core temperature readings
-        delay(DISPTIME_SLOW);                 // show the time for DISPTIME
-        TMVCCoff();                           // turn off power to the TM1637 display
-      } else {                                // if clockMode=false
-        TMVCCon();                            // turn on Vcc to the TM1637 display
-        showTemp(readCoreTemp(100));          // show avg of 100 core temperature readings
-        delay(DISPTIME_SLOW);                 // show the time for DISPTIME
-        TMVCCoff();                           // turn off power to the TM1637 display
+      TMVCCon();                              // turn on Vcc to the TM1637 display
+      showTemp(readCoreTemp(100));            // show avg of 100 core temperature readings
+      safeWait(sw2,DISPTIME_SLOW);            // show the time for DISPTIME
+      TMVCCoff();                             // turn off power to the TM1637 display
+      if (!clockMode) {                       // no sleep in clockMode
         sleep_interrupt();                    // go to sleep here (waits in sleep mode, with 0.8 uA current draw)
         TMVCCon();
       }
@@ -423,7 +416,9 @@ void loop() {
 
   if (mode == 2) {                            // mode=2 is timer mode
     p = buttonRead(sw1);                      // take a button reading
-    if (p == 1) {
+    if (p == 2) {                             // if long push
+      resetTimer=true;                        // reset the timer
+    }else if (p == 1) {                       // short push adds time to the timer
       TMVCCon();                              // turn on Vcc to the TM1637 display
       beeped = false;                         // rearm the buzzer
       if (tDur >= 6 * 60 * 60) {              // if tDur>=6h
@@ -440,53 +435,55 @@ void loop() {
       delay(DEBOUNCE);                        // have a small real delay. This prevents double presses.
       safeWait(sw1, 1000 - DEBOUNCE);         // button-interruptable wait function
       tEnd = millis() + (tDur * 1000UL);      // calculate new end time
-    } else if (p == 2) {
-      timer_reset();
-    }
-    p = 0;                                    // reset the button push
-    if (millis() < tEnd) {                    // after waiting the allotted time
-      showTimeTMR(tEnd - millis(), false);    // show time remaining
-    } else if (!beeped) {                     // 20 second timer
-      beeped = true;                          // yes! we beeped!
-      for (int i = 0; i < 10; i++) {
-        if (i % 2 == 0) {                     // if i is even
-          display.setSegments(SEG_DONE);      // show "done" message
-        } else {
-          display.setSegments(SEG_DASH);      // show dashes
+    } else if (p == 0) {                      // if button not pushed
+      if (millis() < tEnd) {                    // after waiting the allotted time
+        showTimeTMR(tEnd - millis(), false);    // show time remaining
+      } else if (!beeped) {                     // 20 second timer
+        beeped = true;                          // yes! we beeped!
+        for (int i = 0; i < 10; i++) {
+          if (i % 2 == 0) {                     // if i is even
+            display.setSegments(SEG_DONE);      // show "done" message
+          } else {
+            display.setSegments(SEG_DASH);      // show dashes
+          }
+          if (beepBuzz(buzzPin, 3) > 0) {       // flash and beep 3x
+            resetTimer=true;                    // flag the timer to reset
+            break;                              // leave early (user silenced alarm)
+          }
         }
-        if (beepBuzz(buzzPin, 3) > 0) {       // flash and beep 3x
-          timer_reset();
-          break;                              // leave early (user silenced alarm)
-        }
+      } else {                                  // what the sketch does after time runs out, and the timer beeped
+        resetTimer=true;                        // flag the timer to reset
       }
-    } else { // this catches after the beep
-      while (!digitalRead(sw1) || !digitalRead(sw2)); // wait until both buttons not pushed
+    }
+    if(resetTimer){
       timer_reset();
-      if (brightness == 8)TMVCCon();          // turn on Vcc for the TM1637 display
-      display.setSegments(SEG_PUSH);          // show "PUSH" message
-      delay(DISPTIME_FAST);                   // wait a bit
-      if (brightness == 8)TMVCCoff();         // turn off Vcc for the TM1637 display
+      if (brightness == 8)TMVCCon();            // turn on Vcc for the TM1637 display
+      display.setSegments(SEG_PUSH);            // show "PUSH" message
+      delay(DISPTIME_FAST);                     // wait a bit
+      buttonReset(sw1);                         // wait until user lets go of SET button
+      if (brightness == 8){
+        TMVCCoff();                             // turn off Vcc for the TM1637 display
+      }
       if (clockMode) {
         while (digitalRead(sw1) && digitalRead(sw2)); // wait until any button pushed (in clock mode, waits in limbo with 2 mA current draw)
       } else {
-        TMVCCoff();                           // turn off Vcc for the TM1637 display
-        sleep_interrupt();                    // go to sleep here (waits in sleep mode, with 0.8 uA current draw)
-        TMVCCon();                            // turn on Vcc for the TM1637 display
+        TMVCCoff();                             // turn off Vcc for the TM1637 display
+        sleep_interrupt();                      // go to sleep here (waits in sleep mode, with 0.8 uA current draw)
+        TMVCCon();                              // turn on Vcc for the TM1637 display
       }
-      if (brightness == 8)TMVCCon();          // turn on Vcc for the TM1637 display
+      if (brightness == 8)TMVCCon();            // turn on Vcc for the TM1637 display
     }
-  }
+  }                                             // end of if mode==2
 
-  if (mode == 3) {                            // mode=3 is stopwatch mode
-    showTimeSW(millis() - toffsetSW);         // show time elapsed
-    p = buttonRead(sw1);
-    if (p == 1) {
-      stopWatch_pause();                      // pause stopwatch
+  if (mode == 3) {                              // mode=3 is stopwatch mode
+    showTimeSW(millis() - toffsetSW);           // show time elapsed
+    p = buttonRead(sw1);                        // read the SET button
+    if (p == 1) {                               // short push
+      stopWatch_pause();                        // pause stopwatch
     } else if (p == 2) {
       stopWatch_reset();
     }
-    buttonReset(sw1);
-    p=0;
+    buttonReset(sw1);                           // wait until suser lets go of sw1
   }
 
 }
@@ -581,9 +578,10 @@ void setItemByte(byte &item, byte lowLim, byte highLim, void (*f)(byte)){ // set
       item++;                                 // add 1 to hours
       if (item > highLim)item = lowLim;       // wrap around hours
       (*f)(item);                             // show updated item on LCD
-      buttonReset(sw1);                       // debounce sw1 and reset push      
+      buttonReset(sw1);                       // debounce sw1     
     }                                         // end if
   }                                           // end while
+  buttonReset(sw1);                           // don't leave until user lets go of sw1
 }
 
 void setItemBool(bool &item, void (*f)(bool)){ // sets an individual bool item during the setAll() routine
@@ -595,14 +593,15 @@ void setItemBool(bool &item, void (*f)(bool)){ // sets an individual bool item d
     if (push == 1) {                          // if there was a short push
       item=!item;                             // invert item value
       (*f)(item);                             // show updated item on LCD
-      buttonReset(sw1);                       // debounce sw1 and reset push      
+      buttonReset(sw1);                       // debounce sw1 and reset push     
     }                                         // end if
   }                                           // end while
+  buttonReset(sw1);                           // don't leave until user lets go of sw1
 }
 
 void setAll() {
   byte push = 0;                              // push will store button result (0: no push, 1: short push, 2: long push)
-  buttonReset(sw1);                           // debounce sw1
+  buttonReset(sw1);                           // make sure sw1 not pushed
   //un-comment to reset the time and date when setting the time
   //mo=1;   // #month (default: 1)
   //dy=1;   // #day (default: 1)
@@ -611,10 +610,10 @@ void setAll() {
   //s=0;    // #sec (default: 0)
 
   // First set hours
-  setItemByte(h,0,23,showTimeHr);                 // set h (lower limit 0, upper limit 23, use showTimeHr to display)
+  setItemByte(h,0,23,showTimeHr);             // set h (lower limit 0, upper limit 23, use showTimeHr to display)
   
   // Next set minutes
-  setItemByte(m,0,59,showTimeMin);                // set m (lower limit 0, upper limit 59, use showTimeMin to display)
+  setItemByte(m,0,59,showTimeMin);            // set m (lower limit 0, upper limit 59, use showTimeMin to display)
   
   toffset = (h * 3600UL) + (m * 60UL) + s;    // calculate new toffset
   tstart = millis() / 1000UL;                 // new start time for clock
@@ -623,10 +622,10 @@ void setAll() {
   delay(DISPTIME_SLOW);
 
   // Next set month
-  setItemByte(mo,1,12,showTimeMo);                 // set moo (lower limit 1, upper limit 12, use showTimeMo to display)
+  setItemByte(mo,1,12,showTimeMo);            // set moo (lower limit 1, upper limit 12, use showTimeMo to display)
   
   // Next set clock day
-  setItemByte(dy,1,cal[mo - 1],showTimeDay);      // set dy (lower limit 1, upper limit largest that month, use showTimeDay to display)
+  setItemByte(dy,1,cal[mo - 1],showTimeDay);  // set dy (lower limit 1, upper limit largest that month, use showTimeDay to display)
   
   // Toggle alarm ON/OFF
   display.setSegments(SEG_AL);                // show "AL" message
@@ -648,7 +647,7 @@ void setAll() {
 void setLED() {
   if (brightness == 8)TMVCCon();              // turn on Vcc for the TM1637 display
   byte push = 0;                              // push will store button result (0: no push, 1: short push, 2: long push)
-  buttonReset(sw1);                           // debounce sw1 and reset push
+  buttonReset(sw1);                           // make sure sw1 isn't pushed
   //reset the brightness level (2-7)
   display.setSegments(SEG_LED);               // show "LED" message
   delay(DISPTIME_SLOW);
@@ -673,9 +672,8 @@ void setLED() {
         display.showNumberDec(brightness, true, 2, 2); // show user current brightness
       }
     } //end if (push==1)
-  } // end while (end of setting hrs)
-  buttonReset(sw1);                           // debounce sw1 and reset push
-  push=0;
+  } // end while
+  buttonReset(sw1);                           // debounce sw1
 
   // Toggle clock ON/OFF
   display.clear();
@@ -725,8 +723,10 @@ byte buttonRead(byte pin) {
 }
 
 void buttonReset(byte pin) {
-  while (!digitalRead(pin)) {};               // wait until user lets go of button
-  delay(DEBOUNCE);                            // debounce
+  if(!digitalRead(pin)){                      // only do something if pin is pushed down
+    while (!digitalRead(pin));  
+    delay(DEBOUNCE);                          // debounce
+  }
 }
 
 void safeWait(byte pin, unsigned long dly) {  // delay that is interruptable by button push on pin
