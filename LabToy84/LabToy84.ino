@@ -91,6 +91,8 @@
 //#define loop_until_bit_is_set(sfr, bit) do { } while (bit_is_clear(sfr, bit))
 //#define loop_until_bit_is_clear(sfr, bit) do { } while (bit_is_set(sfr, bit))
 
+#define TOFFSET 9.3         // Temperature offset for core temperature routine. Individually calibrated per chip. Start with 0.0 and measure temperature against a real thermometer. Enter offset here.
+
 #include <TM1637Display.h>  // For TM1637 display
 #define CLK 2               // use PA2 for CLK (physical pin 11)
 #define DIO 1               // use PA1 for DIO (physical pin 12)
@@ -767,6 +769,7 @@ byte beepBuzz(byte pin, int n) {              // pin is digital pin wired to buz
       digitalWrite(pin, HIGH);
       x = anyKeyWait(BEEPTIME);               // interruptable wait
       if (x > 0) {
+        digitalWrite(pin, LOW);               // stop the beep
         pinMode(pin, INPUT);
         return x;                             // leave routine here if user pressed button
       }
@@ -785,6 +788,7 @@ byte beepBuzz(byte pin, int n) {              // pin is digital pin wired to buz
 
     x = anyKeyWait(250);                      // final interruptable wait
     if (x > 0) {
+      digitalWrite(pin, LOW);                 // stop the beep
       pinMode(pin, INPUT);
       return x;                               // leave routine here if user pressed button
     }
@@ -796,7 +800,7 @@ byte beepBuzz(byte pin, int n) {              // pin is digital pin wired to buz
 float readCoreTemp(int n) {                   // Calculates and reports the chip temperature of ATtiny84
   // Tempearture Calibration Data
   float kVal = 0.8929;                        // k-value fixed-slope coefficient (default: 1.0). Adjust for manual 2-point calibration.
-  float Tos = -244.5 + 0.0;                   // temperature offset (default: 0.0). Adjust for manual calibration. Second number is the fudge factor.
+  float Tos = -244.5 + TOFFSET;               // temperature offset (default: 0.0 set at top of program). Adjust for manual calibration. Second number is the fudge factor.
 
   sbi(ADCSRA, ADEN);                          // enable ADC (comment out if already on)
   delay(50);                                  // wait for ADC to warm up
