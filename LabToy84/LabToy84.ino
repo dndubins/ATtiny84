@@ -752,6 +752,7 @@ byte anyKeyWait(unsigned long dly) {          // delay that is interruptable by 
   } else {
     ret = 0;                                  // if the delay ended without a button push, return 0
   }
+  digitalWrite(buzzPin, LOW);                 // prevents buzzer from being stuck on
   while (!digitalRead(sw1) || !digitalRead(sw2)); // wait until both buttons not pushed
   delay(DEBOUNCE);                            // debounce
   return ret;
