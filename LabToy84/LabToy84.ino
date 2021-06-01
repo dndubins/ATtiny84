@@ -119,18 +119,18 @@ TM1637Display display(CLK, DIO);
 // Set the starting time and date here (default is Jan 1st, 12:00 am)
 byte mo = 1;  // #month (default: 1)
 byte dy = 1;  // #day for display (default: 1)
-byte h = 23;   // #hr  (default: 0)
-byte m = 58;   // #min (default: 0)
+byte h = 0;   // #hr  (default: 0)
+byte m = 0;   // #min (default: 0)
 byte s = 0;   // #sec (default: 0)
 
 // Set the alarm here (default is 7:30am. Rise and shine!)
-byte h_AL = 23;      // #hr  (default: 7)
-byte m_AL = 59;     // #min (default: 30)
+byte h_AL = 0;      // #hr  (default: 7)
+byte m_AL = 0;      // #min (default: 30)
 int h_SNOOZE = 0;   // #hr for snooze function
 int m_SNOOZE = 0;   // #min for snooze function
 #define T_SNOOZE 5  // duration of snooze button (in minutes)
 
-bool alarm = true;  // alarm on(true) or off(false)? default:false
+bool alarm = false;  // alarm on(true) or off(false)? default:false
 
 //toffset will bring the #of seconds up to the #h, m, s (set above), to display the correct time as you should perceive it.
 unsigned long toffset = (h * 3600UL) + (m * 60UL) + s; // calculate total seconds.
