@@ -101,9 +101,9 @@
 // for USB version of this device: mode=0, brightness=3, clockmode=true
 // for non-USB version of this device: mode=2, brightness=8, clockMode=false
 byte mode = 0;              // mode=0: clock, mode=1: temperature, mode=2: timer, mode=3: stopwatch
-byte brightness = 3;        // brightness setting for TM1637 (0-7) (to save batteries, use a lower number). 8=keep module off normally (most power savings). Use 2 for rechargeable, 3 for alkaline
-bool flashcolon = false;    // true: flashes during regular time display, false: it doesn't
+byte brightness = 3;        // initial brightness setting for TM1637 (0-7) (to save batteries, use a lower number). 8=keep module off normally (most power savings). Use 2 for rechargeable, 3 for alkaline
 bool clockMode = true;      // flag to turn on/off clock. To save battery, clock can be turned off and sleep mode used with timer and stopwatch (sleep mode interferes with millis() function).
+#define flashcolon 0        // 1: flash colon on clock, 0: don't flash colon on clock
 
 TM1637Display display(CLK, DIO);
 
@@ -124,13 +124,13 @@ byte m = 0;   // #min (default: 0)
 byte s = 0;   // #sec (default: 0)
 
 // Set the alarm here (default is 7:30am. Rise and shine!)
-byte h_AL = 0;      // #hr  (default: 7)
-byte m_AL = 0;      // #min (default: 30)
+byte h_AL = 7;      // #hr  (default: 7)
+byte m_AL = 30;     // #min (default: 30)
 int h_SNOOZE = 0;   // #hr for snooze function
 int m_SNOOZE = 0;   // #min for snooze function
 #define T_SNOOZE 5  // duration of snooze button (in minutes)
+bool alarm = false; // initial state for alarm: alarm on(true) or off(false)? default:false
 
-bool alarm = false;  // alarm on(true) or off(false)? default:false
 
 //toffset will bring the #of seconds up to the #h, m, s (set above), to display the correct time as you should perceive it.
 unsigned long toffset = (h * 3600UL) + (m * 60UL) + s; // calculate total seconds.
@@ -983,21 +983,22 @@ void TMVCCoff() {
   pinMode(TMVCC, INPUT);                      // set TMVCC pin to input mode
 }
 
-long readVcc() {                              // back-calculates voltage applied to Vcc of ATtiny84
-  sbi(ADCSRA, ADEN);                          // enable ADC (comment out if already on)
-  delay(50);                                  // wait for ADC to warm up
+long readVcc(){                               // back-calculates voltage (in mV) applied to Vcc of ATtiny84
+  sbi(ADCSRA,ADEN);                           // enable ADC (comment out if already on)
+  delay(50);                                  // wait for ADC to warm up 
   byte ADMUX_P = ADMUX;                       // store present values of these two registers
   byte ADCSRA_P = ADCSRA;
+  ADMUX = _BV(MUX5)|_BV(MUX0);                // set Vbg to positive input of analog comparator (bandgap reference voltage=1.1V). Table 16.4 ATtiny24A/44A/84A Datasheet, p151
   delay(2);                                   // Wait for Vref to settle
-  sbi(ADCSRA, ADSC);                          // Single conversion or free-running mode: write this bit to one to start a conversion.
-  loop_until_bit_is_clear(ADCSRA, ADSC);      // ADSC will read as one as long as a conversion is in progress. When the conversion is complete, it returns a zero. This waits until the ADSC conversion is done.
+  sbi(ADCSRA,ADSC);                           // Single conversion or free-running mode: write this bit to one to start a conversion.
+  loop_until_bit_is_clear(ADCSRA,ADSC);       // ADSC will read as one as long as a conversion is in progress. When the conversion is complete, it returns a zero. This waits until the ADSC conversion is done.
   uint8_t low  = ADCL;                        // read ADCL first (17.13.3.1 ATtiny85 datasheet)
   uint8_t high = ADCH;                        // read ADCL second (17.13.3.1 ATtiny85 datasheet)
-  long result = (high << 8) | low;            // combine low and high bits into one reading
+  long result = (high<<8) | low;              // combine low and high bits into one reading
   result = 1125300L / result;                 // Calculate Vcc (in mV); 1125300 = 1.1*1023*1000
-  ADMUX = ADMUX_P;                            // restore original values of these two registers
-  ADCSRA = ADCSRA_P;
-  cbi(ADCSRA, ADEN);                          // disable ADC to save power (comment out to leave ADC on)
+  ADMUX=ADMUX_P;                              // restore original values of these two registers
+  ADCSRA=ADCSRA_P;
+  cbi(ADCSRA,ADEN);                           // disable ADC to save power (comment out to leave ADC on)
   delay(2);                                   // wait a bit
   return result;                              // Vcc in millivolts
 }
