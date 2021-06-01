@@ -119,25 +119,25 @@ TM1637Display display(CLK, DIO);
 // Set the starting time and date here (default is Jan 1st, 12:00 am)
 byte mo = 1;  // #month (default: 1)
 byte dy = 1;  // #day for display (default: 1)
-byte h = 0;   // #hr  (default: 0)
-byte m = 0;   // #min (default: 0)
+byte h = 23;   // #hr  (default: 0)
+byte m = 58;   // #min (default: 0)
 byte s = 0;   // #sec (default: 0)
 
 // Set the alarm here (default is 7:30am. Rise and shine!)
-byte h_AL = 7;      // #hr  (default: 7)
-byte m_AL = 30;     // #min (default: 30)
-byte h_SNOOZE = 0;  // #hr for snooze function
-byte m_SNOOZE = 0;  // #min for snooze function
+byte h_AL = 23;      // #hr  (default: 7)
+byte m_AL = 59;     // #min (default: 30)
+int h_SNOOZE = 0;   // #hr for snooze function
+int m_SNOOZE = 0;   // #min for snooze function
 #define T_SNOOZE 5  // duration of snooze button (in minutes)
 
-bool alarm = false; // alarm on(true) or off(false)? default:false
+bool alarm = true;  // alarm on(true) or off(false)? default:false
 
 //toffset will bring the #of seconds up to the #h, m, s (set above), to display the correct time as you should perceive it.
 unsigned long toffset = (h * 3600UL) + (m * 60UL) + s; // calculate total seconds.
-unsigned long tstart = millis() / 1000UL;          // start time for clock
+unsigned long tstart = millis() / 1000UL;              // start time for clock
 
 byte hlastloop = 0; // for hour rollover in the main loop function
-byte d = 1;       // #day for counter (default: 1)
+byte d = 1;         // #day for counter (default: 1)
 
 //timer variables
 unsigned long tDur = 0;      // for setting duration of timer
@@ -350,7 +350,7 @@ void loop() {
           h_SNOOZE++;                         // add 1 to hours
           m_SNOOZE -= 60;                     // subtract 60 from minutes
         }
-        if (h_AL + h_SNOOZE > 23)h_SNOOZE = 0; // overflow hours
+        if (h_AL + h_SNOOZE > 23)h_SNOOZE = -23; // overflow hours (23h + 1 wraps around to 23-23 = 0h
         //flashcolon=true;                    // flash the colon to show snooze is active
       } else {                                // if x != 1, reset snooze function
         h_SNOOZE = 0;
@@ -988,7 +988,6 @@ long readVcc() {                              // back-calculates voltage applied
   delay(50);                                  // wait for ADC to warm up
   byte ADMUX_P = ADMUX;                       // store present values of these two registers
   byte ADCSRA_P = ADCSRA;
-  ADMUX = _BV(MUX5) | _BV(MUX0);              // set Vbg to positive input of analog comparator (bandgap reference voltage=1.1V). Table 16.4 ATtiny24A/44A/84A Datasheet, p151
   delay(2);                                   // Wait for Vref to settle
   sbi(ADCSRA, ADSC);                          // Single conversion or free-running mode: write this bit to one to start a conversion.
   loop_until_bit_is_clear(ADCSRA, ADSC);      // ADSC will read as one as long as a conversion is in progress. When the conversion is complete, it returns a zero. This waits until the ADSC conversion is done.
