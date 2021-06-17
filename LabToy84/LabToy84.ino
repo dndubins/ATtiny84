@@ -18,7 +18,7 @@
    "Mode" Momentary Switch on the left: (to change mode)
    GND - SW2 - PA4 (Physical pin 9)
 
-   Piezo Buzzer:
+   Active Piezo Buzzer:
    Longer leg (+) - PA5 (physical pin 8)
    Shorter leg - GND
 
@@ -91,7 +91,7 @@
 //#define loop_until_bit_is_set(sfr, bit) do { } while (bit_is_clear(sfr, bit))
 //#define loop_until_bit_is_clear(sfr, bit) do { } while (bit_is_set(sfr, bit))
 
-#define TOFFSET 0.0         // Temperature offset for core temperature routine. Individually calibrated per chip. Start with 0.0 and measure temperature against a real thermometer. Enter offset here.
+#define TOFFSET 9.3         // Temperature offset for core temperature routine. Individually calibrated per chip. Start with 0.0 and measure temperature against a real thermometer. Enter offset here.
 
 #include <TM1637Display.h>  // For TM1637 display
 #define CLK 2               // use PA2 for CLK (physical pin 11)
@@ -107,11 +107,9 @@ bool clockMode = true;      // flag to turn on/off clock. To save battery, clock
 
 TM1637Display display(CLK, DIO);
 
-//Piezo Buzzer Parameters:
-#define ACTIVEBUZZ          // if active buzzer, uncomment. If passive buzzer, comment out.
+//Active Piezo Buzzer Parameters:
 #define BEEPTIME 100        // duration of beep in milliseconds
-#define BEEPFREQ 2800       // frequency of beep
-#define buzzPin 5           // use PA5 for piezo buzzer (physical pin 8)
+#define buzzPin 5           // use PA5 for active piezo buzzer (physical pin 8)
 
 #define sw2 4               // use PA4 for mode switch (physical pin 9) - toggle mode btw clock and timer
 #define sw1 3               // use PA3 for set switch (physical pin 10) - set clock, add time to timer, etc.
@@ -692,21 +690,6 @@ void setLED() {
   display.clear();                            // clear the display
 }
 
-void atTinyTone(byte pin, unsigned long freq, int dur) {
-  //tone routine for ATtiny85 (blocking)
-  //input pin number, frequency (Hz), and duration in mSec
-  unsigned long d = 500000UL / freq;          // calculate delay in microseconds
-  unsigned long timer1 = millis();
-  pinMode(pin, OUTPUT);
-  do {
-    digitalWrite(pin, HIGH);
-    delayMicroseconds(d);
-    digitalWrite(pin, LOW);
-    delayMicroseconds(d);
-  } while ((millis() - timer1) < dur);
-  pinMode(pin, INPUT);
-}
-
 byte buttonRead(byte pin) {
   // routine to read a button push
   // 0: button not pushed
@@ -766,7 +749,6 @@ byte beepBuzz(byte pin, int n) {              // pin is digital pin wired to buz
       if (mode == 0) {                        // if clock mode
         showTime(h, m, ++s, flashcolon, false); // report the time
       }
-#ifdef ACTIVEBUZZ
       digitalWrite(pin, HIGH);
       x = anyKeyWait(BEEPTIME);               // interruptable wait
       if (x > 0) {
@@ -774,9 +756,6 @@ byte beepBuzz(byte pin, int n) {              // pin is digital pin wired to buz
         pinMode(pin, INPUT);
         return x;                             // leave routine here if user pressed button
       }
-#else
-      atTinyTone(pin, BEEPFREQ, BEEPTIME);
-#endif
       digitalWrite(pin, LOW);
       if (n > 1) {
         x = anyKeyWait(BEEPTIME);             // interruptable wait
