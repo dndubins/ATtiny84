@@ -59,5 +59,6 @@ Setting the clock mode to "OFF" will put the microprocessor to sleep when not us
 ## Stopwatch Mode
   - "00" will be displayed on the LED screen.
   - To start the stopwatch, short press the SET button.
+  - To pause/continue the stopwatch, short press the SET button.
   - To reset the stopwatch, long press the SET button.
   - brightness menu cannot be accessed from this mode.
