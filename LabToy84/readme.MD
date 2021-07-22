@@ -65,25 +65,4 @@ One note here: the internal 1.1V reference wavers a bit depending on Vcc to the 
 
 ## User Beta-Testing:
 
-I sent a prototype of the timer to my father for his birthday. After opening the package, first he asked if it was some sort of prank or joke. Here is a rough transcript of the telephone conversation that followed:
-
-```
-Me: "No, Dad, it's not a prank. It's a timer. I made it. You like to cook, I thought you can use it for cooking."
-Him: "How do I turn it on?"
-Me: "The sliding power switch?"
-Him: "Where's the switch>"
-Me: "It's behind the screen." (earlier version)
-Him: "What does it look like?"
-Me: "It looks like a switch."
-Him: "I can't find it."
-Me: "It's a small black sliding switch behind the number screen."
-Him: "Oh there it is.... wait, the screen says "OOI! Now it says 650... it's not making any sense. Is it broken?"
-Me: "Dad, it's counting down. You are looking at the screen upside-down."
-Him: "How do I set it?"
-Me: "You press the push button."
-Him: "Where's the button?"
-Me: "There's only one push button. Its a small round button to the right of the screen." (earlier version)
-Him: (after some silence) "I will look at this later."
-```
-
-Initial user beta-testing was rated as a fail.
+I put this little unit by my bedside, next to my clock radio for a few weeks to see how it could handle a tough task - waking me up in the morning. During beta testing, I ended up programming in a 5 minute sleep function. Happy to report I ended up putting my clock radio away, and this is now my main Dave-waking device.
