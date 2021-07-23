@@ -216,13 +216,6 @@ const uint8_t SEG_PUSH[] = {
   SEG_F | SEG_E | SEG_G | SEG_B | SEG_C            // H
 };
 
-const uint8_t SEG_DASH[] = {
-  SEG_G ,          // -
-  SEG_G ,          // -
-  SEG_G ,          // -
-  SEG_G            // -
-};
-
 const uint8_t SEG_DONE[] = {
   SEG_B | SEG_C | SEG_D | SEG_E | SEG_G,           // d
   SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F,   // O
@@ -436,15 +429,15 @@ void loop() {
       safeWait(sw1, 1000 - DEBOUNCE);         // button-interruptable wait function
       tEnd = millis() + (tDur * 1000UL);      // calculate new end time
     } else if (p == 0) {                      // if button not pushed
-      if (millis() < tEnd) {                    // after waiting the allotted time
+      if (millis() < tEnd - 1000) {       // after waiting the allotted time (don't include last second).
         showTimeTMR(tEnd - millis(), false);    // show time remaining
       } else if (!beeped) {                     // 20 second timer
         beeped = true;                          // yes! we beeped!
         for (int i = 0; i < 10; i++) {
           if (i % 2 == 0) {                     // if i is even
-            display.setSegments(SEG_DONE);      // show "done" message
+            showTimeTMR(0,false);               // show zero  
           } else {
-            display.setSegments(SEG_DASH);      // show dashes
+            display.setSegments(SEG_DONE);      // show "done" message
           }
           if (beepBuzz(buzzPin, 3) > 0) {       // flash and beep 3x
             resetTimer=true;                    // flag the timer to reset
