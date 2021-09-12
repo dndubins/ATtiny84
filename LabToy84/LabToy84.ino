@@ -92,6 +92,7 @@
 //#define loop_until_bit_is_clear(sfr, bit) do { } while (bit_is_set(sfr, bit))
 
 #define TOFFSET 9.3         // Temperature offset for core temperature routine. Individually calibrated per chip. Start with 0.0 and measure temperature against a real thermometer. Enter offset here.
+                            // There is no separate device, or calibation program for this procedure. This sketch is simply uploaded twice.
 
 #include <TM1637Display.h>  // For TM1637 display
 #define CLK 2               // use PA2 for CLK (physical pin 11)
