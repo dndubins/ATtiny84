@@ -91,9 +91,9 @@
 //#define loop_until_bit_is_set(sfr, bit) do { } while (bit_is_clear(sfr, bit))
 //#define loop_until_bit_is_clear(sfr, bit) do { } while (bit_is_set(sfr, bit))
 
-#define TOFFSET 9.3         // Temperature offset for core temperature routine. Individually calibrated per chip. Start with 0.0 and measure temperature against a real thermometer. Enter offset here.
-                            // There is no separate device, or calibation program for this procedure. This sketch is simply uploaded twice.
-
+#define TOFFSET 3.0         // Temperature offset for core temperature routine. Individually calibrated per chip. Start with 0.0 and measure temperature against a real thermometer. Enter offset here.
+                            // There is no separate device or calibation program for this procedure. This sketch is simply uploaded twice.
+                            
 #include <TM1637Display.h>  // For TM1637 display
 #define CLK 2               // use PA2 for CLK (physical pin 11)
 #define DIO 1               // use PA1 for DIO (physical pin 12)
@@ -125,8 +125,8 @@ byte s = 0;   // #sec (default: 0)
 // Set the alarm here (default is 7:30am. Rise and shine!)
 byte h_AL = 7;      // #hr  (default: 7)
 byte m_AL = 30;     // #min (default: 30)
-int h_SNOOZE = 0;   // #hr for snooze function
-int m_SNOOZE = 0;   // #min for snooze function
+int h_SNOOZE = 0;   // #hr for snooze function (must be able to hold negative number)
+int m_SNOOZE = 0;   // #min for snooze function (must be able to hold negative number)
 #define T_SNOOZE 5  // duration of snooze button (in minutes)
 bool alarm = false; // initial state for alarm: alarm on(true) or off(false)? default:false
 
@@ -342,10 +342,10 @@ void loop() {
           h_SNOOZE++;                         // add 1 to hours
           m_SNOOZE -= 60;                     // subtract 60 from minutes
         }
-        if (h_AL + h_SNOOZE > 23)h_SNOOZE = -23; // overflow hours (23h + 1 wraps around to 23-23 = 0h
+        if (h_AL + h_SNOOZE > 23)h_SNOOZE = -23; // overflow hours (23h + 1 wraps around to 23-23 =0h
         //flashcolon=true;                    // flash the colon to show snooze is active
       } else {                                // if x != 1, reset snooze function
-        h_SNOOZE = 0;
+        h_SNOOZE = 0;                         // reset snooze if no button pushed
         m_SNOOZE = 0;
         //flashcolon=false;                   // stop flashing the colon to show snooze is off
       }
@@ -625,15 +625,17 @@ void setAll() {
   display.setSegments(SEG_AL);                // show "AL" message
   delay(DISPTIME_SLOW);
 
-  setItemBool(alarm,showBoolState);       // set alarm state (lower limit 0, upper limit 1, use showBoolState to display)  
+  setItemBool(alarm,showBoolState);           // set alarm state (lower limit 0, upper limit 1, use showBoolState to display)  
   
   if (alarm) {                                // only set alarm if user arms it
     // First set alarm hours
-    setItemByte(h_AL,0,23,showTimeHr);            // set h_AL (lower limit 0, upper limit 23, use showTimeHr to display)    
+    setItemByte(h_AL,0,23,showTimeHr);        // set h_AL (lower limit 0, upper limit 23, use showTimeHr to display)    
     
     // Next set alarm minutes
-    setItemByte(m_AL,0,59,showTimeMin);                // set m (lower limit 0, upper limit 59, use showTimeMin to display)
+    setItemByte(m_AL,0,59,showTimeMin);       // set m (lower limit 0, upper limit 59, use showTimeMin to display)
 
+    h_SNOOZE = 0;                             // make sure snooze is reset
+    m_SNOOZE = 0;
   } // end of setting alarm time
   delay(500);                                 // one last delay
 }
