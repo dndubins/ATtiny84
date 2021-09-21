@@ -91,7 +91,7 @@
 //#define loop_until_bit_is_set(sfr, bit) do { } while (bit_is_clear(sfr, bit))
 //#define loop_until_bit_is_clear(sfr, bit) do { } while (bit_is_set(sfr, bit))
 
-#define TOFFSET 3.0         // Temperature offset for core temperature routine. Individually calibrated per chip. Start with 0.0 and measure temperature against a real thermometer. Enter offset here.
+#define TOFFSET 4.0         // Temperature offset for core temperature routine. Individually calibrated per chip. Start with 0.0 and measure temperature against a real thermometer. Enter offset here.
                             // There is no separate device or calibation program for this procedure. This sketch is simply uploaded twice.
                             
 #include <TM1637Display.h>  // For TM1637 display
@@ -377,7 +377,7 @@ void loop() {
       display.setSegments(SEG_AL);            // show "AL" message
       delay(DISPTIME_SLOW);
       if (alarm) {
-        showTime(h_AL, m_AL, 0, false, true); // show alarm time. true here forces a display.
+        showTime(h_AL + h_SNOOZE, m_AL + m_SNOOZE, 0, false, true); // show alarm time. true here forces a display.
       } else {
         display.setSegments(SEG_OFF);         // show "OFF" message
       }
