@@ -1,7 +1,7 @@
 # User Guide for the LabToy84
   
 - There are two momentary switches on this device: a MODE button (called sw2 in the program) and a SET button (called sw1 in the program).
-- The program distinguishes between a short push (<0.5 sec) and a long push (>0.5 sec) on each button.
+- The program distinguishes between a short push (<0.5 sec) and a long push (>=0.5 sec) on each button.
 
 ## To Change Modes: 
 - Pressing the MODE button (short push) will cycle between the following modes: <b>Clock --> Temperature --> Timer --> Stopwatch</b>
