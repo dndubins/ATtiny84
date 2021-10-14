@@ -48,17 +48,13 @@ Click: Tools --> Board:"Arduino/Genuino Uno" --> Boards Manager
 -Scroll down to attiny by David A. Mellis
 -Select it, then click the "Install" button
 -ATtiny should now appear on the Tools-->Board dropdown menu
--Select Attiny84 option, select internal 8MHz clock
 
 To upload a sketch:
 -------------------
-1) If you haven't already, add support for the ATtiny84 to the Arduino URL Board Manager by following the steps here:
-https://www.instructables.com/How-to-Program-an-Attiny85-From-an-Arduino-Uno/
-
-2) Prepare the Uno as a programmer by uploading the example sketch ArduinoISP.ino to the Uno:
+Prepare the Uno as a programmer by uploading the example sketch ArduinoISP.ino to the Uno:
 File --> Examples --> ArduinoISP
 
-3) If you haven't burned a bootloader to the ATtiny84 (likely)
+If you haven't burned a bootloader to the ATtiny84 (likely)
 Tools --> Select Board --> ATtiny Microcontrollers --> ATtiny24/44/84
 Tools --> Processor --> ATtiny84
 Tools --> Clock --> Internal 8 MHz
