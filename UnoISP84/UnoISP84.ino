@@ -38,6 +38,18 @@ The capacitor isn't needed for this sketch to work.
 Wire an LED to physical pin 3 (PB1, digital pin 9) of ATtiny84:
 ATtiny84 Physical Pin 3 -- LED -- 1K resistor -- GND
 
+To set up the Arduino IDE to support ATtiny MCUs: (only need to do this once)
+-------------------------------------------------
+File --> Preferences
+Under "Additional Boards Manager URLs" enter the following web address:
+https://raw.githubusercontent.com/damellis/attiny/ide-1.6.x-boards-manager/package_damellis_attiny_index.json
+
+Click: Tools --> Board:"Arduino/Genuino Uno" --> Boards Manager
+-Scroll down to attiny by David A. Mellis
+-Select it, then click the "Install" button
+-ATtiny should now appear on the Tools-->Board dropdown menu
+-Select Attiny84 option, select internal 8MHz clock
+
 To upload a sketch:
 -------------------
 1) If you haven't already, add support for the ATtiny84 to the Arduino URL Board Manager by following the steps here:
