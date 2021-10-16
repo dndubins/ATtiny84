@@ -65,4 +65,4 @@ One note here: the internal 1.1V reference wavers a bit depending on Vcc to the 
 
 ## User Beta-Testing:
 
-I put this little unit by my bedside, next to my clock radio for a few weeks to see how it could handle a tough task - waking me up in the morning. During beta testing, I ended up programming in a 5 minute snooze function. Happy to report I ended up putting my clock radio away, and this is now my main Dave-waking device.
+I put this little unit by my bedside, next to my clock radio for a few weeks to see how it could handle a tough task - waking me up in the morning. During beta testing, I ended up programming in a 5 minute snooze function. Happy to report I ended up putting my clock radio away, and this is now my main Dave-waking device. Occasionally though, I still manage to sleep through the alarm.
