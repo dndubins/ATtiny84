@@ -12,7 +12,7 @@
 
 The method described here to set a number is true for the rest of the options in general: a short SET button push cycles the options, and a long SET button push accepts the current option displayed.
   
-## To Set The Clock:
+## To Set The Clock and Alarm:
    - While in Clock mode, a long push on the SET button enters "set all" mode
    - Use the SET button for each push below: (short push to advance number, long push to accept)
    - set HRS with short push, accept with long push (screen will prompt with am and pm)
@@ -23,11 +23,13 @@ The method described here to set a number is true for the rest of the options in
    - if ALARM on:
       - set ALARM HRS with short push, accept with long push
       - set ALARM MIN with short push, accept with long push
+   **Note:** The alarm will only sound while the device is in Clock mode (displaying the time).
 
 ### To Snooze or Silence Clock Alarm:
-   - When the ALARM rings, the MODE button will stop the alarm from ringing. Alarm mode stays ON (will ring the next day). 
-   - The SET button is a 5-minute snooze bar. You can keep pressing the SET button to sound the alarm 5 minutes later.
-   - If you allow the alarm to ring and miss the snooze bar, alarm mode will stay on, and ring the next day.
+   - While the ALARM is ringing:
+      - The MODE button will silence the alarm for the day. Alarm mode stays ON (will ring the next day). 
+      - The SET button is a 5-minute snooze bar. You can keep pressing the SET button to sound the alarm 5 minutes later.
+   - If you allow the alarm to keep ringing without pressing the MODE or SET button, the ALARM will silence itself after 20 seconds. Alarm mode will stay on, and ring the next day.
 
 ### Brightness Menu: to Set LED brightness, and to Disable Clock Mode
 Setting the brightness lower will save battery life.
