@@ -19,7 +19,7 @@ The method described here to set a number is true for the rest of the options in
    - set MIN with short push, accept with long push;
    - set DAY with short push, accept with long push;
    - set MONTH with short push, accept with long push;
-   - set ALARM on/off with short push, accept with long push;
+   - set ALARM on/off with short push, accept with long push.
    - if ALARM on:
       - set ALARM HRS with short push, accept with long push;
       - set ALARM MIN with short push, accept with long push.
