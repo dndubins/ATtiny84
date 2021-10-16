@@ -63,6 +63,6 @@ Setting the clock mode to "OFF" will put the microprocessor to sleep when not us
   - To start the stopwatch, short press the SET button.
   - To pause/continue the stopwatch, short press the SET button.
   - To reset the stopwatch, long press the SET button.
-  - brightness menu cannot be accessed from this mode.
+  - Brightness menu cannot be accessed from this mode.
 
 Shorter link to this page: https://bit.ly/3A5WvxU
