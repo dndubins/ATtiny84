@@ -150,7 +150,7 @@ unsigned long toffsetSW = 0UL; // to hold offset time for stopwatch
 //programmed delays
 #define DISPTIME_SLOW 800    // time to flash user information e.g. time, date
 #define DISPTIME_FAST 300    // time to flash menu item between clicks
-#define DEBOUNCE 20          // time to debounce a button
+#define DEBOUNCE 60          // time to debounce a button
 
 byte cal[12] = { // to hold # days in each month
   31, // Jan  month 1
