@@ -13,7 +13,7 @@ Pin 12 -- physical Pin 8 (MISO)
 Pin 11 -- physical Pin 7 (MOSI)
 Pin 10 -- physical Pin 4 (RST)
 GND -- physical Pin 14 (GND)
-If you are using an external crystal oscillator:
+If you are burning the bootloader of the ATtiny84 for use with an external crystal oscillator:
 XTAL1 - physical pin 2
 XTAL2 - physical pin 3
 
