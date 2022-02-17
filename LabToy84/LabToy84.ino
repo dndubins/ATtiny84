@@ -280,7 +280,7 @@ void setup() {
     if(brightness==8)TMVCCon();            // turn on Vcc for the TM1637 display
     display.setSegments(SEG_PUSH);         // show "PUSH" message
     delay(500);
-    IF(brightness==8)TMVCCoff();           // turn off Vcc for the TM1637 display
+    if(brightness==8)TMVCCoff();           // turn off Vcc for the TM1637 display
    }
 }
 
