@@ -2,6 +2,7 @@
    (clock function with day and date, alarm, temperature, timer, and stopwatch)
    Author: D. Dubins
    Date: 28-Apr-21
+   Last Updated:04-Apr-22
    This sketch uses the TM1637 library by Avishay Orpaz version 1.2.0
    (available through the Library Manager)
 
@@ -25,14 +26,14 @@
    To set clock:
    Pressing the SET button (long push) enters "set time and date" mode
    (short push on SET to advance number, MODE button to accept)
-   set HRS with short push, accept with MODE button
-   set MIN with short push, accept with MODE button
-   set DAY with short push, accept with MODE button
-   set MONTH with short push, accept with MODE button
-   set ALARM on/off with short push, accept with MODE button
+   increase HRS with short push, decrease with long push, accept with MODE button
+   increase MIN with short push, decrease with long push, accept with MODE button
+   increase DAY with short push, decrease with long push, accept with MODE button
+   increase MONTH with short push, decrease with long push, accept with MODE button
+   set ALARM on/off with short push, decrease with long push, accept with MODE button
    if ALARM on:
-   set ALARM HRS with short push, accept with MODE button
-   set ALARM MIN with short push, accept with MODE button
+   increase ALARM HRS with short push, decrease with long push, accept with MODE button
+   increase ALARM MIN with short push, decrease with long push, accept with MODE button
 
    OR: enter starting time, date, and alarm in the sketch.
 
