@@ -9,7 +9,7 @@
    Connections:
    TM1637 -- ATtiny84
    CLK - PA2 (Physical pin 11)
-   DIO - PA1 (Physical pin 12))
+   DIO - PA1 (Physical pin 12)
    GND - GND
    5V - PA0 (Physical pin 13)
 
@@ -24,15 +24,15 @@
 
    To set clock:
    Pressing the SET button (long push) enters "set time and date" mode
-   (short push to advance number, long push to accept)
-   set HRS with short push, accept with long push
-   set MIN with short push, accept with long push
-   set DAY with short push, accept with long push
-   set MONTH with short push, accept with long push
-   set ALARM on/off with short push, accept with long push
+   (short push on SET to advance number, MODE button to accept)
+   set HRS with short push, accept with MODE button
+   set MIN with short push, accept with MODE button
+   set DAY with short push, accept with MODE button
+   set MONTH with short push, accept with MODE button
+   set ALARM on/off with short push, accept with MODE button
    if ALARM on:
-   set ALARM HRS with short push, accept with long push
-   set ALARM MIN with short push, accept with long push
+   set ALARM HRS with short push, accept with MODE button
+   set ALARM MIN with short push, accept with MODE button
 
    OR: enter starting time, date, and alarm in the sketch.
 
@@ -65,6 +65,17 @@
    Pin 13: AREF/0/A0/ADC0/PCINT0/PA0
    Pin 14: GND
 
+   Burning the ATtiny84 with Uno as ISP
+   ------------------------------------
+   UNO -- ATtiny84
+   +5V -- physical Pin 1 (Vcc)
+   Pin 13 -- physical Pin 9 (SCK)
+   Pin 12 -- physical Pin 8 (MISO)
+   Pin 11 -- physical Pin 7 (MOSI)
+   Pin 10 -- physical Pin 4 (RST)
+   GND -- physical Pin 14 (GND)
+   XTAL
+
    TM1637 Custom Character Map:
        -A-
      F|   |B
@@ -91,10 +102,10 @@
 //#define loop_until_bit_is_set(sfr, bit) do { } while (bit_is_clear(sfr, bit))
 //#define loop_until_bit_is_clear(sfr, bit) do { } while (bit_is_set(sfr, bit))
 
-#define TOFFSET 4.0         // Temperature offset for core temperature routine. Individually calibrated per chip. Start with 0.0 and measure temperature against a real thermometer. Enter offset here.
+#define TOFFSET 14.9        // Temperature offset for core temperature routine. Individually calibrated per chip. Start with 0.0 and measure temperature against a real thermometer. Enter offset here.
                             // There is no separate device or calibation program for this procedure. This sketch is simply uploaded twice.
                             
-#include <TM1637Display.h>  // For TM1637 display
+#include <TM1637Display.h>  // For TM1637 display library (Avishay Orpaz v. 1.2.0)
 #define CLK 2               // use PA2 for CLK (physical pin 11)
 #define DIO 1               // use PA1 for DIO (physical pin 12)
 #define TMVCC 0             // use PA0 for Vcc of TM1637 (physical pin 13)
@@ -150,7 +161,7 @@ unsigned long toffsetSW = 0UL; // to hold offset time for stopwatch
 //programmed delays
 #define DISPTIME_SLOW 800    // time to flash user information e.g. time, date
 #define DISPTIME_FAST 300    // time to flash menu item between clicks
-#define DEBOUNCE 50          // time to debounce a button
+#define DEBOUNCE 20          // time to debounce a button
 
 byte cal[12] = { // to hold # days in each month
   31, // Jan  month 1
@@ -276,12 +287,6 @@ void setup() {
       TMVCCoff();                          // turn off Vcc for the TM1637 display
     }
   }
-  if(mode==2){
-    if(brightness==8)TMVCCon();            // turn on Vcc for the TM1637 display
-    display.setSegments(SEG_PUSH);         // show "PUSH" message
-    delay(500);
-    if(brightness==8)TMVCCoff();           // turn off Vcc for the TM1637 display
-   }
 }
 
 void loop() {
@@ -572,23 +577,30 @@ void setItemByte(byte &item, byte lowLim, byte highLim, void (*f)(byte)){ // set
   //(*f) passes function as argument (it's a function pointer)
   byte push=0;
   (*f)(item);                                 // show item on LCD
-  while (push != 2) {
+  while (digitalRead(sw2)) {                  // sw2 exits this routine
     push = buttonRead(sw1);                   // read button
     if (push == 1) {                          // if there was a short push
-      item++;                                 // add 1 to hours
-      if (item > highLim)item = lowLim;       // wrap around hours
+      item++;                                 // add 1 to item
+      if (item > highLim)item = lowLim;       // wrap around item
+      (*f)(item);                             // show updated item on LCD
+      buttonReset(sw1);                       // debounce sw1     
+    } else if (push == 2) {                   // if there was a long push
+      item--;                                 // add 1 to item
+      if (item == 255)item = highLim;         // wrap around item
       (*f)(item);                             // show updated item on LCD
       buttonReset(sw1);                       // debounce sw1     
     }                                         // end if
   }                                           // end while
   buttonReset(sw1);                           // don't leave until user lets go of sw1
+  buttonReset(sw2);                           // don't leave until user lets go of sw2
+  delay(100);                                 // prevents nonsense
 }
 
 void setItemBool(bool &item, void (*f)(bool)){ // sets an individual bool item during the setAll() routine
   //(*f) passes function as argument (it's a function pointer)
   byte push=0;
   (*f)(item);                                 // show item on LCD
-  while (push != 2) {
+  while (digitalRead(sw2)) {                  // MODE button to exit
     push = buttonRead(sw1);                   // read button
     if (push == 1) {                          // if there was a short push
       item=!item;                             // invert item value
@@ -597,6 +609,8 @@ void setItemBool(bool &item, void (*f)(bool)){ // sets an individual bool item d
     }                                         // end if
   }                                           // end while
   buttonReset(sw1);                           // don't leave until user lets go of sw1
+  buttonReset(sw2);                           // don't leave until user lets go of sw1
+  delay(100);                                 // extra delay
 }
 
 void setAll() {
