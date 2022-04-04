@@ -10,7 +10,7 @@
 - Pressing the MODE button accepts the current option displayed on the screen.
 - "OFF" is a battery saving mode, where the LED display will use a brightness of 3, but only light up momentarily when you press a button. This prolongs battery life and would also be useful if the dimmest setting of the screen is keeping you awake at night.
 
-The method described here to set a number is true for the rest of the options in general: a short SET button push cycles the options, and a long SET button push accepts the current option displayed.
+The method described here to set a number is true for the rest of the options in general: a short SET button push cycles the options, and the MODE button accepts the current option displayed. For setting the time or date, a long push decreases the displayed number.
   
 ## To Set The Clock and Alarm:
    - While in Clock mode, a long push on the SET button enters "set all" mode.
