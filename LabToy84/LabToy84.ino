@@ -674,7 +674,7 @@ void setLED() {
   } else {
     display.showNumberDec(brightness, true, 2, 2); // show user current brightness
   }
-  while (push != 2) {
+  while (digitalRead(sw2)) {                  // MODE button exits
     push = buttonRead(sw1);                   // read button
     if (push == 1) {                          // if there was a short push
       brightness++;                           // add 1 to hours
@@ -690,7 +690,9 @@ void setLED() {
     } //end if (push==1)
   } // end while
   buttonReset(sw1);                           // debounce sw1
-
+  buttonReset(sw2);                           // debounce sw1
+  delay(100);
+  
   // Toggle clock ON/OFF
   display.clear();
   display.setSegments(SEG_CLOC);              // show "CLOC" message
