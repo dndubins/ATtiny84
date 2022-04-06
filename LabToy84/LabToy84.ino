@@ -103,7 +103,7 @@
 //#define loop_until_bit_is_set(sfr, bit) do { } while (bit_is_clear(sfr, bit))
 //#define loop_until_bit_is_clear(sfr, bit) do { } while (bit_is_set(sfr, bit))
 
-#define TOFFSET 14.9        // Temperature offset for core temperature routine. Individually calibrated per chip. Start with 0.0 and measure temperature against a real thermometer. Enter offset here.
+#define TOFFSET 8.3        // Temperature offset for core temperature routine. Individually calibrated per chip. Start with 0.0 and measure temperature against a real thermometer. Enter offset here.
                             // There is no separate device or calibation program for this procedure. This sketch is simply uploaded twice.
                             
 #include <TM1637Display.h>  // For TM1637 display library (Avishay Orpaz v. 1.2.0)
@@ -840,12 +840,12 @@ void flashTime() {
   // Note: a "12-o'clock flasher" is someone who has 12:00 flashing on all of their appliances at home.
   // These people generally rely on the technical problem solving skills of others.
   if (brightness == 8)TMVCCon();              // turn on Vcc for the TM1637 display
-  while (buttonRead(sw1) == 0) {              // while button not pushed
+  while (buttonRead(sw2) == 0) {              // while MODE button not pushed (MODE button used to exit flashTime)
     showTime(h, m, s, false, true);           // show current time with colon
     //    display.showNumberDecEx(1200,0x80>>1,false,4,0);  // show 12:00
-    safeWait(sw1, 500);                       // wait 500 msec
+    safeWait(sw2, 500);                       // wait 500 msec
     display.clear();                          // clear the display
-    safeWait(sw1, 500);                       // wait 500 msec
+    safeWait(sw2, 500);                       // wait 500 msec
   }
   if (brightness == 8)TMVCCoff();             // turn off Vcc for the TM1637 display
 }
