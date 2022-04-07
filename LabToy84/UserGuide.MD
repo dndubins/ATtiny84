@@ -13,16 +13,15 @@
 The method described here to set a number is true for the rest of the options in general: a short SET button push cycles the options, and the MODE button accepts the current option displayed. For setting the time or date, a long push decreases the displayed number.
   
 ## To Set The Clock and Alarm:
-   - While in Clock mode, a long push on the SET button enters "set all" mode.
-   - Use the SET button for each push below: (short push to advance number, long push to accept)
-   - increase HRS with short push, decrease with long push, accept with MODE button (screen will prompt with am and pm);
-   - increase MIN with short push, decrease with long push, accept with MODE button;
-   - increase DAY with short push, decrease with long push, accept with MODE button;
-   - increase MONTH with short push, decrease with long push, accept with MODE button;
-   - set ALARM on/off with short push, accept with MODE button.
+   - While in Clock mode, a long push on the SET button enters "set all" mode. The LCD will flash 12:00. Press the MODE button to start setting HRS. 
+   - Short push on SET increases HRS, long push on SET decreases HRS. Accept selection with MODE button, and to advance to setting MIN.
+   - Short push on SET increases MIN, long push on SET decreases MIN. Accept selection with MODE button, and to advance to setting MONTH.
+   - Short push on SET increases MONTH, long push on SET decreases MONTH. Accept selection with MODE button, and to advance to setting DAY.
+   - Short push on SET increases DAY, long push on SET decreases DAY. Accept selection with MODE button, and to advance to setting ALARM state.
+   - set ALARM on/off with short push on SET, accept with MODE button.
    - if ALARM on:
-      - increase ALARM HRS with short push, decrease with long push, accept with MODE button;
-      - increase ALARM MIN with short push, decrease with long push, accept with MODE button.
+     - Short push on SET increases ALARM HRS, long push on SET decreases ALARM HRS. Accept selection with MODE button, and to advance to setting ALARM MIN.
+     - Short push on SET increases ALARM MIN, long push on SET decreases ALARM MIN. Accept selection with MODE button.
    **Note:** The alarm will only sound while the device is in Clock mode (displaying the time).
 
 ### To Snooze or Silence Clock Alarm:
