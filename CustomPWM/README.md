@@ -130,7 +130,7 @@ Timer 1 is a bit different on the ATtiny84. It's a 16-bit timer, with lots of be
 
 Timer 1 is controlled by the TCCR1A and TCCR1B Timer/Counter1 Control Registers.
 
-To set the frequency in this mode, the following equation is used: frequency=fclk/((OCR1C+1)*N). OCR1A is used to set the duty cycle. This equation will hold for all of the following examples. This makes life slightly less confusing! Here is the code for PA6 only, using Timer 1:
+To set the frequency in this mode, the following equation is used: frequency=fclk/((ICR1+1)*N). OCR1A is used to set the duty cycle. This equation will hold for all of the following examples. This makes life slightly less confusing! Here is the code for PA6 only, using Timer 1:
 
 ```
 // Custom PWM on Pin PA6 only, using Timer 1: 
