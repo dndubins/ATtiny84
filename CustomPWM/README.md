@@ -71,7 +71,7 @@ Now you have options. Using OCR0A, you can control the frequency using the formu
    //Formula: wave frequency=fclk/((OCR0A+1)*N)
   pinMode(7, OUTPUT); // output pin for OCR0B is PA7 (physical pin 6)
   TCCR0A = _BV(COM0A1) | _BV(COM0B1) | _BV(WGM01) | _BV(WGM00); // set OC0A on compare match
-  TCCR0B = _BV(WGM02) | _BV(CS00);  // no prescaling
+  //TCCR0B = _BV(WGM02) | _BV(CS00);  // no prescaling
   //TCCR0B = _BV(WGM02)  | _BV(CS01);  // prescaler=8
   //TCCR0B = _BV(WGM02) | _BV(CS01) | _BV(CS00);  // nprscaler=64
   //TCCR0B = _BV(WGM02) | _BV(CS02);  // prescaler=256
