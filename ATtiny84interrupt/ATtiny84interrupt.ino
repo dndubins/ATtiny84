@@ -121,4 +121,6 @@ void detach_interrupt(byte i){             // detach a pin change interrupt for 
 
 ISR(PCINT0_vect){     // This ISR will run when interrupt is triggered
   if(!digitalRead(sw1))pushed=true; // only do something when state is FALLING
+  // really no if statement is needed here. The ISR will be called on a FALLING signal on sw1.
+  // so all that is needed inside the ISR routine is "pushed=true;".
 }
