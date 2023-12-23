@@ -44,7 +44,7 @@ GND - SW1 - ATtiny85 Pin 5 (=Digital Pin 0)
 NC - ATtiny85 Pin 1 (RST)  (you can also wire this to GND through a switch to reset the MCU)
 Batt GND - ATtiny85 Pin 4 (=GND)
 
-Note 1: To save more power, set output pinModes to be input pinmodes before sleeping.
+Note 1: To save more power, set all output pins to INPUT mode before sleep, then set them to OUTPUT mode after waking.
 Note 2: Always burn bootloader for a new chip. Burn with internal 1 MHz clock (will be more efficient on 3V battery).
 Note 3: In deep sleep mode millis() stops functioning.
 */
