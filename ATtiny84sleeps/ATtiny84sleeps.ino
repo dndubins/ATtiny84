@@ -62,7 +62,7 @@ Note 3: In deep sleep mode millis() stops functioning.
 #define loop_until_bit_is_set(sfr, bit) do { } while (bit_is_clear(sfr, bit))
 #define loop_until_bit_is_clear(sfr, bit) do { } while (bit_is_set(sfr, bit))
 
-#define sw1 0                // use PB0 for set timer switch (physical pin 13)
+#define sw1 0                // use PB0 for switch (physical pin 13)
 #define ledPin 2             // use PB2 for LED (physical pin 11)
 
 void setup(){
