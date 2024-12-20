@@ -1,1 +1,1 @@
-
+I accidentally allocated 3 non-PWM pins for the ATtiny84 to control 3 servos. This involved a PCB print, so rather than swap pins around, I wanted to create a "brute force" sketch that would control the servos independently. Here it is! No special library required.
