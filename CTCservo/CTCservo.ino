@@ -31,10 +31,19 @@ void setup() {
 }
 
 void loop() {
-  int location = map(analogRead(POTPIN), 0, 1023, SVOMINPULSE, SVOMAXPULSE);
-  setServo(0, location);  // write new location to servo 0
-  setServo(1, location);  // write new location to servo 0
-  setServo(2, location);  // write new location to servo 0
+    int location = map(analogRead(POTPIN), 1023, 0, 0, SVOMAXANGLE);
+    setServo(0, location);  // write new location to servo 0
+    setServo(1, location);  // write new location to servo 0
+    setServo(2, location);  // write new location to servo 0
+  //for (int i = 0; i < SVOMAXANGLE; i++) {  // rock servo 0
+  //  setServo(0, i);
+  //  delay(10);
+  //}
+  //for (int i = SVOMAXANGLE; i >=0; i--) {
+  //  setServo(0, i);
+  //  delay(10);
+  //}
+
 }
 
 void attachServo(byte servo_num) {
@@ -50,7 +59,8 @@ void detachServo(byte servo_num) {
   }
 }
 
-void setServo(byte servo_num, int pulse_width) {
+void setServo(byte servo_num, int angle) {
+  int pulse_width = map(angle, 0, SVOMAXANGLE, SVOMINPULSE, SVOMAXPULSE);  // map angle to pulse width
   if (servo_num < NSVO) {
     // Convert pulse width in microseconds to pulse width in # times ISR runs (64 µs for Timer1, 1 us per tick)
     servo_PWs[servo_num] = pulse_width;  // Store pulse_width in servo_PWs
@@ -59,18 +69,18 @@ void setServo(byte servo_num, int pulse_width) {
 
 void setCTC() {  //setting the registers aof the ATtiny84 for CTC mode
   // Set up Timer1 for 1µs ticks (assuming 8MHz clock)
-  cli();                  //stop interrupts
-  TCCR1A = 0;             //clear timer control register A
-  TCCR1B = 0;             //clear timer control register B
-  TCNT1 = 0;              //set counter to 0
-  TCCR1B = _BV(WGM12);    //CTC mode (Table 12-5 on ATtiny84 datasheet)
+  cli();                //stop interrupts
+  TCCR1A = 0;           //clear timer control register A
+  TCCR1B = 0;           //clear timer control register B
+  TCNT1 = 0;            //set counter to 0
+  TCCR1B = _BV(WGM12);  //CTC mode (Table 12-5 on ATtiny84 datasheet)
   //TCCR1B = _BV(WGM13) | _BV(WGM12);
   //TCCR1B |= _BV(CS10);  // prescaler=1
   TCCR1B |= _BV(CS11);  // prescaler=8
   //TCCR1B |= _BV(CS11) |  _BV(CS10); // prescaler=64
   //TCCR1B |= _BV(CS12); // prescaler=256
   //TCCR1B |= _BV(CS12) |  _BV(CS10); // prescaler=1024
-  OCR1A = 31;           //OCR1A=(fclk/(N*frequency))-1 (where N is prescaler)
+  OCR1A = 31;             //OCR1A=(fclk/(N*frequency))-1 (where N is prescaler)
   TIMSK1 |= _BV(OCIE1A);  //enable timer compare
   sei();                  // enable interrupts
 }
