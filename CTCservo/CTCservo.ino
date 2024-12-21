@@ -58,6 +58,17 @@ void loop() {
     delay(1000);
   }
   */
+
+  //Uncomment for aggressive movement of all servos simultaneously.
+  /*setServo(0, 0);
+  setServo(1, 0);
+  setServo(2, 0);
+  delay(1000);
+  setServo(0, SVOMAXANGLE);
+  setServo(1, SVOMAXANGLE);
+  setServo(2, SVOMAXANGLE);
+  delay(1000);
+  */
 }
 
 void attachServo(byte servo_num) {
