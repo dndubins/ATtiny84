@@ -87,7 +87,7 @@ void detachServo(byte servo_num) {
 }
 
 void setServo(byte servo_num, int angle) {
-  // Convert pulse width in microseconds to pulse width in # times ISR runs (32 µs for Timer1, 1 us per tick)
+  // Convert pulse width in microseconds to pulse width in microseconds
   int pulse_width = map(angle, 0, SVOMAXANGLE, SVOMINPULSE, SVOMAXPULSE);  // map angle to pulse width
   pulse_width = constrain(pulse_width, SVOMINPULSE, SVOMAXPULSE);          // constrain pulse width to min and max
   cli();                                                                   // Disable interrupts. It's best to update volatile global variables with interrupts diabled.
