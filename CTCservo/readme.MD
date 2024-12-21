@@ -1,0 +1,1 @@
+After BruteForceServo.ino, I decided to try and make a servo sketch based on Timer1 in CTC mode. With the help of Perplexity.AI, ChatGPT, and a lot of polishing, I came up with something that worked ok.
