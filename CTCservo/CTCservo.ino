@@ -1,5 +1,6 @@
 // CTCservo.ino
 // Control 3 servos from pins PA2, PA3, and PA4 using CTC mode of Timer1 (ATtiny84)
+// Clock speed = 8MHz
 // Transferability: This is a very specific sketch! Will only work on the ATtiny84.
 // Author: D.Dubins, Perplexity.AI, and ChatGPT (mostly Perplexity.AI)
 // Date: 20-Dec-24
@@ -20,34 +21,50 @@ volatile bool servo_attached[NSVO] = { 0, 0, 0 };     // Servo attachment status
 volatile unsigned long timer_counter = 0;             // For timing pulse widths inside the ISR
 
 void setup() {
+  //mySerial.begin(9600); // Start the software serial monitor
   setCTC();
-  DDRA |= (1 << PA2) | (1 << PA3) | (1 << PA4);  // Set servo pins as outputs
   attachServo(0);
   attachServo(1);
   attachServo(2);
+  //detachServo(0);
   //detachServo(1);
   //detachServo(2);
-  //detachServo(3);
+  homeServos(); // start sketch by sending attached servos to home position
 }
 
 void loop() {
+  // Uncomment for potentiometer control:
   int location = map(analogRead(POTPIN), 1023, 0, 0, SVOMAXANGLE);
   setServo(0, location);  // write new location to servo 0
-  setServo(1, location);  // write new location to servo 0
+  setServo(1, location);  // write new location to servo 1
   setServo(2, location);  // write new location to servo 0
-  /*for (int i = 0; i < SVOMAXANGLE; i++) {  // rock servo 0
-    setServo(0, i);
-    delay(10);
+  delay(50); // wait a bit
+  
+  //Uncomment to rock servo 1 slowly
+  /*for (int i = 0; i < SVOMAXANGLE; i++) {
+    setServo(1, i);
+    delay(500); // 0.5s delay should let you see each angle
   }
   for (int i = SVOMAXANGLE; i >=0; i--) {
-    setServo(0, i);
-    delay(10);
-  }*/
+    setServo(1, i);
+    delay(500);
+  }
+  */
+
+  //Uncomment to rock all servos through 0-SVOMAXANGLE sequentially.
+  /*for (int i = 0; i < NSVO; i++) {
+    setServo(i, 0);
+    delay(1000);
+    setServo(i, SVOMAXANGLE);
+    delay(1000);
+  }
+  */
 }
 
 void attachServo(byte servo_num) {
   if (servo_num < NSVO) {
     servo_attached[servo_num] = true;
+    DDRA |= (1 << PA2 + servo_num);  // Set servi pin to output mode
   }
 }
 
@@ -55,15 +72,25 @@ void detachServo(byte servo_num) {
   if (servo_num < NSVO) {
     servo_attached[servo_num] = false;
     PORTA &= ~(1 << (PA2 + servo_num));  // Set pin low
+    DDRA &= ~((1 << PA2 + servo_num));   // Set pin to input mode
   }
 }
 
 void setServo(byte servo_num, int angle) {
+  // Convert pulse width in microseconds to pulse width in # times ISR runs (32 µs for Timer1, 1 us per tick)
   int pulse_width = map(angle, 0, SVOMAXANGLE, SVOMINPULSE, SVOMAXPULSE);  // map angle to pulse width
-  if (servo_num < NSVO) {
-    // Convert pulse width in microseconds to pulse width in # times ISR runs (64 µs for Timer1, 1 us per tick)
-    servo_PWs[servo_num] = pulse_width;  // Store pulse_width in servo_PWs
+  pulse_width = constrain(pulse_width, SVOMINPULSE, SVOMAXPULSE);          // constrain pulse width to min and max
+  cli();                                                                   // Disable interrupts. Spend as little time in desabled interrupt land as possible.
+  servo_PWs[servo_num] = pulse_width;                                      // Store pulse_width in servo_PWs
+  sei();                                                                   // Enable interrupts
+}
+
+void homeServos() {  // routine to home servos
+  // Note: servo will not home unless it is first enabled.
+  for (byte i = 0; i < NSVO; i++) {
+    setServo(i, 90);  // send all servos to middle position
   }
+  delay(1000); // wait for servos to home
 }
 
 void setCTC() {  //setting the registers aof the ATtiny84 for CTC mode
@@ -79,18 +106,21 @@ void setCTC() {  //setting the registers aof the ATtiny84 for CTC mode
   //TCCR1B |= _BV(CS11) |  _BV(CS10); // prescaler=64
   //TCCR1B |= _BV(CS12); // prescaler=256
   //TCCR1B |= _BV(CS12) |  _BV(CS10); // prescaler=1024
-  OCR1A = 31;             //OCR1A=(fclk/(N*frequency))-1 (where N is prescaler)
+  OCR1A = 47;             //OCR1A=(fclk/(N*frequency))-1 (where N is prescaler).
+  //OCR1A=63: less angle resolution, less chatter. 47: more angle resolution. Lower # seems to result in more chatter/buggy behaviour.
   TIMSK1 |= _BV(OCIE1A);  //enable timer compare
   sei();                  // enable interrupts
 }
 
 ISR(TIM1_COMPA_vect) {                  // This is the ISR that will turn off the pins at the correct widths
-  timer_counter += 32;                  // ISR will run every 32µs
+  timer_counter += 48;                  // ISR will run every (OCR1A+1)µs.
   if (timer_counter >= CYCLE_LENGTH) {  // if the timer reaches the cycle length (20ms)
     timer_counter = 0;                  // Reset counter after the full cycle (20ms)
     for (byte i = 0; i < NSVO; i++) {
       // Turn on the servo pin when the timer resets
-      PORTA |= (1 << (PA2 + i));  // Set pin high
+      if (servo_attached[i]) {      //only turn on pin if servo attached
+        PORTA |= (1 << (PA2 + i));  // Set pin high
+      }
     }
   }
   // Handle the pulse generation for each servo pin
