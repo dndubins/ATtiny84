@@ -21,7 +21,6 @@ volatile bool servo_attached[NSVO] = { 0, 0, 0 };     // Servo attachment status
 volatile unsigned long timer_counter = 0;             // For timing pulse widths inside the ISR
 
 void setup() {
-  //mySerial.begin(9600); // Start the software serial monitor
   setCTC();
   attachServo(0);
   attachServo(1);
