@@ -31,19 +31,18 @@ void setup() {
 }
 
 void loop() {
-    int location = map(analogRead(POTPIN), 1023, 0, 0, SVOMAXANGLE);
-    setServo(0, location);  // write new location to servo 0
-    setServo(1, location);  // write new location to servo 0
-    setServo(2, location);  // write new location to servo 0
-  //for (int i = 0; i < SVOMAXANGLE; i++) {  // rock servo 0
-  //  setServo(0, i);
-  //  delay(10);
-  //}
-  //for (int i = SVOMAXANGLE; i >=0; i--) {
-  //  setServo(0, i);
-  //  delay(10);
-  //}
-
+  int location = map(analogRead(POTPIN), 1023, 0, 0, SVOMAXANGLE);
+  setServo(0, location);  // write new location to servo 0
+  setServo(1, location);  // write new location to servo 0
+  setServo(2, location);  // write new location to servo 0
+  /*for (int i = 0; i < SVOMAXANGLE; i++) {  // rock servo 0
+    setServo(0, i);
+    delay(10);
+  }
+  for (int i = SVOMAXANGLE; i >=0; i--) {
+    setServo(0, i);
+    delay(10);
+  }*/
 }
 
 void attachServo(byte servo_num) {
