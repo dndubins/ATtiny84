@@ -2,6 +2,8 @@
 // Control 3 servos from pins PA2, PA3, and PA4 using CTC mode of Timer1 (ATtiny84)
 // Clock speed = 8MHz
 // Transferability: This is a very specific sketch! Will only work on the ATtiny84.
+// However, if you have a good understanding of timers and CTC mode, you can adapt it to
+// non-PWM pins on other MCUs as well.
 // Authors: D.Dubins, Perplexity.AI, and ChatGPT (mostly Perplexity.AI)
 // Date: 21-Dec-24
 
