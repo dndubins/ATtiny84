@@ -159,9 +159,9 @@ void servo_timeout_check() {  // this routine disables the timers on inactivity 
   static unsigned long servo_timer; // servo timer
   int total = 0;
   for (int i = 0; i < NSVO; i++) total += servo_PWs[i];
-  if (abs(total - totalLast) > 10) {    // if reading changed significantly
-    servo_timer = millis();                // reset the timer
-    enableTimerInterrupt();             // makesure timer1 is enabled
+  if (abs(total - totalLast) > 10) {    // if reading changed beyond noise
+    servo_timer = millis();             // reset the timer
+    enableTimerInterrupt();             // make sure timer1 is enabled
   }
   if (millis() - servo_timer > SVOTIMEOUT) disableTimerInterrupt();
   totalLast = total;  // store total to totalLast
