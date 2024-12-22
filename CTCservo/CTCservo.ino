@@ -3,8 +3,7 @@
 // Clock speed = 8MHz
 // Transferability: This is a very specific sketch! Will only work on the ATtiny84.
 // Authors: D.Dubins, Perplexity.AI, and ChatGPT (mostly Perplexity.AI)
-// Date Created: 19-Dec-24
-// Last Upated: 22-Dec-24
+// Date: 21-Dec-24
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -89,8 +88,8 @@ void setServo(byte servo_num, int angle) {
   if (pulse_width != servo_PWs[servo_num]) {                               // Disable interrupts only if signal changes
     cli();                                                                 // Disable interrupts. It's best to update volatile global variables with interrupts diabled.
     servo_PWs[servo_num] = pulse_width;                                    // Store new pulse_width in servo_PWs.
-    sei();                                                                 // Enable interrupts. Spend as little time in "disabled interrupt land" as possible.
-  }  
+    sei();
+  }  // Enable interrupts. Spend as little time in "disabled interrupt land" as possible.
 }
 
 void homeServos() {  // routine to home servos
@@ -110,11 +109,11 @@ void setCTC() {  // setting the registers of the ATtiny84 for CTC mode
   TCCR1B = _BV(WGM12);  // CTC mode (Table 12-5 on ATtiny84 datasheet)
   //TCCR1B = _BV(WGM13) | _BV(WGM12);
   //TCCR1B |= _BV(CS10);  // prescaler=1
-  TCCR1B |= _BV(CS11);  // prescaler=8
-  //TCCR1B |= _BV(CS11) | _BV(CS10);  // prescaler=64
+  //TCCR1B |= _BV(CS11);  // prescaler=8
+  TCCR1B |= _BV(CS11) | _BV(CS10);  // prescaler=64
   //TCCR1B |= _BV(CS12); // prescaler=256
   //TCCR1B |= _BV(CS12) |  _BV(CS10); // prescaler=1024
-  OCR1A = 19999;  //OCR1A=(fclk/(N*frequency))-1 (where N is prescaler).
+  OCR1A = 2499;  //OCR1A=(fclk/(N*frequency))-1 (where N is prescaler).
   //N=64, OCR1A=2499: 50Hz cycle, 8us per tick.
   //N=8, OCR1A=19999: 50Hz cycle, 1us per tick.
   TIMSK1 |= _BV(OCIE1A);  // enable timer compare
@@ -126,7 +125,7 @@ ISR(TIM1_COMPA_vect) {  // This is the ISR that will turn off the pins at the co
   //TCNT1 starts at 0 and counts up. Each increment lasts 8 microseconds. We are going to use this as a timer.
   //8 microseconds gives us (2500-500us)/8us =250 steps. This is fine for a 180 degree servo. For a 360 degree servo,
   //if more steps are needed, you can set the timer to N=8, OCR1A=19999 and this will give 2000 steps, but require
-  //more attention by the ISR (tied up every microsecond).
+  //more attention by the ISR.
   for (byte i = 0; i < NSVO; i++) {
     // Turn on the servo pin
     if (servo_attached[i]) {      // only turn on pin if servo attached
@@ -134,10 +133,10 @@ ISR(TIM1_COMPA_vect) {  // This is the ISR that will turn off the pins at the co
     }
   }
 
-  while (TCNT1 < SVOMAXPULSE + 10) {
+  while ((TCNT1*8) < SVOMAXPULSE + 10) { // multiply TCNT1 by microseconds/step
     // a 50 Hz pulse has a period of 20,000 us. We just need to make it past SVOMAXPULSE with a small buffer.
     for (byte i = 0; i < NSVO; i++) {
-      if (servo_attached[i] && (TCNT1) > servo_PWs[i]) {
+      if (servo_attached[i] && (TCNT1*8) > servo_PWs[i]) {
         // Turn off the servo pin if the timer exceeds the pulse width
         PORTA &= ~(1 << (PA2 + i));  // Set correct servo pin low
       }
