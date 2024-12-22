@@ -10,11 +10,11 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-#define NSVO 3              // number of servos to control
-#define SVOMAXANGLE 179     // maximum angle for servo.
-#define SVOMINPULSE 500     // minimum pulse width in microseconds for servo signal (0 degrees). Default: 500
-#define SVOMAXPULSE 2500    // maximum pulse width in microseconds for servo signal (for maximum angle). Default: 2500
-#define SVOTIMEOUT 500      // timeout in ms to disable servos. Should be long enough to attain setpoint.
+#define NSVO 3            // number of servos to control
+#define SVOMAXANGLE 179   // maximum angle for servo.
+#define SVOMINPULSE 500   // minimum pulse width in microseconds for servo signal (0 degrees). Default: 500
+#define SVOMAXPULSE 2500  // maximum pulse width in microseconds for servo signal (for maximum angle). Default: 2500
+#define SVOTIMEOUT 500    // timeout in ms to disable servos. Should be long enough to attain setpoint.
 
 #define POTPIN A7  // PA7 (A7) for wiper of potentiometer pin
 
@@ -34,13 +34,18 @@ void setup() {
 
 void loop() {
   // The servo_timeout_check() is optional. Temporarily turning off Timer1 will free the mcu to do other things.
-  servo_timeout_check(); // if servos are inactive, stop Timer1 (less trouble for other routines)
+  servo_timeout_check();  // if servos are inactive, stop Timer1 (less trouble for other routines)
+
   // Uncomment for potentiometer control:
   int location = map(analogRead(POTPIN), 1023, 0, 0, SVOMAXANGLE);
   setServo(0, location);  // write new location to servo 0
   setServo(1, location);  // write new location to servo 1
   setServo(2, location);  // write new location to servo 2
   delay(50);              // wait a bit to reduce jittering
+
+  //Uncomment for potentiometer control of all servos with slower movement:
+  //int location = map(analogRead(POTPIN), 1023, 0, 0, SVOMAXANGLE);
+  //moveTo(location, location, location, 5);  // move to new location, delay=4 ms between steps
 
   //Uncomment to rock servo 1 slowly
   /*for (int i = 0; i < SVOMAXANGLE; i++) {
@@ -104,6 +109,32 @@ void homeServos() {  // routine to home servos
   delay(1000);  // wait for servos to home
 }
 
+void moveTo(int s0, int s1, int s2, int wait) {  // routine for controlling 3 servos slowly, simultaneously.
+  // wait=0: as fast as possible. do not use wait < 10 msec.
+  // Change structure of moveTo based on # servos needed (add coordinates)
+  int loc[NSVO] = { s0, s1, s2 };  // create array for loc’ns
+  static int pos[NSVO];            // remembers last value of pos
+  if (wait == 0) {                 // if wait=0, move as fast as possible
+    for (int i = 0; i < NSVO; i++) {
+      setServo(i, loc[i]);  // write new position to servos
+    }
+  } else {
+    int dev = 0;  // to track deviation
+    do {
+      dev = 0;
+      for (int i = 0; i < NSVO; i++) {  // moves servos one step
+        if (loc[i] > pos[i]) pos[i]++;  // add 1 to pos[i]
+        if (loc[i] < pos[i]) pos[i]--;  // subtr 1 from pos[i]
+        dev += abs(pos[i] - loc[i]);    // calculate deviation
+      }
+      for (int i = 0; i < NSVO; i++) {
+        setServo(i, pos[i]);  // write new position to servos
+      }
+      delay(wait);      // slow down movement
+    } while (dev > 0);  // stop when location attained
+  }                     // end if
+}
+
 void setCTC() {  // setting the registers of the ATtiny84 for CTC mode
   // Setting up Timer1 for 1µs ticks (assuming 8MHz clock)
   cli();                // stop interrupts
@@ -137,10 +168,10 @@ ISR(TIM1_COMPA_vect) {  // This is the ISR that will turn off the pins at the co
     }
   }
 
-  while ((TCNT1*8) < (SVOMAXPULSE + 10)) { // multiply TCNT1 by microseconds/step
+  while ((TCNT1 * 8) < (SVOMAXPULSE + 10)) {  // multiply TCNT1 by microseconds/step
     // a 50 Hz pulse has a period of 20,000 us. We just need to make it past SVOMAXPULSE with a small buffer.
     for (byte i = 0; i < NSVO; i++) {
-      if (servo_attached[i] && (TCNT1*8) > servo_PWs[i]) {
+      if (servo_attached[i] && (TCNT1 * 8) > servo_PWs[i]) {
         // Turn off the servo pin if the timer exceeds the pulse width
         PORTA &= ~(1 << (PA2 + i));  // Set correct servo pin low
       }
@@ -158,12 +189,12 @@ void enableTimerInterrupt() {  // run this if you'd like to (re)enable CTC timer
 
 void servo_timeout_check() {  // this routine disables the timers on inactivity and enables them on a reading change.
   static int totalLast;
-  static unsigned long servo_timer; // servo timer
+  static unsigned long servo_timer;  // servo timer
   int total = 0;
   for (int i = 0; i < NSVO; i++) total += servo_PWs[i];
-  if (abs(total - totalLast) > 10) {    // if reading changed beyond noise
-    servo_timer = millis();             // reset the timer
-    enableTimerInterrupt();             // make sure timer1 is enabled
+  if (abs(total - totalLast) > 10) {  // if reading changed beyond noise
+    servo_timer = millis();           // reset the timer
+    enableTimerInterrupt();           // make sure timer1 is enabled
   }
   if (millis() - servo_timer > SVOTIMEOUT) disableTimerInterrupt();
   totalLast = total;  // store total to totalLast
