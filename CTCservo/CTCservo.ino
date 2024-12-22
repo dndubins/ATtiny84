@@ -3,7 +3,8 @@
 // Clock speed = 8MHz
 // Transferability: This is a very specific sketch! Will only work on the ATtiny84.
 // Authors: D.Dubins, Perplexity.AI, and ChatGPT (mostly Perplexity.AI)
-// Date: 21-Dec-24
+// Date Created: 19-Dec-24
+// Last Upated: 22-Dec-24
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -18,14 +19,13 @@
 
 unsigned int servo_PWs[NSVO] = { 1500, 1500, 1500 };  // Pulse widths in microseconds (default to center position)
 volatile bool servo_attached[NSVO] = { 0, 0, 0 };     // Servo attachment status
-volatile unsigned long timer_counter = 0;             // For timing pulse widths inside the ISR
 
 void setup() {
-  setCTC();
-  attachServo(0);
+  setCTC();        // set CTC mode to start a 50Hz timer for the servo signals
+  attachServo(0);  // attach servos here
   attachServo(1);
   attachServo(2);
-  //detachServo(0);
+  //detachServo(0); // if you would like to detach any servo:
   //detachServo(1);
   //detachServo(2);
   homeServos();  // start sketch by sending attached servos to home position
@@ -37,7 +37,7 @@ void loop() {
   setServo(0, location);  // write new location to servo 0
   setServo(1, location);  // write new location to servo 1
   setServo(2, location);  // write new location to servo 2
-  delay(100);             // wait a bit
+  delay(50);              // wait a bit to reduce jittering
 
   //Uncomment to rock servo 1 slowly
   /*for (int i = 0; i < SVOMAXANGLE; i++) {
@@ -47,8 +47,7 @@ void loop() {
   for (int i = SVOMAXANGLE; i >=0; i--) {
     setServo(1, i);
     delay(500);
-  }
-  */
+  }*/
 
   //Uncomment to rock all servos through 0-SVOMAXANGLE sequentially.
   /*for (int i = 0; i < NSVO; i++) {
@@ -56,8 +55,7 @@ void loop() {
     delay(1000);
     setServo(i, SVOMAXANGLE);
     delay(1000);
-  }
-  */
+  }*/
 
   //Uncomment for aggressive movement of all servos simultaneously.
   /*setServo(0, 0);
@@ -67,14 +65,13 @@ void loop() {
   setServo(0, SVOMAXANGLE);
   setServo(1, SVOMAXANGLE);
   setServo(2, SVOMAXANGLE);
-  delay(1000);
-  */
+  delay(1000);*/
 }
 
 void attachServo(byte servo_num) {
   if (servo_num < NSVO) {
     servo_attached[servo_num] = true;  // Set servo_attached to true
-    DDRA |= (1 << PA2 + servo_num);    // Set servo pin to OUTPUT mode
+    DDRA |= (1 << (PA2 + servo_num));  // Set servo pin to OUTPUT mode
   }
 }
 
@@ -89,9 +86,11 @@ void detachServo(byte servo_num) {
 void setServo(byte servo_num, int angle) {
   int pulse_width = map(angle, 0, SVOMAXANGLE, SVOMINPULSE, SVOMAXPULSE);  // convert angle to pulse width in microseconds
   pulse_width = constrain(pulse_width, SVOMINPULSE, SVOMAXPULSE);          // constrain pulse width to min and max
-  cli();                                                                   // Disable interrupts. It's best to update volatile global variables with interrupts diabled.
-  servo_PWs[servo_num] = pulse_width;                                      // Store pulse_width in servo_PWs.
-  sei();                                                                   // Enable interrupts. Spend as little time in "disabled interrupt land" as possible.
+  if (pulse_width != servo_PWs[servo_num]) {                               // Disable interrupts only if signal changes
+    cli();                                                                 // Disable interrupts. It's best to update volatile global variables with interrupts diabled.
+    servo_PWs[servo_num] = pulse_width;                                    // Store new pulse_width in servo_PWs.
+    sei();                                                                 // Enable interrupts. Spend as little time in "disabled interrupt land" as possible.
+  }  
 }
 
 void homeServos() {  // routine to home servos
@@ -112,32 +111,35 @@ void setCTC() {  // setting the registers of the ATtiny84 for CTC mode
   //TCCR1B = _BV(WGM13) | _BV(WGM12);
   //TCCR1B |= _BV(CS10);  // prescaler=1
   TCCR1B |= _BV(CS11);  // prescaler=8
-  //TCCR1B |= _BV(CS11) |  _BV(CS10); // prescaler=64
+  //TCCR1B |= _BV(CS11) | _BV(CS10);  // prescaler=64
   //TCCR1B |= _BV(CS12); // prescaler=256
   //TCCR1B |= _BV(CS12) |  _BV(CS10); // prescaler=1024
-  OCR1A = 47;  //OCR1A=(fclk/(N*frequency))-1 (where N is prescaler).
-  //Note: OCR1A=63: less angle resolution, less chatter. OCR1A=47: more angle resolution. Lower # seems to result in more chatter/buggy behaviour.
+  OCR1A = 19999;  //OCR1A=(fclk/(N*frequency))-1 (where N is prescaler).
+  //N=64, OCR1A=2499: 50Hz cycle, 8us per tick.
+  //N=8, OCR1A=19999: 50Hz cycle, 1us per tick.
   TIMSK1 |= _BV(OCIE1A);  // enable timer compare
   sei();                  // enable interrupts
 }
 
-ISR(TIM1_COMPA_vect) {                  // This is the ISR that will turn off the pins at the correct widths
-  timer_counter += 48;                  // ISR will run every (OCR1A+1)µs.
-  if (timer_counter >= CYCLE_LENGTH) {  // if the timer reaches the cycle length (20ms)
-    timer_counter = 0;                  // reset counter after the full cycle (20ms)
-    for (byte i = 0; i < NSVO; i++) {
-      // Turn on the servo pin when the timer resets
-      if (servo_attached[i]) {      // only turn on pin if servo attached
-        PORTA |= (1 << (PA2 + i));  // set servo pin high
-      }
+ISR(TIM1_COMPA_vect) {  // This is the ISR that will turn off the pins at the correct widths
+  //The function micros() does not advance inside the ISR.
+  //TCNT1 starts at 0 and counts up. Each increment lasts 8 microseconds. We are going to use this as a timer.
+  //8 microseconds gives us (2500-500us)/8us =250 steps. This is fine for a 180 degree servo. For a 360 degree servo,
+  //if more steps are needed, you can set the timer to N=8, OCR1A=19999 and this will give 2000 steps, but require
+  //more attention by the ISR (tied up every microsecond).
+  for (byte i = 0; i < NSVO; i++) {
+    // Turn on the servo pin
+    if (servo_attached[i]) {      // only turn on pin if servo attached
+      PORTA |= (1 << (PA2 + i));  // set correct servo pin high
     }
   }
-  // Handle the pulse generation for each servo pin
-  for (byte i = 0; i < NSVO; i++) {
-    if (servo_attached[i]) {
-      if (timer_counter >= servo_PWs[i]) {
+
+  while (TCNT1 < SVOMAXPULSE + 10) {
+    // a 50 Hz pulse has a period of 20,000 us. We just need to make it past SVOMAXPULSE with a small buffer.
+    for (byte i = 0; i < NSVO; i++) {
+      if (servo_attached[i] && (TCNT1) > servo_PWs[i]) {
         // Turn off the servo pin if the timer exceeds the pulse width
-        PORTA &= ~(1 << (PA2 + i));  // Set pin low
+        PORTA &= ~(1 << (PA2 + i));  // Set correct servo pin low
       }
     }
   }
