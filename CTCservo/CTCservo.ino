@@ -13,6 +13,7 @@
 #define SVOMAXANGLE 179     // maximum angle for servo.
 #define SVOMINPULSE 500     // minimum pulse width in microseconds for servo signal (0 degrees). Default: 500
 #define SVOMAXPULSE 2500    // maximum pulse width in microseconds for servo signal (for maximum angle). Default: 2500
+#define SVOTIMEOUT 500      // timeout in ms to disable servos. Should be long enough to attain setpoint.
 
 #define POTPIN A7  // PA7 (A7) for wiper of potentiometer pin
 
@@ -31,6 +32,8 @@ void setup() {
 }
 
 void loop() {
+  // The servo_timeout_check() is optional. Temporarily turning off Timer1 will free the mcu to do other things.
+  servo_timeout_check(); // if servos are inactive, stop Timer1 (less trouble for other routines)
   // Uncomment for potentiometer control:
   int location = map(analogRead(POTPIN), 1023, 0, 0, SVOMAXANGLE);
   setServo(0, location);  // write new location to servo 0
@@ -150,4 +153,17 @@ void disableTimerInterrupt() {  // run this if you'd like to disable CTC timer i
 
 void enableTimerInterrupt() {  // run this if you'd like to (re)enable CTC timer interrupt
   TIMSK1 |= (1 << OCIE1A);     // Enable Timer1 Compare Match A interrupt
+}
+
+void servo_timeout_check() {  // this routine disables the timers on inactivity and enables them on a reading change.
+  static unsigned int totalLast;
+  static unsigned long svotimer; // servo timer
+  unsigned int total = 0;
+  for (int i = 0; i < NSVO; i++) total += servo_PWs[i];
+  if (abs(total - totalLast) > 300) {   // if reading changed significantly
+    svotimer = millis();                // reset the timer
+    enableTimerInterrupt();             // makesure timer1 is enabled
+  }
+  if (millis() - svotimer > SVOTIMEOUT) disableTimerInterrupt();
+  totalLast = total;  // store total to totalLast
 }
