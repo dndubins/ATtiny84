@@ -155,14 +155,14 @@ void enableTimerInterrupt() {  // run this if you'd like to (re)enable CTC timer
 }
 
 void servo_timeout_check() {  // this routine disables the timers on inactivity and enables them on a reading change.
-  static unsigned int totalLast;
-  static unsigned long svotimer; // servo timer
-  unsigned int total = 0;
+  static int totalLast;
+  static unsigned long servo_timer; // servo timer
+  int total = 0;
   for (int i = 0; i < NSVO; i++) total += servo_PWs[i];
-  if (abs(total - totalLast) > 300) {   // if reading changed significantly
-    svotimer = millis();                // reset the timer
+  if (abs(total - totalLast) > 10) {    // if reading changed significantly
+    servo_timer = millis();                // reset the timer
     enableTimerInterrupt();             // makesure timer1 is enabled
   }
-  if (millis() - svotimer > SVOTIMEOUT) disableTimerInterrupt();
+  if (millis() - servo_timer > SVOTIMEOUT) disableTimerInterrupt();
   totalLast = total;  // store total to totalLast
 }
