@@ -50,10 +50,10 @@ void loop() {
   //servoWriteAll(179, 179, 179, 1000);   //go to 179,179,179 signal should last 1000 msec
 }
 
-void moveTo(byte s0, byte s1, byte s2, int wait) {  // routine for controlling 3 servos slowly, simultaneously.
+void moveTo(int s0, int s1, int s2, int wait) {  // routine for controlling 3 servos slowly, simultaneously.
   // wait=0: as fast as possible. do not use wait < 10 msec.
   // Change structure of moveTo based on # servos needed (add coordinates)
-  byte loc[NSVO] = { s0, s1, s2 };                      //create array for loc’ns
+  int loc[NSVO] = { s0, s1, s2 };                      //create array for loc’ns
   static int pos[NSVO];                                 // remembers last value of pos
   int dev = 0;                                          // to track deviation
   loc[0] = constrain(loc[0], 0, SVOMAXANGLE);           // limits for servo 0
