@@ -135,7 +135,7 @@ ISR(TIM1_COMPA_vect) {  // This is the ISR that will turn off the pins at the co
     }
   }
 
-  while ((TCNT1*8) < SVOMAXPULSE + 10) { // multiply TCNT1 by microseconds/step
+  while ((TCNT1*8) < (SVOMAXPULSE + 10)) { // multiply TCNT1 by microseconds/step
     // a 50 Hz pulse has a period of 20,000 us. We just need to make it past SVOMAXPULSE with a small buffer.
     for (byte i = 0; i < NSVO; i++) {
       if (servo_attached[i] && (TCNT1*8) > servo_PWs[i]) {
