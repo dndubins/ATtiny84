@@ -188,15 +188,29 @@ void enableTimerInterrupt() {  // run this if you'd like to (re)enable CTC timer
   TIMSK1 |= (1 << OCIE1A);     // Enable Timer1 Compare Match A interrupt
 }
 
-void servo_timeout_check() {  // this routine disables the timers on inactivity and enables them on a reading change.
+void servo_timeout_check() {  // This routine disables the timers on inactivity and enables them on a reading change.
+// This could be important to do if you have SoftwareSerial commands in between the servos moving
+// (Serial commands really mess up servo movement, and vice versa).
+  static bool timer1_enabled = false;
   static int totalLast;
-  static unsigned long servo_timer;  // servo timer
+  static unsigned long servo_timer;  // to time how long the servos have been active.
   int total = 0;
-  for (int i = 0; i < NSVO; i++) total += servo_PWs[i];
-  if (abs(total - totalLast) > 10) {  // if reading changed beyond noise
-    servo_timer = millis();           // reset the timer
-    enableTimerInterrupt();           // make sure timer1 is enabled
+  // Using the total pulse width added up between attached servos to see if any changes happened.
+  for (int i = 0; i < NSVO; i++) {
+    if (servo_attached[i]) { // Only count attached servos
+      total += servo_PWs[i];
+    }
   }
-  if (millis() - servo_timer > SVOTIMEOUT) disableTimerInterrupt();
+  if (abs(total - totalLast) > 100) {  // if reading changed beyond noise, and timer1 is not enabled
+    servo_timer = millis();           // reset the timer
+    if(!timer1_enabled){
+      enableTimerInterrupt();           // make sure timer1 is enabled
+      timer1_enabled=true;              // update flag
+    }
+  }
+  if (((millis() - servo_timer) > SVOTIMEOUT) && timer1_enabled){
+    disableTimerInterrupt();          // disable Timer1
+    timer1_enabled=false;
+  }
   totalLast = total;  // store total to totalLast
 }
