@@ -9,7 +9,6 @@
 #include <avr/interrupt.h>
 
 #define NSVO 3              // number of servos to control
-#define CYCLE_LENGTH 20000  // 20ms cycle (50Hz)
 #define SVOMAXANGLE 179     // maximum angle for servo.
 #define SVOMINPULSE 500     // minimum pulse width in microseconds for servo signal (0 degrees). Default: 500
 #define SVOMAXPULSE 2500    // maximum pulse width in microseconds for servo signal (for maximum angle). Default: 2500
