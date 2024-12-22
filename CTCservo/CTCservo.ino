@@ -3,9 +3,10 @@
 // Clock speed = 8MHz
 // Transferability: This is a very specific sketch! Will only work on the ATtiny84.
 // However, if you have a good understanding of timers and CTC mode, you can adapt it to
-// non-PWM pins on other MCUs as well.
+// non-PWM pins of other MCUs as well.
 // Authors: D.Dubins, Perplexity.AI, and ChatGPT (mostly Perplexity.AI)
-// Date: 21-Dec-24
+// Date: 19-Dec-24
+// Last Updated: 22-Dec-24
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -19,25 +20,25 @@
 #define POTPIN A7  // PA7 (A7) for wiper of potentiometer pin
 
 unsigned int servo_PWs[NSVO] = { 1500, 1500, 1500 };  // Pulse widths in microseconds (default to center position)
-volatile bool servo_attached[NSVO] = { 0, 0, 0 };     // Servo attachment status
+bool servo_attached[NSVO] = { 0, 0, 0 };              // Servo attachment status
 
 void setup() {
   setCTC();        // set CTC mode to start a 50Hz timer for the servo signals
   attachServo(0);  // attach servos here
   attachServo(1);
   attachServo(2);
-  //detachServo(0); // if you would like to detach any servo:
+  //detachServo(0); // if you would like to detach a specific servo at any time:
   //detachServo(1);
   //detachServo(2);
   homeServos();  // start sketch by sending attached servos to home position
 }
 
 void loop() {
-  // The servo_timeout_check() is optional. Temporarily turning off Timer1 will free the mcu to do other things.
+  // This servo_timeout_check() is optional. Temporarily turning off Timer1 will free mcu to do other things.
   servo_timeout_check();  // if servos are inactive, stop Timer1 (less trouble for other routines)
 
   // Uncomment for potentiometer control:
-  int location = map(analogRead(POTPIN), 1023, 0, 0, SVOMAXANGLE);
+  int location = map(analogRead(POTPIN), 1023, 0, 0, SVOMAXANGLE); // take pot reading & remap to angle.
   setServo(0, location);  // write new location to servo 0
   setServo(1, location);  // write new location to servo 1
   setServo(2, location);  // write new location to servo 2
@@ -94,7 +95,7 @@ void detachServo(byte servo_num) {
 void setServo(byte servo_num, int angle) {
   int pulse_width = map(angle, 0, SVOMAXANGLE, SVOMINPULSE, SVOMAXPULSE);  // convert angle to pulse width in microseconds
   pulse_width = constrain(pulse_width, SVOMINPULSE, SVOMAXPULSE);          // constrain pulse width to min and max
-  if (pulse_width != servo_PWs[servo_num]) {                               // Disable interrupts only if signal changes
+  if (pulse_width != servo_PWs[servo_num && servo_attached[servo_num]) {   // Disable interrupts only if signal changes and servo is attached
     cli();                                                                 // Disable interrupts. It's best to update volatile global variables with interrupts diabled.
     servo_PWs[servo_num] = pulse_width;                                    // Store new pulse_width in servo_PWs.
     sei();
