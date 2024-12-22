@@ -95,7 +95,7 @@ void detachServo(byte servo_num) {
 void setServo(byte servo_num, int angle) {
   int pulse_width = map(angle, 0, SVOMAXANGLE, SVOMINPULSE, SVOMAXPULSE);  // convert angle to pulse width in microseconds
   pulse_width = constrain(pulse_width, SVOMINPULSE, SVOMAXPULSE);          // constrain pulse width to min and max
-  if (pulse_width != servo_PWs[servo_num && servo_attached[servo_num]) {   // Disable interrupts only if signal changes and servo is attached
+  if (pulse_width != servo_PWs[servo_num] && servo_attached[servo_num]) {   // Disable interrupts only if signal changes and servo is attached
     cli();                                                                 // Disable interrupts. It's best to update volatile global variables with interrupts diabled.
     servo_PWs[servo_num] = pulse_width;                                    // Store new pulse_width in servo_PWs.
     sei();
