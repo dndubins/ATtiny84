@@ -51,8 +51,8 @@ void setup() {
 }
 
 void loop() {
-  //This servo_timeout_check() is optional. Temporarily turning off Timer1 will free mcu to do other things.
-  //servo_timeout_check();  // if servos are inactive, stop Timer1 (less trouble for other routines)
+  //This servo_timeout_check() is optional. Temporarily turning off Timer1 will free the mcu to do other things.
+  servo_timeout_check();  // if servos are inactive, stop Timer1 (less trouble for other routines)
 
   // Uncomment for potentiometer control:
   //int location = map(analogRead(POTPIN), 1023, 0, 0, SVOMAXANGLE); // take pot reading & remap to angle.
