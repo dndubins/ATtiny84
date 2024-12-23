@@ -88,7 +88,7 @@ void detachServo(byte servo_num) {
   if (servo_num < NSVO) {
     servo_attached[servo_num] = false;
     PORTA &= ~(1 << (PA2 + servo_num));  // Set servo pin low
-    DDRA &= ~((1 << PA2 + servo_num));   // Set servo pin to INPUT mode (less chatter when not doing anything)
+    DDRA &= ~(1 << (PA2 + servo_num));   // Set servo pin to INPUT mode (less chatter when not doing anything)
   }
 }
 
