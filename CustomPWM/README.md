@@ -170,7 +170,11 @@ This gives rise to the following awesome table, assuming an 8MHz clock speed:
  | 7500 | 	1066.5 | 	133.3 | 	16.7 | 	4.2 | 	1 | 
  | 10000 | 	799.9 | 	100 | 	12.5 | 	3.1 | 	0.8 | 
  | 20000 | 	400 | 	50 | 	6.2 | 	1.6 | 	0.4 | 
- | 32767 | 	244.1 | 	30.5 | 	3.8 | 	1 | 	0.2 | 
+ | 30000 | 	266.7 | 	33.3 | 	4.2 | 	1 | 	0.3 | 
+ | 40000 | 	200 | 	25 | 	3.1 | 	0.8 | 	0.2 | 
+ | 50000 | 	160 | 	20 | 	2.5 | 	0.6 | 	0.2 | 
+ | 60000 | 	133.3 | 	16.7 | 	2.1 | 	0.5 | 	0.1 | 
+ | 65535 | 	122.1 | 	15.3 | 	1.9 | 	0.5 | 	0.1 | 
 
 A small application note is that according to the datasheet, you have to take care in sending 16-bit numbers to the registers. When writing to the registers, it does it in two goes, first the high-bit and then the low-bit. I am using the David Mellis version of the Attiny board manager (https://github.com/damellis/attiny), and his library takes care of it all in one line, so when I write (for example) ICR1=32000; it just works. However, if you are using a different manager, consider heeding these instructions if you get wonky behaviour. I would suggest the following (doing the same for OCR1AH and OCR1AL):
 
@@ -218,7 +222,7 @@ TCCR1B = _BV(WGM13) | _BV(WGM12);
 TCCR1B |= _BV(CS11) |  _BV(CS10); // prescaler=64
 //TCCR1B |= _BV(CS12); // prescaler=256
 //TCCR1B |= _BV(CS12) |  _BV(CS10); // prescaler=1024
-ICR1=100;  //enter a value from 0-32,767 to set the frequency
+ICR1=100;  //enter a value from 0-65535 to set the frequency
 OCR1A=25;  //duty cycle PA6 = (ICR1-OCR1B)/ICR1 (this example is a 75% duty cycle at 1238 Hz)
 OCR1B=75;  //duty cycle PA5 = (ICR1-OCR1B)/ICR1 (this example is a 25% duty cycle at 1238 Hz)
 ```
