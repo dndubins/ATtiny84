@@ -143,10 +143,10 @@ TCCR1B = _BV(WGM13) | _BV(WGM12);
 TCCR1B |= _BV(CS11) |  _BV(CS10); // prescaler=64
 //TCCR1B |= _BV(CS12); // prescaler=256
 //TCCR1B |= _BV(CS12) |  _BV(CS10); // prescaler=1024
-ICR1=100;  //enter a value from 0-32,767 to set the frequency
+ICR1=100;  //enter a value from 0-65,535 to set the frequency
 OCR1A=50;  //duty cycle = (ICR1-OCR1A)/ICR1
 ```
-In this mode (mode 14), ICR1 is used to set the frequency of the PWM signal, and OCR1A is used to set the duty cycle, using the formula: duty cycle=(ICR1-OCR1A)/ICR1). OCR1A should be less than ICR1. There's a LOT of latitude here, ICR1 and OCR1A are 16-bit numbers, meaning that you can enter values from 0-32,767 for each of them! 
+In this mode (mode 14), ICR1 is used to set the frequency of the PWM signal, and OCR1A is used to set the duty cycle, using the formula: duty cycle=(ICR1-OCR1A)/ICR1). OCR1A should be less than ICR1. There's a LOT of latitude here, ICR1 and OCR1A are 16-bit numbers, meaning that you can enter values from 0-65535 for each of them! 
 
 This gives rise to the following awesome table, assuming an 8MHz clock speed:
 
@@ -197,7 +197,7 @@ TCCR1B = _BV(WGM13) | _BV(WGM12);
 TCCR1B |= _BV(CS11) |  _BV(CS10); // prescaler=64
 //TCCR1B |= _BV(CS12); // prescaler=256
 //TCCR1B |= _BV(CS12) |  _BV(CS10); // prescaler=1024
-ICR1=100;  //enter a value from 0-32,767 to set the frequency
+ICR1=100;  //enter a value from 0-65535 to set the frequency
 OCR1B=50;  //duty cycle = (ICR1-OCR1B)/ICR1
 ```
 The frequency is set again by ICR1 according to the formula: frequency=fclk/((ICR1+1)*N), and the duty cycle again is just inverted (ICR1-OCR1B)/ICR1. The same frequency table above applies, as it is the same method.
