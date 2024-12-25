@@ -51,7 +51,7 @@ void loop() {
 }
 
 void setTimer0() {
-  // CTC Match Routine using Timer 0
+  // CTC Match Routine using Timer 0 (ATtiny84)
   // Formula: frequency=fclk/((OCR0A+1)*N)
   cli();                // stop interrupts
   TCCR0A = 0;          // Clear TCCR0A
@@ -60,7 +60,7 @@ void setTimer0() {
   TCCR0A |= (1 << WGM01); // Set CTC mode
   //TCCR0B = _BV(CS00);  // prescaler=1 (no prescaling)   (Table 13-9, ATtiny84 datasheet)
   //TCCR0B = _BV(CS01);  // prescaler=8
-  TCCR0B = _BV(CS01) | _BV(CS00);  // nprscaler=64
+  TCCR0B = _BV(CS01) | _BV(CS00);  // prescaler=64
   //TCCR0B = _BV(CS02);  // prescaler=256
   //TCCR0B = _BV(CS02) | _BV(CS00);  // prescaler=1024
   OCR0A = 124;        //OCR1A=(fclk/(N*frequency))-1 (where N is prescaler).

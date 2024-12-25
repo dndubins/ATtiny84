@@ -48,7 +48,7 @@ void loop(){
 }
 
 void setTimer1(){
-  // CTC Match Routine using Timer 1
+  // CTC Match Routine using Timer 1 (ATtiny84)
   // Formula: frequency=fclk/((OCR1A+1)*N)
   cli();                // stop interrupts
   TCCR1A = 0;           // clear timer control register A
