@@ -68,7 +68,7 @@ Let's write a sketch that prints the time in millis() to the Serial Monitor at a
 Here's what the sketch could look like:
 
 ```
-/*  ATtiny84timedISR.ino - Timing an ISR using Timer 1 (without sleep)
+/*  ATtiny84timedISR_Timer1.ino - Timing an ISR using Timer 1 (without sleep)
 Author: D. Dubins
 Date: 24-Dec-24
 Description: This program will run the ISR at the frequency set in the timer setup routine.
@@ -193,7 +193,7 @@ The slowest we can do anything is about 30 Hz. So how can we accomplish this? We
 We can just keep track of the total time elapsed with a global volatile integer. Here's a stab at this idea:
 
 ```
-/*  ATtiny84timedISR_timer0.ino - Timing an ISR using Timer 0 (without sleep)
+/*  ATtiny84timedISR_Timer0.ino - Timing an ISR using Timer 0 (without sleep)
 Author: D. Dubins
 Date: 24-Dec-24
 Description: This program will run the ISR at the time delay specified by reportingTime.
