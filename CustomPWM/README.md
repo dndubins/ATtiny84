@@ -102,7 +102,7 @@ This gives rise to the following frequency table (in Hz) assuming an 8MHz clock 
 
 Well, you can do this, but your options are a bit more limited. The frequency is set using the prescaler value only, calculated using the formula: frequency=fclk/(N*256). OCR0A and OCR0B are used to control the duty cycles of PB2 and PA7, respectively, using the formula: duty cycle=OCR0X/255. Here is the code:
 ```
-  // Custom PWM on Pin PB2 and PA7 together, using Timer 0: (Page84 on ATtiny85 full datasheet)
+  // Custom PWM on Pin PB2 and PA7 together, using Timer 0: (ATtiny84)
   //Formula: wave frequency= fclk /(N x 510)
   pinMode(7, OUTPUT); // output pin for OCR0B is PA7 (physical pin 6)
   pinMode(8, OUTPUT); // output pin for OCR0A is PB2 (physical pin 5).
@@ -133,7 +133,7 @@ Timer 1 is controlled by the TCCR1A and TCCR1B Timer/Counter1 Control Registers.
 To set the frequency in this mode, the following equation is used: frequency=fclk/((ICR1+1)*N). OCR1A is used to set the duty cycle. This equation will hold for all of the following examples. This makes life slightly less confusing! Here is the code for PA6 only, using Timer 1:
 
 ```
-// Custom PWM on Pin PA6 only, using Timer 1: 
+// Custom PWM on Pin PA6 only, using Timer 1: (ATtiny84)
 //Formula: frequency=fclk/((ICR1+1)*N)
  pinMode(6, OUTPUT); // output is PA6 (physical pin 7)
 TCCR1A = _BV(COM1A1) | _BV(COM1A0) | _BV(WGM11); // fast PWM with ICR1 at the top
@@ -191,7 +191,7 @@ You may or may not need to do this. Probably not, but it's just worth noting. Yo
 For PA5, you need only set channels COM1B1 and COM1B0 high instead, and set the duty cycle with OCR1B:
 
 ```
-// Custom PWM on Pin PA5 only, using Timer 1: 
+// Custom PWM on Pin PA5 only, using Timer 1: (ATtiny84)
 pinMode(5, OUTPUT); // output is PA5 (physical pin 8)
 //Formula: frequency=fclk/((ICR1+1)*N)
 TCCR1A = _BV(COM1B1) | _BV(COM1B0) | _BV(WGM11); // fast PWM with ICR1 at the top
@@ -211,7 +211,7 @@ The frequency is set again by ICR1 according to the formula: frequency=fclk/((IC
 Similarly, you just need to set all of the COM1XX bits high in TCCR1A to get a custom PWM signal on both pins, and control their duty cycles independently with OCR1A and OCR1B:
 
 ```
-// Custom PWM on both pins PA6 and PA5, using Timer 1: 
+// Custom PWM on both pins PA6 and PA5, using Timer 1: (ATtiny84)
  pinMode(6, OUTPUT); // output is PA6 (physical pin 7)
  pinMode(5, OUTPUT); // output is PA5 (physical pin 8)
 //Formula: frequency=fclk/((ICR1+1)*N)
@@ -235,4 +235,5 @@ https://andreasrohner.at/posts/Electronics/How-to-set-the-PWM-frequency-for-the-
 This very useful post saved me hours:
 https://stackoverflow.com/questions/59160802/how-do-i-output-a-compare-match-to-oc1b-in-fast-pwm-mode-on-the-attiny84
 
-And also (of course) special thanks go to the attiny84 datasheet.
+And also (of course) special thanks go to the attiny84 datasheet:<p>
+https://ww1.microchip.com/downloads/en/DeviceDoc/Atmel-7701_Automotive-Microcontrollers-ATtiny24-44-84_Datasheet.pdf
