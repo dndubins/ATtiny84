@@ -235,5 +235,5 @@ https://andreasrohner.at/posts/Electronics/How-to-set-the-PWM-frequency-for-the-
 This very useful post saved me hours:
 https://stackoverflow.com/questions/59160802/how-do-i-output-a-compare-match-to-oc1b-in-fast-pwm-mode-on-the-attiny84
 
-And also (of course) special thanks go to the attiny84 datasheet:
+And also (of course) special thanks go to the ATtiny84 datasheet:
 https://ww1.microchip.com/downloads/en/DeviceDoc/Atmel-7701_Automotive-Microcontrollers-ATtiny24-44-84_Datasheet.pdf
