@@ -25,7 +25,7 @@ Here is the code to get Timer 1 into CTC mode:
   TIMSK1 |= _BV(OCIE1A);  // enable timer compare
   sei();                  // enable interrupts
 ```
-Other than the prescaler, OCR1A is the only number we need to set here. It behaves according to the following chart, assuming an 8MHz clock speed:
+Other than the prescaler, OCR1A is the only number we need to set here. It behaves according to the following frequency chart, assuming an 8MHz clock speed: (all table values in Hz)
 
  | OCR1A | 	1 | 	8 | 	64 | 	256 | 	1024 | 
 | --- |	--- |	--- |	--- |	--- |	--- |
@@ -60,7 +60,7 @@ TIMSK1 |= (1 << OCIE1A);   //re-enable CTC mode for Timer 1<p>
 This could be important if other routines in your code need to use Timer1. Also, if you'd like to access (or change) the value of the counter inside the ISR, TCNT1 (Timer/Counter 1 register) is the register to use. So for instance, your sketch can reset this just by using:<p>
 TCNT1=0;<p>
 or it can use it to measure time inside the ISR since the ISR reset, by doing something like,<p>
-"if(TCNT1==10)digitalWrite(pin,HIGH);"<p>
+if(TCNT1==10)digitalWrite(pin,HIGH);<p>
 
 Speaking of ISRs, now we can talk about how the entire sketch might look if you are using Timer1 to time an event.
 Let's write a sketch that prints the time in millis() to the Serial Monitor at a frequency of once per second (1 Hz, as set in the code above).
@@ -144,9 +144,7 @@ from being changed in unexpected ways.
 
 Timer 0 (8 bit)
 ---------------
-Timer 0 is set to CTC mode in a similar way. Here is the code to get Timer 0 into CTC mode:
-Using OCR0A (range 0-255), you can control the frequency of Timer 0 using the formula: frequency=fclk/((OCR0A+1)*N). 
-Your choices for a prescaler value for Timer 0 are 1, 8, 64, 256, and 1024.
+Timer 0 is set to CTC mode in a similar way. Using OCR0A (range 0-255), you can control the frequency of Timer 0 using the formula: frequency=fclk/((OCR0A+1)*N). Your choices for a prescaler value for Timer 0 are 1, 8, 64, 256, and 1024. Here is the code to get Timer 0 into CTC mode:
 
 ```
 // CTC Match Routine using Timer 0
