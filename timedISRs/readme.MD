@@ -9,6 +9,7 @@ Timer 1 (16 bit)
 Here is the code to get Timer 1 into CTC mode:
 ```
   // CTC Match Routine using Timer 1
+  // Formula: frequency=fclk/((OCR1A+1)*N)
   cli();                // stop interrupts
   TCCR1A = 0;           // clear timer control register A
   TCCR1B = 0;           // clear timer control register B
@@ -91,8 +92,8 @@ Pin 14: GND
 
 Serial Hookup (if needed):
 --------------------------
-ATTINY84 digital pin 0 -> Arduino Uno pin 0 RX (blue wire)
-ATTINY84 digital pin 1 -> Arduino Uno pin 1 TX (white wire)
+ATTINY84 digital pin 6 -> Arduino Uno pin 0 RX
+ATTINY84 digital pin 7 -> Arduino Uno pin 1 TX
 */
 
 #include <SoftwareSerial.h> // if needed
@@ -141,30 +142,32 @@ ISR(TIM1_COMPA_vect){
 Note that any variables changed inside the ISR need to be declared as volatile in global space. This protects them
 from being changed in unexpected ways.
 
-Timer 0 (also 8 bit)
---------------------
+Timer 0 (8 bit)
+---------------
 Timer 0 is set to CTC mode in a similar way. Here is the code to get Timer 0 into CTC mode:
 Using OCR0A (range 0-255), you can control the frequency of Timer 0 using the formula: frequency=fclk/((OCR0A+1)*N). 
 Your choices for a prescaler value for Timer 0 are 1, 8, 64, 256, and 1024.
 
 ```
-  // CTC Match Routine using Timer 0
-  // Formula: frequency=fclk/((OCR0A+1)*N)
-  cli();                      // clear interrupts
-  GTCCR = _BV(PSR0);          // reset the prescaler for Timer0
-  TIMSK |= _BV(OCIE0A);       // enable interrupt on Compare Match A for Timer0
-  TCCR0A |= _BV(WGM01);       // Set CTC mode (WGM01 = 1, WGM00 = 0)
-  //TCCR0B = _BV(WGM02) | _BV(CS00);  // prescaler=1
-  //TCCR0B = _BV(WGM02)  | _BV(CS01);  // prescaler=8
-  TCCR0B = _BV(WGM02) | _BV(CS01) | _BV(CS00);  // prescaler=64
-  //TCCR0B = _BV(WGM02) | _BV(CS02);  // prescaler=256
-  //TCCR0B = _BV(WGM02) | _BV(CS02) | _BV(CS00);  // prescaler=1024
-  OCR0A = 124; // Set betw 1-255 (prescaler=64, OCR1C=124 -->  1 kHz)
-  sei();       // enable interrupts
+// CTC Match Routine using Timer 0
+// Formula: frequency=fclk/((OCR0A+1)*N)
+cli();                // stop interrupts
+TCCR0A = 0;          // Clear TCCR0A
+TCCR0B = 0;          // Clear TCCR0B
+TCNT0 = 0;           // Initialize counter
+TCCR0A |= (1 << WGM01); // Set CTC mode
+//TCCR0B = _BV(CS00);  // prescaler=1 (no prescaling)   (Table 13-9, ATtiny84 datasheet)
+//TCCR0B = _BV(CS01);  // prescaler=8
+TCCR0B = _BV(CS01) | _BV(CS00);  // prescaler=64
+//TCCR0B = _BV(CS02);  // prescaler=256
+//TCCR0B = _BV(CS02) | _BV(CS00);  // prescaler=1024
+OCR0A = 124;            // OCR0A=(fclk/(N*frequency))-1 (where N is prescaler).
+TIMSK0 |= _BV(OCIE0A);  // enable interrupt on Compare Match A for Timer0
+sei();                  // Enable global interrupts
 ```
 
 Here is a chart of frequencies (in Hz) spanning your options, assuming an 8MHz clock speed:
- | ICR1 | 	1 | 	8 | 	64 | 	256 | 	1024 | 
+ | OCR0A | 	1 | 	8 | 	64 | 	256 | 	1024 | 
 | --- |	--- |	--- |	--- |	--- |	--- |
  | 1 | 	4000000 | 	500000 | 	62500 | 	15625 | 	3906.3 | 
  | 5 | 	1333333.3 | 	166666.7 | 	20833.3 | 	5208.3 | 	1302.1 | 
@@ -184,85 +187,91 @@ Here is a chart of frequencies (in Hz) spanning your options, assuming an 8MHz c
  | 255 | 	31250 | 	3906.3 | 	488.3 | 	122.1 | 	30.5 | 
 
 Putting this all together, we can write a sketch to ask the ATtiny85 to take an analogRead() from pin A0,
-at a frequency of about once per second (1 Hz). Note that the pre-scaler 1024 is much lower than Timer1's prescaler of 16384. The slowest we can
-do anything is about 30 Hz. So how can we accomplish this? We need to track the number of rollovers the ISR does, and then act inside the ISR accordingly.
-We can just keep track of the total time elapsed with a global volatile unsigned long integer. Here's a stab at this idea:
+at a frequency of about once per second (1 Hz). Note that the maximum value of OCR0A and a pre-scaler 1024 really limits us if we need to go slower than 30 Hz. 
+The slowest we can do anything is about 30 Hz. So how can we accomplish this? We need to track the number of rollovers the ISR does, and then act inside the ISR accordingly.
+We can just keep track of the total time elapsed with a global volatile integer. Here's a stab at this idea:
 
 ```
-/*  ATtiny85timedISR.ino - Timing an ISR using Timer 1 (without sleep)
-Timer routine inspired from:
-https://embeddedthoughts.com/2016/06/06/attiny85-introduction-to-pin-change-and-timer-interrupts/
+/*  ATtiny84timedISR_timer0.ino - Timing an ISR using Timer 0 (without sleep)
 Author: D. Dubins
 Date: 24-Dec-24
-Description: This program will run the ISR at the time delay specified.
+Description: This program will run the ISR at the time delay specified by reportingTime.
 
-The following are the ATtiny85 pins by function:
+The following are the ATtiny84 pins by function:
 ------------------------------------------------
-Pin 1: PB5 / Reset (momentary switch btw Pin1 and GND to reset)
-Pin 2: PB3 / Analog Input 3 (A3) / Digital Pin 3 / PCINT3
-Pin 3: PB4 / Analog Input 2 (A2) / Digital Pin 4 / PCINT4
-Pin 4: GND
-Pin 5: PB0 / Digital Pin 0 / PWM supported / AREF / MOSI / PCINT0
-Pin 6: PB1 / Digital Pin 1 / PWM supported / MISO / PCINT1
-Pin 7: PB2 / Analog Input 1 (A1) / SCK / Digital Pin 2 / PCINT2
-Pin 8: Vcc+
+Pin 1: Vcc (1.8-5.5V)
+Pin 2: 10/XTAL1/PCINT8/PB0
+Pin 3: 9/XTAL2/PCINT9/PB1
+Pin 4: dW/RESET/PCINT11/PB3
+Pin 5: PWM/OC0A/CKOUT/8/INT0/PCINT10/PB2
+Pin 6: PWM/ICP/OC0B/7/A7/ADC7/PCINT7/PA7
+Pin 7: PWM/MOSI/SDA/OC1A/6/A6/ADC6/PCINT6/PA6
+Pin 8: PWM/D0/OC1B/MISO/5/A5/ADC5/PCINT5/PA5
+Pin 9: T1/SCL/SCK/4/A4/ADC4/PCINT4/PA4
+Pin 10: 3/A3/ADC3/PCINT3/PA3
+Pin 11: 2/A2/ADC2/PCINT2/PA2
+Pin 12: 1/A1/ADC1/PCINT1/PA1
+Pin 13: AREF/0/A0/ADC0/PCINT0/PA0
+Pin 14: GND
 
 Serial Hookup (if needed):
 --------------------------
-ATTINY85 digital pin 3 -> Arduino Uno pin 0 RX (blue wire)
-ATTINY85 digital pin 4 -> Arduino Uno pin 1 TX (white wire)
+ATTINY84 digital pin 6 -> Arduino Uno pin 0 RX
+ATTINY84 digital pin 7 -> Arduino Uno pin 1 TX
 */
 
-#include <SoftwareSerial.h> // if needed
+#include <SoftwareSerial.h>  // if needed
 
-volatile bool report=false;       // keep track if ISR is triggered
-volatile int reading=0;           // to hold analog reading
-volatile int cycles=0;            // to hold total# cycles ISR ran
-int reportingTime=2000;           // data collection interval (in milliseconds)
+volatile bool report = false;  // keep track if ISR is triggered
+volatile int reading = 0;      // to hold analog reading
+volatile int cycles = 0;       // to hold total# cycles ISR ran
+int reportingTime = 2000;      // data collection interval (in milliseconds)
 
-#define rxPin 3    // this is physical pin 2 on ATtiny85
-#define txPin 4    // this is physical pin 3 on ATtiny85
+#define rxPin 6  // PA6 is physical pin 7 on ATtiny84
+#define txPin 7  // PA7 is physical pin 6 on ATtiny84
 
 SoftwareSerial mySerial(rxPin, txPin);
 
-void setup(){
+void setup() {
   mySerial.begin(9600);
   setTimer0();
 }
- 
-void loop(){
-  if(report){
-    mySerial.println(reading);   // you shouldn't put serial or timed commands inside ISRs
-    report=false;
+
+void loop() {
+  if (report) {
+    mySerial.println(reading);  // you shouldn't put serial or timed commands inside ISRs
+    report = false;
   }
 }
 
-void setTimer0(){
+void setTimer0() {
   // CTC Match Routine using Timer 0
   // Formula: frequency=fclk/((OCR0A+1)*N)
-  cli();                      // clear interrupts
-  GTCCR = _BV(PSR0);          // reset the prescaler for Timer0
-  TIMSK |= _BV(OCIE0A);       // enable interrupt on Compare Match A for Timer0
-  TCCR0A |= _BV(WGM01);       // Set CTC mode (WGM01 = 1, WGM00 = 0)
-  //TCCR0B = _BV(WGM02) | _BV(CS00);  // prescaler=1
-  //TCCR0B = _BV(WGM02)  | _BV(CS01);  // prescaler=8
-  TCCR0B = _BV(WGM02) | _BV(CS01) | _BV(CS00);  // prescaler=64
-  //TCCR0B = _BV(WGM02) | _BV(CS02);  // prescaler=256
-  //TCCR0B = _BV(WGM02) | _BV(CS02) | _BV(CS00);  // prescaler=1024
-  OCR0A = 124; // Set betw 1-255 (prescaler=64, OCR1C=124 -->  1 kHz)
-  sei();       // enable interrupts
+  cli();                // stop interrupts
+  TCCR0A = 0;          // Clear TCCR0A
+  TCCR0B = 0;          // Clear TCCR0B
+  TCNT0 = 0;           // Initialize counter
+  TCCR0A |= (1 << WGM01); // Set CTC mode
+  //TCCR0B = _BV(CS00);  // prescaler=1 (no prescaling)   (Table 13-9, ATtiny84 datasheet)
+  //TCCR0B = _BV(CS01);  // prescaler=8
+  TCCR0B = _BV(CS01) | _BV(CS00);  // nprscaler=64
+  //TCCR0B = _BV(CS02);  // prescaler=256
+  //TCCR0B = _BV(CS02) | _BV(CS00);  // prescaler=1024
+  OCR0A = 124;        //OCR1A=(fclk/(N*frequency))-1 (where N is prescaler).
+  TIMSK0 |= _BV(OCIE0A);       // enable interrupt on Compare Match A for Timer0
+  sei();                  // Enable global interrupts
 }
-  
-ISR(TIMER0_COMPA_vect){
+
+ISR(TIM0_COMPA_vect) {
   //This ISR will run 31 times per second. We keep track of the number of times it ran
   //to report a reading.
   //Make ISRs as simple and as short as possible. Any global arrays changed should be declared
   //as volatile.
   cycles++;
-  if(cycles>=reportingTime){  // (2000 msec/1000) x 1000 cycles/sec = 2000 cycles.
-    reading=analogRead(A1); // take an analog reading from pin A1 
-    report=true;            // flag that datum is ready (just for reporting)
-    cycles=0; // reset the number of cycles
+  if (cycles >= reportingTime) {  // (2000 msec/1000) x 1000 cycles/sec = 2000 cycles.
+    reading = analogRead(A1);     // take an analog reading from pin A1
+    report = true;                // flag that datum is ready (just for reporting)
+    cycles = 0;                   // reset the number of cycles
   }
 }
 ```
