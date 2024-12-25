@@ -128,7 +128,7 @@ void setTimer1(){
   //TCCR1B |= _BV(CS10);  // prescaler=1 (Table 14-6 on the ATtiny84 datasheet)
   //TCCR1B |= _BV(CS11);  // prescaler=8
   //TCCR1B |= _BV(CS11) | _BV(CS10);  // prescaler=64
-  TCCR1B |= _BV(CS12); // prescaler=256
+  TCCR1B |= _BV(CS12);    // prescaler=256
   //TCCR1B |= _BV(CS12) |  _BV(CS10); // prescaler=1024
   OCR1A = 31249;  //OCR1A=(fclk/(N*frequency))-1 (where N is prescaler).
   TIMSK1 |= _BV(OCIE1A);  // enable timer compare
@@ -157,7 +157,7 @@ TCCR0A |= (1 << WGM01); // Set CTC mode
 //TCCR0B = _BV(CS00);  // prescaler=1 (no prescaling)   (Table 13-9, ATtiny84 datasheet)
 //TCCR0B = _BV(CS01);  // prescaler=8
 TCCR0B = _BV(CS01) | _BV(CS00);  // prescaler=64
-//TCCR0B = _BV(CS02);  // prescaler=256
+//TCCR0B = _BV(CS02);   // prescaler=256
 //TCCR0B = _BV(CS02) | _BV(CS00);  // prescaler=1024
 OCR0A = 124;            // OCR0A=(fclk/(N*frequency))-1 (where N is prescaler).
 TIMSK0 |= _BV(OCIE0A);  // enable interrupt on Compare Match A for Timer0
@@ -252,7 +252,7 @@ void setTimer0() {
   TCCR0A |= (1 << WGM01); // Set CTC mode
   //TCCR0B = _BV(CS00);  // prescaler=1 (no prescaling)   (Table 13-9, ATtiny84 datasheet)
   //TCCR0B = _BV(CS01);  // prescaler=8
-  TCCR0B = _BV(CS01) | _BV(CS00);  // nprscaler=64
+  TCCR0B = _BV(CS01) | _BV(CS00);  // prescaler=64
   //TCCR0B = _BV(CS02);  // prescaler=256
   //TCCR0B = _BV(CS02) | _BV(CS00);  // prescaler=1024
   OCR0A = 124;        //OCR1A=(fclk/(N*frequency))-1 (where N is prescaler).
