@@ -285,3 +285,5 @@ or it can use it to measure time inside the ISR since the ISR reset, by doing so
 if(TCNT0==10)digitalWrite(pin,HIGH);<p>
 
 Note that for both sketches, even though timers were being used, the SoftwareSerial connection still worked, and reported data. Yay!
+Special thanks goes to the ATtiny84 datasheet, where so many questions are answered:
+https://ww1.microchip.com/downloads/en/DeviceDoc/Atmel-7701_Automotive-Microcontrollers-ATtiny24-44-84_Datasheet.pdf
