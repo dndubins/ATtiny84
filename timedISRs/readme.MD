@@ -117,11 +117,11 @@ void loop(){
 }
 
 void setTimer1(){
-  // CTC Match Routine using Timer 1
+  // CTC Match Routine using Timer 1 (ATtiny84)
   // Formula: frequency=fclk/((OCR1A+1)*N)
   cli();                // stop interrupts
-  TCCR1A = 0;           // clear timer control register A
-  TCCR1B = 0;           // clear timer control register B
+  TCCR1A = 0;           // clear timer1 control register A
+  TCCR1B = 0;           // clear timer1 control register B
   TCNT1 = 0;            // set counter to 0
   TCCR1B = _BV(WGM12);  // CTC mode (Table 12-5 on ATtiny84 datasheet)
   //TCCR1B = _BV(WGM13) | _BV(WGM12);
@@ -243,7 +243,7 @@ void loop() {
 }
 
 void setTimer0() {
-  // CTC Match Routine using Timer 0
+  // CTC Match Routine using Timer 0 (ATtiny84)
   // Formula: frequency=fclk/((OCR0A+1)*N)
   cli();                // stop interrupts
   TCCR0A = 0;          // Clear TCCR0A
