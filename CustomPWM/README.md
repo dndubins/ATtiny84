@@ -1,9 +1,10 @@
-<h2>Warning: Changing Register Bits</h2>
-Now for a very important word about changing register values. Usually when you are monkeying around with prescaler values, you change them around. It's easy to forget this very important fact: when we change a prescaler (or any) bit, the other bits stay as they are. It's very important either to clear the register before you start setting prescalers, or clear the bits that need to be low. Otherwise you will be wondering why for example when you went from a prescaler of 64 above to a prescaler of 8, nothing happened. It's because when you set the prescaler of 64 you asked for this:<p>
+<h2>A Word of Warning: Changing Register Bits</h2>
+Before we start this section, here is a very important short reminder about changing register values. We will need to do this for fastPWM. Usually when you are monkeying around with prescaler values, you change them around. It's easy to forget this fact: when we change a single prescaler (or any) bit, the other bits stay as they are. It's very important either to clear the register before you start setting prescalers, or clear the bits that need to be low. Otherwise you will be wondering why for example when you went from a prescaler of 64 above to a prescaler of 8, nothing happened. It's because when you set the prescaler of 64 you asked for this:<p>
 TCCR1B |= _BV(CS11) | _BV(CS10);  // THIS SETS CS11 and CS10 both HIGH.<p>
 But then, when you change the code to this: <p>
 TCCR1B |= _BV(CS11);  // prescaler=8 // THIS SETS CS11 HIGH.<p>
 Guess what? CS10 is still HIGH! This will mess you up if you forget this cardinal rule of registers. You can reset a register this way:<p>
+
 ```
 // 1) Set the whole register to zero first.
   TCCR1B=0; // This is dangerous. Is ther any other important stuff in there? Check the datasheet to make sure this is ok.
@@ -19,6 +20,7 @@ Guess what? CS10 is still HIGH! This will mess you up if you forget this cardina
 //   Then when you set the prescalers //for the first time, there won't be stray 1's lurking in the registers. However, if you need to
 //   change prescalers during the program, this //won't help you if you forget to set the appropriate bits low.
 ``` 
+
 This is true for TCCR1B, or any register you are changing values of using the |= operator.<p>
 
 
