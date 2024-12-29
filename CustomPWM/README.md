@@ -146,30 +146,7 @@ TCCR1B |= _BV(CS11) |  _BV(CS10); // prescaler=64
 ICR1=100;  //enter a value from 0-65,535 to set the frequency
 OCR1A=50;  //duty cycle = (ICR1-OCR1A)/ICR1
 ```
-In this mode (mode 14), ICR1 is used to set the frequency of the PWM signal, and OCR1A is used to set the duty cycle, using the formula: duty cycle=(ICR1-OCR1A)/ICR1). OCR1A should be less than ICR1. There's a LOT of latitude here, ICR1 and OCR1A are 16-bit numbers, meaning that you can enter values from 0-65535 for each of them! 
-
-<h2>Warning: Changing Register Bits</h2>
-Now for a very important word about changing register values. Usually when you are monkeying around with prescaler values, you change them around. It's easy to forget this very important fact: when we change a prescaler (or any) bit, the other bits stay as they are. It's very important either to clear the register before you start setting prescalers, or clear the bits that need to be low. Otherwise you will be wondering why for example when you went from a prescaler of 64 above to a prescaler of 8, nothing happened. It's because when you set the prescaler of 64 you asked for this:<p>
-TCCR1B |= _BV(CS11) | _BV(CS10);  // THIS SETS CS11 and CS10 both HIGH.<p>
-But then, when you change the code to this: <p>
-TCCR1B |= _BV(CS11);  // prescaler=8 // THIS SETS CS11 HIGH.<p>
-Guess what? CS10 is still HIGH! This will mess you up if you forget this cardinal rule of registers. You can reset a register this way:<p>
-'''
-// 1) Set the whole register to zero first.
-  TCCR1B=0; // This is dangerous. Is ther any other important stuff in there? Check the datasheet to make sure this is ok.
-// 2) Clear the bits one-by-one first, before you set the pre-scalers:
-   TCCR1B &=~(_BV(CS10));  // clear bit CS10 before setting prescalers
-   TCCR1B &=~(_BV(CS11));     // clear bit CS11 before setting prescalers
-   TCCR1B &=~(_BV(CS12));     // clear bit CS12 before setting prescalers
-// 3) You could be explicit in the same line of the bits that need to be set high and low:
-   TCCR1B = (_BV(CS11)) & ~(_BV(CS10) | _BV(CS12));  // prescaler=8. THIS SETS CS01 HIGH, and CS00, CS02 LOW, explicitly.
-   // If you have multiple bits to set HIGH and LOW, you can bundle them (for example) like this:
-   //TCCR0B = (_BV(WGM02)  | _BV(CS01)) & ~(_BV(CS00) | _BV(CS02));  // prescaler=8 // THIS SETS WGM02, CS01 HIGH, and CS00, CS02 LOW.
-// 4) Do a hard reset on the mcu, or turn off/on the power. This should reset all registers to default values. 
-//   Then when you set the prescalers //for the first time, there won't be stray 1's lurking in the registers. However, if you need to
-//   change prescalers during the program, this //won't help you if you forget to set the appropriate bits low.
-``` 
-This is true for TCCR1B, or any register you are changing values of using the |= operator.<p>
+In this mode (mode 14), ICR1 is used to set the frequency of the PWM signal, and OCR1A is used to set the duty cycle, using the formula: duty cycle=(ICR1-OCR1A)/ICR1). OCR1A should be less than ICR1. There's a LOT of latitude here, ICR1 and OCR1A are 16-bit numbers, meaning that you can enter values from 0-65535 for each of them!<p>
 
 This gives rise to the following awesome table, assuming an 8MHz clock speed:
 
