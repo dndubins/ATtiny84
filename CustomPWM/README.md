@@ -1,4 +1,4 @@
-<h2>A Word of Warning: Changing Register Bits</h2>
+<h2>A Word of Warning Before We Begin: Changing Register Bits</h2>
 Before we start this section, here is a very important short reminder about changing register values. We will need to do this for fastPWM. Usually when you are monkeying around with prescaler values, you change them around. It's easy to forget this fact: when we change a single prescaler (or any) bit inside a register, the other bits stay as they are. It's very important either to clear the register before you start setting prescalers, or clear the bits that need to be low. Otherwise, you will be wondering why for example when you changed from a prescaler of 64 in Timer 1 for example, to a prescaler of 8, nothing changed. It's because when you set the prescaler of 64, you asked for this:<p>
 TCCR1B |= _BV(CS11) | _BV(CS10);  // THIS SETS CS11 and CS10 both HIGH.<p>
 But then, when you changed the code to this: <p>
@@ -13,11 +13,11 @@ Guess what? CS10 is still HIGH! This will mess you up if you forget this cardina
    TCCR1B &=~(_BV(CS11));     // clear bit CS11 before setting prescalers
    TCCR1B &=~(_BV(CS12));     // clear bit CS12 before setting prescalers
 // or alternately, all in one line:
-   TCCR1B &=~ (_BV(CS10) | _BV(CS11) | _BV(CS12); // clear bits CS10, CS11, and CS12 before we start changing them.
+   TCCR1B &= ~(_BV(CS10) | _BV(CS11) | _BV(CS12)); // clear bits CS10, CS11, and CS12 before we start changing them.
 // 3) You could be explicit in the *same line* of the bits that need to be set high and low:
-   TCCR1B = (_BV(CS11)) & ~(_BV(CS10) | _BV(CS12));  // prescaler=8. THIS SETS CS01 HIGH, and CS00, CS02 LOW, explicitly.
+   TCCR1B |= (_BV(CS11)) & ~(_BV(CS10) | _BV(CS12));  // prescaler=8. THIS SETS CS01 HIGH, and CS00, CS02 LOW, explicitly.
    // If you have multiple bits to set HIGH and LOW, you can bundle them (for example) like this:
-   //TCCR0B = (_BV(WGM02)  | _BV(CS01)) & ~(_BV(CS00) | _BV(CS02));  // prescaler=8 // THIS SETS WGM02, CS01 HIGH, and CS00, CS02 LOW.
+   //TCCR0B |= (_BV(WGM02)  | _BV(CS01)) & ~(_BV(CS00) | _BV(CS02));  // prescaler=8 // THIS SETS WGM02, CS01 HIGH, and CS00, CS02 LOW.
 // 4) Do a hard reset on the mcu, or turn off/on the power. This should reset all registers to default values. 
 //   Then when you set the prescalers //for the first time, there won't be stray 1's lurking in the registers. However, if you need to
 //   change prescalers during the program, this //won't help you if you forget to set the appropriate bits low.
@@ -98,6 +98,7 @@ Now you have options. Using OCR0A, you can control the frequency using the formu
    //Formula: wave frequency=fclk/((OCR0A+1)*N)
   pinMode(7, OUTPUT); // output pin for OCR0B is PA7 (physical pin 6)
   TCCR0A = _BV(COM0A1) | _BV(COM0B1) | _BV(WGM01) | _BV(WGM00); // set OC0A on compare match
+  TCCR0B &= ~(_BV(CS00) | _BV(CS01) | _BV(CS02)); // clear bits CS00, CS01, and CS02 before we start changing them.
   //TCCR0B = _BV(WGM02) | _BV(CS00);  // no prescaling
   //TCCR0B = _BV(WGM02)  | _BV(CS01);  // prescaler=8
   //TCCR0B = _BV(WGM02) | _BV(CS01) | _BV(CS00);  // nprscaler=64
@@ -134,6 +135,7 @@ Well, you can do this, but your options are a bit more limited. The frequency is
   pinMode(7, OUTPUT); // output pin for OCR0B is PA7 (physical pin 6)
   pinMode(8, OUTPUT); // output pin for OCR0A is PB2 (physical pin 5).
   TCCR0A = _BV(COM0A1) | _BV(COM0A0) | _BV(COM0B1) |_BV(COM0B0) |_BV(WGM01) |_BV(WGM00); // PWM (Mode 3)
+  TCCR0B &= ~(_BV(CS00) | _BV(CS01) | _BV(CS02)); // clear bits CS01, CS02, and CS03 before we start changing them.
   TCCR0B = _BV(CS00);  // no prescaling
   //TCCR0B = _BV(CS01);  // prescaler=8
   //TCCR0B = _BV(CS01) | _BV(CS00);  // prescaler=64
@@ -164,7 +166,8 @@ To set the frequency in this mode, the following equation is used: frequency=fcl
 //Formula: frequency=fclk/((ICR1+1)*N)
  pinMode(6, OUTPUT); // output is PA6 (physical pin 7)
 TCCR1A = _BV(COM1A1) | _BV(COM1A0) | _BV(WGM11); // fast PWM with ICR1 at the top
-TCCR1B = _BV(WGM13) | _BV(WGM12); 
+TCCR1B = _BV(WGM13) | _BV(WGM12);
+TCCR1B &= ~(_BV(CS10) | _BV(CS11) | _BV(CS12)); // clear bits CS10, CS11, and CS12 before we start changing them.
 //TCCR1B |= _BV(CS10);  // prescaler=1
 //TCCR1B |= _BV(CS11); // prescaler=8
 TCCR1B |= _BV(CS11) |  _BV(CS10); // prescaler=64
@@ -222,7 +225,8 @@ For PA5, you need only set channels COM1B1 and COM1B0 high instead, and set the 
 pinMode(5, OUTPUT); // output is PA5 (physical pin 8)
 //Formula: frequency=fclk/((ICR1+1)*N)
 TCCR1A = _BV(COM1B1) | _BV(COM1B0) | _BV(WGM11); // fast PWM with ICR1 at the top
-TCCR1B = _BV(WGM13) | _BV(WGM12); 
+TCCR1B = _BV(WGM13) | _BV(WGM12);
+TCCR1B &= ~(_BV(CS10) | _BV(CS11) | _BV(CS12)); // clear bits CS10, CS11, and CS12 before we start changing them.
 //TCCR1B |= _BV(CS10);  // prescaler=1
 //TCCR1B |= _BV(CS11); // prescaler=8
 TCCR1B |= _BV(CS11) |  _BV(CS10); // prescaler=64
@@ -243,7 +247,8 @@ Similarly, you just need to set all of the COM1XX bits high in TCCR1A to get a c
  pinMode(5, OUTPUT); // output is PA5 (physical pin 8)
 //Formula: frequency=fclk/((ICR1+1)*N)
 TCCR1A = _BV(COM1A1) | _BV(COM1A0) | _BV(COM1B1) | _BV(COM1B0) | _BV(WGM11); // fast PWM with ICR1 at the top
-TCCR1B = _BV(WGM13) | _BV(WGM12); 
+TCCR1B = _BV(WGM13) | _BV(WGM12);
+TCCR1B &= ~(_BV(CS10) | _BV(CS11) | _BV(CS12)); // clear bits CS10, CS11, and CS12 before we start changing them.
 //TCCR1B |= _BV(CS10);  // prescaler=1
 //TCCR1B |= _BV(CS11); // prescaler=8
 TCCR1B |= _BV(CS11) |  _BV(CS10); // prescaler=64
