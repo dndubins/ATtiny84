@@ -134,7 +134,7 @@ Well, you can do this, but your options are a bit more limited. The frequency is
   pinMode(7, OUTPUT); // output pin for OCR0B is PA7 (physical pin 6)
   pinMode(8, OUTPUT); // output pin for OCR0A is PB2 (physical pin 5).
   TCCR0A = _BV(COM0A1) | _BV(COM0A0) | _BV(COM0B1) |_BV(COM0B0) |_BV(WGM01) |_BV(WGM00); // PWM (Mode 3)
-  TCCR0B &= ~(_BV(CS00) | _BV(CS01) | _BV(CS02)); // clear bits CS01, CS02, and CS03 before we start changing them.
+  TCCR0B &= ~(_BV(CS00) | _BV(CS01) | _BV(CS02)); // clear bits CS00, CS01, and CS02 before we start changing them.
   TCCR0B = _BV(CS00);  // no prescaling
   //TCCR0B = _BV(CS01);  // prescaler=8
   //TCCR0B = _BV(CS01) | _BV(CS00);  // prescaler=64
