@@ -1,18 +1,20 @@
 <h2>A Word of Warning: Changing Register Bits</h2>
-Before we start this section, here is a very important short reminder about changing register values. We will need to do this for fastPWM. Usually when you are monkeying around with prescaler values, you change them around. It's easy to forget this fact: when we change a single prescaler (or any) bit, the other bits stay as they are. It's very important either to clear the register before you start setting prescalers, or clear the bits that need to be low. Otherwise you will be wondering why for example when you went from a prescaler of 64 above to a prescaler of 8, nothing happened. It's because when you set the prescaler of 64 you asked for this:<p>
+Before we start this section, here is a very important short reminder about changing register values. We will need to do this for fastPWM. Usually when you are monkeying around with prescaler values, you change them around. It's easy to forget this fact: when we change a single prescaler (or any) bit inside a register, the other bits stay as they are. It's very important either to clear the register before you start setting prescalers, or clear the bits that need to be low. Otherwise, you will be wondering why for example when you changed from a prescaler of 64 in Timer 1 for example, to a prescaler of 8, nothing changed. It's because when you set the prescaler of 64, you asked for this:<p>
 TCCR1B |= _BV(CS11) | _BV(CS10);  // THIS SETS CS11 and CS10 both HIGH.<p>
-But then, when you change the code to this: <p>
+But then, when you changed the code to this: <p>
 TCCR1B |= _BV(CS11);  // prescaler=8 // THIS SETS CS11 HIGH.<p>
-Guess what? CS10 is still HIGH! This will mess you up if you forget this cardinal rule of registers. You can reset a register this way:<p>
+Guess what? CS10 is still HIGH! This will mess you up if you forget this cardinal rule of registers. So how can you make sure the appropriate bits are cleared? You can reset bits in a register this way:<p>
 
 ```
-// 1) Set the whole register to zero first.
-  TCCR1B=0; // This is dangerous. Is ther any other important stuff in there? Check the datasheet to make sure this is ok.
-// 2) Clear the bits one-by-one first, before you set the pre-scalers:
-   TCCR1B &=~(_BV(CS10));  // clear bit CS10 before setting prescalers
+// 1) Set the whole register to zero.
+  TCCR1B=0; // This is dangerous. Is there any other important stuff in there? Check the datasheet to make sure this is ok.
+// 2) Clear the bits one-by-one, before you set the pre-scalers:
+   TCCR1B &=~(_BV(CS10));     // clear bit CS10 before setting prescalers
    TCCR1B &=~(_BV(CS11));     // clear bit CS11 before setting prescalers
    TCCR1B &=~(_BV(CS12));     // clear bit CS12 before setting prescalers
-// 3) You could be explicit in the same line of the bits that need to be set high and low:
+// or alternately, all in one line:
+   TCCR1B &=~ (_BV(CS10) | _BV(CS11) | _BV(CS12); // clear bits CS10, CS11, and CS12 before we start changing them.
+// 3) You could be explicit in the *same line* of the bits that need to be set high and low:
    TCCR1B = (_BV(CS11)) & ~(_BV(CS10) | _BV(CS12));  // prescaler=8. THIS SETS CS01 HIGH, and CS00, CS02 LOW, explicitly.
    // If you have multiple bits to set HIGH and LOW, you can bundle them (for example) like this:
    //TCCR0B = (_BV(WGM02)  | _BV(CS01)) & ~(_BV(CS00) | _BV(CS02));  // prescaler=8 // THIS SETS WGM02, CS01 HIGH, and CS00, CS02 LOW.
@@ -22,9 +24,6 @@ Guess what? CS10 is still HIGH! This will mess you up if you forget this cardina
 ``` 
 
 This is true for TCCR1B, or any register you are changing values of using the |= operator.<p>
-
-
-
 
 # Fast PWM on the ATtiny84
 
