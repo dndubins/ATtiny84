@@ -1,3 +1,21 @@
+# Fast PWM on the ATtiny84
+
+I stumbled on the ATtiny84 by chance as a happy medium between the ATtiny85 and the ATmega328. It has many more digital pins than the ATtiny85, without the big real estate needed by the DIP version of the 328. I know, life would be a lot easier if I just went surface mount, but damn it, I'm not ready! I just like PDIP, ok? :) My printed circuits look great - provided you just stepped out of the 70s.
+
+In any event, one of the more important tasks I have needed with many of my projects is more (or any) control over PWM frequencies. There exists a point in many of my projects where I want to calibrate something, or send a specific signal to a device, and customizing the PWM frequency ends up being the answer. Nothing I've been doing so far requires considering phase inversion, or wave symmetry - these are modes I don't tend to explore. The day that I need them, I'm sure I will start caring. But until then, there's this beautiful little problem I've solved for two MCUs so far:
+
+https://playground.arduino.cc/Code/FastPWM/
+
+https://github.com/dndubins/ATtiny85/tree/main/CustomPWM
+
+Now on to the third!
+
+My goal for this exercise was to generate the same one-stop set of instructions for the ATtiny84. Here goes!!!
+
+The ATtiny84, like the ATtyiny85, has two timers: Timer 0 (responsible for the delay() and millis() functions), and Timer 1. There are only 4 pins on the ATtiny84 that are PWM-capable. PB2 and PA7 (physical pins 5 and 6) are controlled by Timer 0. Pins PA6 and PA5 (physical pins 7 and 8) are controlled by Timer 1. 
+
+Just like my Arduino Playground article, I will organize this post by what you would like to do.
+
 <h2>A Word of Warning Before We Begin: Changing Register Bits</h2>
 Before we start this section, here is a very important short reminder about changing register values. We will need to do this for fastPWM. Usually when you are monkeying around with prescaler values, you change them around. It's easy to forget this fact: when we change a single prescaler (or any) bit inside a register, the other bits stay as they are. It's very important either to clear the register before you start setting prescalers, or clear the bits that need to be low. Otherwise, you will be wondering why for example when you changed from a prescaler of 64 in Timer 1 for example, to a prescaler of 8, nothing changed. It's because when you set the prescaler of 64, you asked for this:<p>
 TCCR1B |= _BV(CS11) | _BV(CS10);  // THIS SETS CS11 and CS10 both HIGH.<p>
@@ -24,25 +42,6 @@ Guess what? CS10 is still HIGH! This will mess you up if you forget this cardina
 ``` 
 
 This is true for TCCR1B, or any register you are changing values of using the |= operator.<p>
-
-# Fast PWM on the ATtiny84
-
-I stumbled on the ATtiny84 by chance as a happy medium between the ATtiny85 and the ATmega328. It has many more digital pins than the ATtiny85, without the big real estate needed by the DIP version of the 328. I know, life would be a lot easier if I just went surface mount, but damn it, I'm not ready! I just like PDIP, ok? :) My printed circuits look great - provided you just stepped out of the 70s.
-
-In any event, one of the more important tasks I have needed with many of my projects is more (or any) control over PWM frequencies. There exists a point in many of my projects where I want to calibrate something, or send a specific signal to a device, and customizing the PWM frequency ends up being the answer. Nothing I've been doing so far requires considering phase inversion, or wave symmetry - these are modes I don't tend to explore. The day that I need them, I'm sure I will start caring. But until then, there's this beautiful little problem I've solved for two MCUs so far:
-
-https://playground.arduino.cc/Code/FastPWM/
-
-https://github.com/dndubins/ATtiny85/tree/main/CustomPWM
-
-Now on to the third!
-
-My goal for this exercise was to generate the same one-stop set of instructions for the ATtiny84. Here goes!!!
-
-The ATtiny84, like the ATtyiny85, has two timers: Timer 0 (responsible for the delay() and millis() functions), and Timer 1. There are only 4 pins on the ATtiny84 that are PWM-capable. PB2 and PA7 (physical pins 5 and 6) are controlled by Timer 0. Pins PA6 and PA5 (physical pins 7 and 8) are controlled by Timer 1. 
-
-Just like my Arduino Playground article, I will organize this post by what you would like to do.
-
 
 Timer 0 (controls Pins PB2 and PA7)
 -----------------------------------
