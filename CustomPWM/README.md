@@ -32,7 +32,7 @@ Guess what? CS10 is still HIGH! This will mess you up if you forget this cardina
    TCCR1B &=~(_BV(CS12));     // clear bit CS12 before setting prescalers
 // or alternately, all in one line:
    TCCR1B &= ~(_BV(CS10) | _BV(CS11) | _BV(CS12)); // clear bits CS10, CS11, and CS12 before we start changing them.
-// 3) You could be explicit in the *same line* of the bits that need to be set high and low:
+// 3) You could be explicit in the *same line* about the bits that need to be set high and low:
    TCCR1B |= (_BV(CS11)) & ~(_BV(CS10) | _BV(CS12));  // prescaler=8. THIS SETS CS01 HIGH, and CS00, CS02 LOW, explicitly.
    // If you have multiple bits to set HIGH and LOW, you can bundle them (for example) like this:
    //TCCR0B |= (_BV(WGM02)  | _BV(CS01)) & ~(_BV(CS00) | _BV(CS02));  // prescaler=8 // THIS SETS WGM02, CS01 HIGH, and CS00, CS02 LOW.
