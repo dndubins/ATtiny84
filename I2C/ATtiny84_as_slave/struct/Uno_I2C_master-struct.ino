@@ -80,7 +80,7 @@ void receiveFromSlave(char* a){
 
 void sendToSlave(char* a) {
   Wire.beginTransmission(I2C_ADDR1);  // Start I2C transmission to slave
-  Wire.write(a,1);  // Send the data as the char array myCharArr (1 byte long)
+  Wire.write(a,sizeof(mystruct));  // Send the data as the char array myCharArr (size of mystruct, 13 bytes long)
   Wire.endTransmission();  // End the transmission
   Serial.println("Data sent to slave.");
 }
