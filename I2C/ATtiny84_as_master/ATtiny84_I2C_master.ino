@@ -118,8 +118,7 @@ void sendInt(int j){      // integer to send
   TinyWireM.beginTransmission(I2C_ADDR1); // Start the transmission
   int i=0;
   do{
-      TinyWireM.write(B[i]);
-      i++;
+      TinyWireM.write(B[i++]);
   }while(B[i]!='\0');
   TinyWireM.write('\0'); // send terminal character
   TinyWireM.endTransmission();           // end the transmission
