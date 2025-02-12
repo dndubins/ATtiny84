@@ -46,6 +46,7 @@ void loop() {
   // Receive data from slave
   receiveFromSlave(RXdata.myCharArr);  // Receive RXdata from slave
   delay(500);  // Small delay to avoid overloading the slave
+  // Comment this section out if only receiving one byte:
   if(rcv){ // if new data has been received:
     // Print the received struct
     Serial.println(F("Received from slave: "));
@@ -68,6 +69,7 @@ void receiveFromSlave(char* a){
   while(Wire.available()) {    
     RXdata.myCharArr[i++] = Wire.read();  // Read the next byte from the slave
   }
+  if(i==sizeof(myStruct))rcv=true;  // new data has been received of the correct size
   // Use this if you only want to receive a single response character from the slave:
   /*Wire.requestFrom(I2C_ADDR1,1);  // Request 1 byte
   while(Wire.available()) {    
@@ -75,7 +77,6 @@ void receiveFromSlave(char* a){
     Serial.print(F("Received from slave: "));
     Serial.println(c);  
   }*/
-  if(i==sizeof(myStruct))rcv=true;  // new data has been received of the correct size
 }
 
 void sendToSlave(char* a) {
