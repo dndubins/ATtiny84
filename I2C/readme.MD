@@ -18,4 +18,6 @@ This explanation is from Perplexity.ai, regarding master and slave roles:
 In I2C communication, the master and slave roles define which device controls the communication and which responds.<p>
 Master: The master device initiates all communication on the I2C bus and provides the clock signal (SCL) for all slave devices. It addresses the slave device it wants to communicate with. The master controls when data is sent and received.<p>
 Slave: The slave device listens for its unique address from the master. It only responds when addressed by the master. The slave doesn't initiate communication; it waits for the master's instructions.<p>
-The master-slave relationship is essential for coordinating data transfer on the I2C bus. The master controls the communication, ensuring that only one device transmits data at a time, preventing conflicts.
+The master-slave relationship is essential for coordinating data transfer on the I2C bus. The master controls the communication, ensuring that only one device transmits data at a time, preventing conflicts.<p>
+
+<b>Note:</b> When you are defining an I2C address, pick a unique number that is in the range 0x08 (DEC: 8) to 0x77 (DEC: 119).<br> Numbers outside this range are reserved. To see common I2C addresses of other devices (and to avoid hardware conflicts), see: https://learn.adafruit.com/i2c-addresses/the-list
