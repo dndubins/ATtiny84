@@ -2,7 +2,7 @@
    (clock function with day and date, alarm, temperature, timer, and stopwatch)
    Author: D. Dubins
    Date: 28-Apr-21
-   Last Updated:04-Apr-22
+   Last Updated:17-Mar-25
    This sketch uses the TM1637 library by Avishay Orpaz version 1.2.0
    (available through the Library Manager)
 
@@ -427,6 +427,12 @@ void loop() {
     }else if (p == 1) {                       // short push adds time to the timer
       TMVCCon();                              // turn on Vcc to the TM1637 display
       beeped = false;                         // rearm the buzzer
+      if(tEnd>millis()){                      // tEnd = 0 for the first button push. This fixes the logic.
+        float minLeft=float(tEnd-millis())/60000; // calculate the remaining minutes as a float number
+        float minRounded=minLeft - floor(minLeft); // get just the decimal
+        tDur=(60*ceil((float)(tEnd-millis())/60000.0));  // round up to nearest minute and write back to tDur (for adding a minute)
+        if(minRounded<(50.0/60.0))tDur-=60;     // round up to nearest minute if more than 10 seconds elapsed, otherwise rounds up to nearest 2.
+      }       
       if (tDur >= 6 * 60 * 60) {              // if tDur>=6h
         tDur += 60 * 60;                      // add 1 hr
       } else if (tDur >= 60 * 60) {           // if tDur>=1h
