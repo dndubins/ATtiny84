@@ -1,6 +1,6 @@
 # Timed ISRs on the ATtiny84 using CTC mode
 
-The ATtiny84 is a very capable MCU that I almost use now by default for small devices. It has plenty of pins, and can do most things the ATmega328p can. One of the things I like to do is to use timers to plan ISRs to run, because ISRs are efficient, accurate and can run in the background of your sketch behind a delay() statement or whatever else you are doing.
+The ATtiny84 is a very capable MCU that I use now almost by default for small devices. It has plenty of pins, and can do most things the ATmega328P can. One of the things I like to do is to use timers to plan ISRs to run, because ISRs are efficient, accurate and can run in the background of your sketch behind a delay() statement or whatever else you are doing.
 
 The ATtiny84 has two timers. Timer 0 is 8 bits, and Timer 1 is 16 bits. If you use Timer 0 for anything, you are putting other time commands at risk. For instance, the delay(), millis(), and other time commands will be impacted and wrong when you set prescalars/etc. So, we will start with Timer 1, because it's less risky.<p>
 
