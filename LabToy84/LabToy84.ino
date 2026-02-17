@@ -438,28 +438,29 @@ void loop() {
       unsigned long now = millis();
       unsigned long remaining = (tEnd > now) ? (tEnd - now) : 0;
 
-      // round up to next full minute
-      unsigned long totalSec = (remaining + 999) / 1000;    // convert ms → sec, round up any fraction
-      unsigned long tDurSec = ((totalSec + 59) / 60) * 60;  // round up to next minute
+      // convert ms to sec and round up any fraction
+      unsigned long totalSec = (remaining + 999) / 1000;
 
-      // apply "big jump" rules for long timers
-      if (tDurSec >= 6UL * 60UL * 60UL) {   // 6+ hours
-        tDurSec += 60UL * 60UL;             // +1 hr
-      } else if (tDurSec >= 60UL * 60UL) {  // 1–5 hours
-        tDurSec += 15UL * 60UL;             // +15 min
-      } else if (tDurSec >= 20UL * 60UL) {  // 20–59 min
-        tDurSec += 5UL * 60UL;              // +5 min
-      } else {                              // <20 min
-        tDurSec += 60UL;                    // +1 min
+      // decide new duration based on bucketed approach
+      unsigned long tDurSec;
+
+      if (totalSec >= 6UL * 60UL * 60UL) {         // 6+ hours
+        tDurSec = ((totalSec / 3600) + 1) * 3600;  // round up to next hour
+      } else if (totalSec >= 60UL * 60UL) {        // 1–5 hours
+        tDurSec = ((totalSec / 900) + 1) * 900;    // round up to next 15 min
+      } else if (totalSec >= 20UL * 60UL) {        // 20–59 min
+        tDurSec = ((totalSec / 300) + 1) * 300;    // round up to next 5 min
+      } else {                                     // <20 min
+        tDurSec = ((totalSec / 60) + 1) * 60;      // round up to next minute
       }
 
       tDur = tDurSec;
-      DISPLAY_ON_IF_SAVING;               // turn on Vcc for the TM1637 display
-      showTimeTMR(tDur * 1000UL, true);   // show start time remaining (true=force display)
-      delay(DEBOUNCE);                    // have a small real delay. This prevents double presses.
-      safeWait(sw1, 1000 - DEBOUNCE);     // button-interruptable wait function
-      tEnd = millis() + (tDur * 1000UL);  // calculate new end time
-    } else if (p == 0) {                  // if button not pushed
+      DISPLAY_ON_IF_SAVING;
+      showTimeTMR(tDur * 1000UL, true);
+      delay(DEBOUNCE);
+      safeWait(sw1, 1000 - DEBOUNCE);
+      tEnd = millis() + (tDur * 1000UL);
+    } else if (p == 0) {  // if button not pushed
       long remaining = (long)(tEnd - millis());
       if (remaining > 1000) {  // after waiting the allotted time (don't include last second).
         showTimeTMR((unsigned long)remaining, false);
@@ -877,6 +878,7 @@ void showTemp(int T) {                      // temperature
   if (T != Tlast) {                         // only change the display if the temperature changes
     showSegments_P(SEG_DEGC);               // show degree message
     display.showNumberDec(T, false, 2, 0);  // false: don't show leading zeros, Start at first digit (position 0).
+    delayMicroseconds(50);
   }
   Tlast = T;  // store current temperature
 }
@@ -903,6 +905,7 @@ void showTimeTMR(unsigned long msec, bool force) {  // time remaining in msec. f
       display.showNumberDec(s, false);  // false: don't show leading zero
     }
   }
+  delayMicroseconds(50);
   hlast = h;  // store current hrs
   mlast = m;  // store current min
   slast = s;  // store current sec
@@ -943,6 +946,7 @@ void showTimeSW(unsigned long msec) {  // show time (input argument: msec) for t
   if (h == 0 && m == 0) {                   // just update msec here (prevents LCD flashing)
     display.showNumberDec(ms, true, 2, 2);  // false: don't show leading zero, 2: start 2 spaces over
   }
+  delayMicroseconds(50);
   hlast = h;  // store current hrs
   mlast = m;  // store current min
   slast = s;  // store current sec
