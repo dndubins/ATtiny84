@@ -2,7 +2,7 @@
    (temperature, timer, and stopwatch)
    Author: D. Dubins
    Date: 28-Apr-21
-   Last Updated:17-Feb-26
+   Last Updated:19-Feb-26
    This sketch uses the TM1637 library by Avishay Orpaz version 1.2.0
    (available through the Library Manager)
 
@@ -206,6 +206,7 @@ void loop() {
   if (modeChanged) {  // user has changed the mode
     if (mode == TIMER) {
       resetTimer = true;
+      timer_reset();
     } else if (mode == STOPWATCH) {
       stopWatch_reset();               // reset stopwatch on mode change
     } else if (mode == TEMPERATURE) {  // first occurrence of temperature after switching mode
@@ -259,16 +260,7 @@ void loop() {
           resetTimer = true;  // flag the timer to reset
         }
       }
-      if (resetTimer) {
-        timer_reset();
-        TMVCCon();                      // turn on Vcc for the TM1637 display
-        display.setSegments(SEG_PUSH);  // show "PUSH" message
-        delay(DISPTIME_FAST);           // wait a bit
-        buttonReset(sw1);               // wait until user lets go of SET button
-        TMVCCoff();                     // turn off Vcc for the TM1637 display
-        sleep_interrupt();              // go to sleep here (waits in sleep mode, with 0.8 uA current draw)
-        TMVCCon();                      // turn on Vcc for the TM1637 display
-      }
+      if (resetTimer)timer_reset();
     } else if (mode == STOPWATCH) {
       showTimeSW(millis() - toffsetSW);  // show time elapsed
       p1 = buttonRead(sw1);              // read the SET button
@@ -511,6 +503,19 @@ void showTemp(float T) {  // temperature
 }
 
 // Timer Functions
+void timer_reset() {  // reset on the fly without the PUSH screen
+  tDur = 0;           // reset timer on mode change (comment out if you'd like to change this)
+  tEnd = millis();
+  beeped = true;
+      TMVCCon();                      // turn on Vcc for the TM1637 display
+      display.setSegments(SEG_PUSH);  // show "PUSH" message
+      delay(DISPTIME_FAST);           // wait a bit
+      buttonReset(sw1);               // wait until user lets go of SET button
+      TMVCCoff();                     // turn off Vcc for the TM1637 display
+      sleep_interrupt();              // go to sleep here (waits in sleep mode, with 0.8 uA current draw)
+      TMVCCon();                      // turn on Vcc for the TM1637 display
+}
+
 void showTimeTMR(unsigned long msec, bool force) {  // time remaining in msec. force=true forces the display.
   // this function converts milliseconds to h, m, s
   // For a function that takes h,m,s as input arguments, see PB860.pbworks.com
@@ -535,12 +540,6 @@ void showTimeTMR(unsigned long msec, bool force) {  // time remaining in msec. f
   hlast = h;  // store current hrs
   mlast = m;  // store current min
   slast = s;  // store current sec
-}
-
-void timer_reset() {  // reset on the fly without the PUSH screen
-  tDur = 0;           // reset timer on mode change (comment out if you'd like to change this)
-  tEnd = millis();
-  beeped = true;
 }
 
 //Stopwatch functions
@@ -585,7 +584,6 @@ void stopWatch_pause() {
     ;                       // wait for user to press a button again (HIGH=UNPUSHED)
   if (!digitalRead(sw2)) {  // if user presses the mode button here
     toffsetSW = millis();   // new starting point
-    //mode = 127;             // change mode (will wrap around)
     return;  // get outta dodge
   }
   byte push = buttonRead(sw1);  // if user presses the sw1 button to resume
