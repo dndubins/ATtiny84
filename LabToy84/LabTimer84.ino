@@ -14,7 +14,7 @@
    GND - GND
    5V - PA0 (Physical pin 13)
 
-   "Set" Momentary Switch on the right: (to set the time and date)
+   "Set" Momentary Switch on the right: (to start/stop/reset timer & stopwatch, and display the temperature)
    GND - sw1 - PA3 (Physical pin 10)
    "Mode" Momentary Switch on the left: (to change mode)
    GND - SW2 - PA4 (Physical pin 9)
