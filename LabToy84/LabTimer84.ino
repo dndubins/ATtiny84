@@ -76,6 +76,9 @@
 #include <avr/sleep.h>  // sleep library
 #include <avr/power.h>  // power library
 
+//for flash space
+#include <avr/pgmspace.h>
+
 //define the classic bit functions:
 #define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
 #define cbi(sfr, bit) (_SFR_BYTE(sfr) &= ~_BV(bit))
