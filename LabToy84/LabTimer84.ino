@@ -2,7 +2,7 @@
    (temperature, timer, and stopwatch)
    Author: D. Dubins
    Date: 28-Apr-21
-   Last Updated:19-Feb-26
+   Last Updated:20-Feb-26
    This sketch uses the TM1637 library by Avishay Orpaz version 1.2.0
    (available through the Library Manager)
 
@@ -128,21 +128,21 @@ unsigned long toffsetSW = 0UL;  // to hold offset time for stopwatch
 #define DEBOUNCE 20        // time to debounce a button
 #define WARMUP 50          // time to warm up after sleeping/etc.
 
-const uint8_t SEG_PUSH[] = {
+const uint8_t PROGMEM SEG_PUSH[] = {
   SEG_E | SEG_F | SEG_A | SEG_B | SEG_G,  // P
   SEG_F | SEG_E | SEG_D | SEG_C | SEG_B,  // U
   SEG_A | SEG_F | SEG_G | SEG_C | SEG_D,  // S
   SEG_F | SEG_E | SEG_G | SEG_B | SEG_C   // H
 };
 
-const uint8_t SEG_DONE[] = {
+const uint8_t PROGMEM SEG_DONE[] = {
   SEG_B | SEG_C | SEG_D | SEG_E | SEG_G,          // d
   SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F,  // O
   SEG_C | SEG_E | SEG_G,                          // n
   SEG_A | SEG_D | SEG_E | SEG_F | SEG_G           // E
 };
 
-const uint8_t SEG_LED[] = {
+const uint8_t PROGMEM SEG_LED[] = {
   // for brightness
   SEG_F | SEG_E | SEG_D,                  // L
   SEG_A | SEG_D | SEG_E | SEG_F | SEG_G,  // E
@@ -150,7 +150,7 @@ const uint8_t SEG_LED[] = {
   0x00                                    // space
 };
 
-const uint8_t SEG_BATT[] = {
+const uint8_t PROGMEM SEG_BATT[] = {
   // for brightness
   SEG_F | SEG_E | SEG_D | SEG_G | SEG_C,          // b
   SEG_E | SEG_F | SEG_A | SEG_B | SEG_C | SEG_G,  // A
@@ -158,21 +158,21 @@ const uint8_t SEG_BATT[] = {
   SEG_F | SEG_E | SEG_D | SEG_G                   // t
 };
 
-const byte SEG_DEGC[] = {
+const byte PROGMEM SEG_DEGC[] = {
   0x00,                           // space
   0x00,                           // space
   SEG_A | SEG_F | SEG_G | SEG_B,  // degree sign
   SEG_A | SEG_F | SEG_E | SEG_D   // C
 };
 
-const byte SEG_ON[] = {
+const byte PROGMEM SEG_ON[] = {
   0x00,                                           // space
   0x00,                                           // space
   SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F,  // O
   SEG_E | SEG_G | SEG_C                           // n
 };
 
-const byte SEG_OFF[] = {
+const byte PROGMEM SEG_OFF[] = {
   0x00,                                           // space
   SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F,  // O
   SEG_E | SEG_F | SEG_A | SEG_G,                  // F
@@ -251,7 +251,7 @@ void loop() {
             if (i % 2 == 0) {         // if i is even
               showTimeTMR(0, false);  // show zero
             } else {
-              display.setSegments(SEG_DONE);  // show "done" message
+              showSegments_P(SEG_DONE);  // show "done" message
             }
             if (beepBuzz(buzzPin, 3) > 0) {  // flash and beep 3x
               resetTimer = true;             // flag the timer to reset
@@ -291,9 +291,9 @@ void loop() {
 void showBoolState(bool a) {  // time in min
   display.clear();            // clear the display
   if (a) {
-    display.setSegments(SEG_ON);  // show "ON" message
+    showSegments_P(SEG_ON);  // show "ON" message
   } else {
-    display.setSegments(SEG_OFF);  // show "OFF" message
+    showSegments_P(SEG_OFF);  // show "OFF" message
   }
 }
 
@@ -342,7 +342,7 @@ void setLED() {
   byte push = 0;     // push will store button result (0: no push, 1: short push, 2: long push)
   buttonReset(sw1);  // make sure sw1 isn't pushed
   //reset the brightness level (2-7)
-  display.setSegments(SEG_LED);  // show "LED" message
+  showSegments_P(SEG_LED);  // show "LED" message
   delay(DISPTIME_SLOW);
   // First set hours
   display.clear();
@@ -362,7 +362,7 @@ void setLED() {
   delay(100);
 
   display.clear();
-  display.setSegments(SEG_BATT);  // show "LED" message
+  showSegments_P(SEG_BATT);  // show "LED" message
   delay(DISPTIME_SLOW);
   int battLife = constrain((readVcc() / 12) - 167, 0, 100);  // calculate remaining battery life
   display.clear();                                           // clear the display
@@ -457,11 +457,7 @@ byte beepBuzz(byte pin, int n) {  // pin is digital pin wired to buzzer. n is nu
   return 0;  // exit normally
 }
 
-float readCoreTemp(int n) {  // Calculates and reports the chip temperature of ATtiny84
-  // Tempearture Calibration Data
-  float kVal = 0.8929;           // k-value fixed-slope coefficient (default: 1.0). Adjust for manual 2-point calibration.
-  float Tos = -244.5 + TOFFSET;  // temperature offset (default: 0.0 set at top of program). Adjust for manual calibration. Second number is the fudge factor.
-
+int readCoreTemp(int n) {  // Calculates and reports the chip temperature of ATtiny84
   sbi(ADCSRA, ADEN);     // enable ADC (comment out if already on)
   delay(WARMUP);         // wait for ADC to warm up
   byte ADMUX_P = ADMUX;  // store present values of these two registers
@@ -473,14 +469,15 @@ float readCoreTemp(int n) {  // Calculates and reports the chip temperature of A
   delay(WARMUP);       // wait for Vref to settle
   cbi(ADCSRA, ADATE);  // disable autotrigger
   cbi(ADCSRA, ADIE);   // disable interrupt
-  float avg = 0.0;     // to calculate mean of n readings
+  long avg = 0;        // to calculate mean of n readings
   for (int i = 0; i < n; i++) {
     sbi(ADCSRA, ADSC);                              // single conversion or free-running mode: write this bit to one to start a conversion.
     loop_until_bit_is_clear(ADCSRA, ADSC);          // ADSC will read as one as long as a conversion is in progress. When the conversion is complete, it returns a zero. This waits until the ADSC conversion is done.
     uint8_t low = ADCL;                             // read ADCL first (17.13.3.1 ATtiny85 datasheet)
     uint8_t high = ADCH;                            // read ADCL second (17.13.3.1 ATtiny85 datasheet)
-    long Tkelv = kVal * ((high << 8) | low) + Tos;  // remperature formula, p149 of datasheet
-    avg += (Tkelv - avg) / (i + 1);                 // calculate iterative mean
+    int adc = (high << 8) | low;                    // combine high and low bits
+    long TdegC = (893L * adc)/1000 -244 + (int)TOFFSET;  // Temperature formula, p149 of datasheet. 
+    avg += (TdegC - avg) / (i + 1);                 // calculate iterative mean
   }
   ADMUX = ADMUX_P;  // restore original values of these two registers
   ADCSRA = ADCSRA_P;
@@ -494,13 +491,13 @@ float readCoreTemp(int n) {  // Calculates and reports the chip temperature of A
   // These coefficients can be replaced by performing a 2-point calibration, and fitting a straight line
   // to solve for kVal and Tos. These are used to convert the ADC reading to degrees Celsius (or another temperature unit).
 
-  return avg;  // return temperature in degC
+  return (int)avg+TOFFSET;  // return temperature in degC. TOFFSET is a fudge factor defined at the top of the program.
 }
 
 // Show temperature function
 void showTemp(float T) {  // temperature
   int Tint = (int)T;
-  display.setSegments(SEG_DEGC);             // show degree message
+  showSegments_P(SEG_DEGC);             // show degree message
   display.showNumberDec(Tint, false, 2, 0);  // false: don't show leading zeros, Start at first digit (position 0).
 }
 
@@ -510,7 +507,7 @@ void timer_reset() {  // reset on the fly without the PUSH screen
   tEnd = millis();
   beeped = true;
       TMVCCon();                      // turn on Vcc for the TM1637 display
-      display.setSegments(SEG_PUSH);  // show "PUSH" message
+      showSegments_P(SEG_PUSH);  // show "PUSH" message
       delay(DISPTIME_FAST);           // wait a bit
       buttonReset(sw1);               // wait until user lets go of SET button
       TMVCCoff();                     // turn off Vcc for the TM1637 display
@@ -675,4 +672,14 @@ void sleep_interrupt() {  // interrupt sleep routine - this one restores millis(
 }
 
 ISR(PCINT0_vect) {  // This ISR is always called after waking from sleep mode.
+}
+
+void showSegments_P(const uint8_t *p) {
+  delayMicroseconds(50);    // wait a bit (in case waking up from sleep)
+  uint8_t buf[4]={0};       // define buffer as 4 bytes and clear it out
+  for (uint8_t i = 0; i < 4; i++) {
+    buf[i] = pgm_read_byte(&p[i]); // read next byte in progmem
+  }
+  display.setSegments(buf); // display 4 bytes
+  delayMicroseconds(50);    // wait a bit
 }
