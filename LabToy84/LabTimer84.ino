@@ -198,7 +198,8 @@ void loop() {
   buttonReset(sw2);         // user should let go of MODE button
 
   if (p2 == 1) {            // if sw2 mode button pushed (short). This routine runs when first switched to new mode.
-    mode = (mode + 1) % 3;  // 0 -> 1 -> 2 -> 0
+    mode++;                 // increment mode
+    if(mode>2)mode=0;       // wrap around max mode
     modeChanged = true;     // change in mode happened
   } else if (p2 == 2) {     // if long push on mode button
     setLED();               // set brightness
