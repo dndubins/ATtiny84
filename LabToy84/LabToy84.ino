@@ -322,15 +322,13 @@ void loop() {
   }
 
   if (modeChanged) {  // user has changed the mode
-    if (mode == CLOCK) {
+    if (mode == CLOCK && clockMode) {
       TMVCCon();                        // turn on Vcc to the TM1637 display
       showTime(h, m, s, false, false);  // report the time
       delay(DISPTIME_SLOW);             // show the time for DISPTIME
       if (brightness == 8)              // changing to clock mode while in LED battery saving mode
         TMVCCoff();                     // turn off power to the TM1637 display
-    }
-
-    if (mode == TIMER) {
+    } else if (mode == TIMER) {
       resetTimer = true;
       timer_reset();
     } else if (mode == STOPWATCH) {
@@ -347,7 +345,8 @@ void loop() {
 
   } else {  // Mode is not changing. Steady-state behaviour starts here (regular loop)
 
-    if (mode == CLOCK) {                                         // mode=0 is clock mode
+    // Now the regular loop:
+    if (mode == CLOCK && clockMode) {                            // mode=0 is clock mode
       unsigned long t = (millis() / 1000UL) + toffset - tstart;  // update time in sec.
       // first convert seconds into hours, minutes, seconds
       d = (t / 86400UL);                                  // calculate days
@@ -419,10 +418,7 @@ void loop() {
       p1 = 0;         // reset button push
       p2 = 0;         // reset button push
       hlastloop = h;  // store current values
-    }
-
-    // Now the regular loop:
-    if (mode == TIMER) {
+    } else if (mode == TIMER) {
       p1 = buttonRead(sw1);  // take a button reading
       if (p1 == 2) {         // if long push
         resetTimer = true;   // reset the timer
