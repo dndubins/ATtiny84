@@ -109,9 +109,9 @@ TM1637Display display(CLK, DIO);
 //Active Piezo Buzzer Parameters:
 #define BEEPTIME 100  // duration of beep in milliseconds
 #define buzzPin 5     // use PA5 for active piezo buzzer (physical pin 8)
-
-#define sw2 4  // use PA4 for mode switch (physical pin 9) - toggle mode
+//Define momentary switches:
 #define sw1 3  // use PA3 for set switch (physical pin 10) - add time to timer, etc.
+#define sw2 4  // use PA4 for mode switch (physical pin 9) - toggle mode
 
 //timer variables
 unsigned long tDur = 0;        // for setting duration of timer
@@ -126,6 +126,7 @@ unsigned long toffsetSW = 0UL;  // to hold offset time for stopwatch
 #define DISPTIME_SLOW 800  // time to flash user information e.g. time, date
 #define DISPTIME_FAST 300  // time to flash menu item between clicks
 #define DEBOUNCE 20        // time to debounce a button
+#define WARMUP 50          // time to warm up after sleeping/etc.
 
 const uint8_t SEG_PUSH[] = {
   SEG_E | SEG_F | SEG_A | SEG_B | SEG_G,  // P
@@ -331,7 +332,7 @@ void setItemBool(bool &item, void (*f)(bool)) {  // sets an individual bool item
     }                         // end if
   }                           // end while
   buttonReset(sw1);           // don't leave until user lets go of sw1
-  buttonReset(sw2);           // don't leave until user lets go of sw1
+  buttonReset(sw2);           // don't leave until user lets go of sw2
   delay(100);                 // extra delay
 }
 
@@ -461,14 +462,14 @@ float readCoreTemp(int n) {  // Calculates and reports the chip temperature of A
   float Tos = -244.5 + TOFFSET;  // temperature offset (default: 0.0 set at top of program). Adjust for manual calibration. Second number is the fudge factor.
 
   sbi(ADCSRA, ADEN);     // enable ADC (comment out if already on)
-  delay(50);             // wait for ADC to warm up
+  delay(WARMUP);         // wait for ADC to warm up
   byte ADMUX_P = ADMUX;  // store present values of these two registers
   byte ADCSRA_P = ADCSRA;
   ADMUX = B00100010;  // Page 149 of ATtiny84 datasheet - enable temperature sensor
   cbi(ADMUX, ADLAR);  // Right-adjust result
   sbi(ADMUX, REFS1);
   cbi(ADMUX, REFS0);   // set internal ref to 1.1V
-  delay(2);            // wait for Vref to settle
+  delay(WARMUP);       // wait for Vref to settle
   cbi(ADCSRA, ADATE);  // disable autotrigger
   cbi(ADCSRA, ADIE);   // disable interrupt
   float avg = 0.0;     // to calculate mean of n readings
@@ -618,7 +619,7 @@ void stopWatch_reset() {
 void TMVCCon() {
   pinMode(TMVCC, OUTPUT);     // set TMVCC pin to output mode
   digitalWrite(TMVCC, HIGH);  // turn on TM1637 LED display
-  delay(10);                  // wait for TM1637 to warm up
+  delay(WARMUP);              // wait for TM1637 to warm up
   display.clear();
 }
 
@@ -630,11 +631,11 @@ void TMVCCoff() {
 
 long readVcc() {         // back-calculates voltage (in mV) applied to Vcc of ATtiny84
   sbi(ADCSRA, ADEN);     // enable ADC (comment out if already on)
-  delay(50);             // wait for ADC to warm up
+  delay(WARMUP);         // wait for ADC to warm up
   byte ADMUX_P = ADMUX;  // store present values of these two registers
   byte ADCSRA_P = ADCSRA;
   ADMUX = _BV(MUX5) | _BV(MUX0);          // set Vbg to positive input of analog comparator (bandgap reference voltage=1.1V). Table 16.4 ATtiny24A/44A/84A Datasheet, p151
-  delay(2);                               // Wait for Vref to settle
+  delay(WARMUP);                          // Wait for Vref to settle
   sbi(ADCSRA, ADSC);                      // Single conversion or free-running mode: write this bit to one to start a conversion.
   loop_until_bit_is_clear(ADCSRA, ADSC);  // ADSC will read as one as long as a conversion is in progress. When the conversion is complete, it returns a zero. This waits until the ADSC conversion is done.
   uint8_t low = ADCL;                     // read ADCL first (17.13.3.1 ATtiny85 datasheet)
@@ -644,7 +645,7 @@ long readVcc() {         // back-calculates voltage (in mV) applied to Vcc of AT
   ADMUX = ADMUX_P;                        // restore original values of these two registers
   ADCSRA = ADCSRA_P;
   cbi(ADCSRA, ADEN);  // disable ADC to save power (comment out to leave ADC on)
-  delay(2);           // wait a bit
+  delay(WARMUP);      // wait a bit
   return result;      // Vcc in millivolts
 }
 
