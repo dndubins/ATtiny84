@@ -29,8 +29,6 @@
    Options: 0(most dim) to 7 (most bright)
    -->BATT status will display (in %)
 
-   When the ALARM rings, the MODE button stops the alarm. The SET button is a 5-minute snooze bar.
-
    The following are the ATtiny84 pins by function:
    ------------------------------------------------
    Pin 1: Vcc (1.8-5.5V)
