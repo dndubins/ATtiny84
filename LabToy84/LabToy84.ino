@@ -1,12 +1,12 @@
-/* LabToy84.ino - Main LabToy Program for the ATtiny84
-   (clock function with day and date, alarm, temperature, timer, and stopwatch)
+/* LabToy.ino - Main LabToy Program for the ATtiny84 
+   (with clock function, day and date, alarm, temperature, timer, and stopwatch)
    Author: D. Dubins
    Date: 28-Apr-21
-   Last Updated:17-Feb-26
+   Last Updated:20-Feb-26
    This sketch uses the TM1637 library by Avishay Orpaz version 1.2.0
    (available through the Library Manager)
 
-   Burn bootloader to 8 MHz External Clock
+   Burn bootloader to 16 MHz External Clock
    Connections:
    TM1637 -- ATtiny84
    CLK - PA2 (Physical pin 11)
@@ -14,7 +14,7 @@
    GND - GND
    5V - PA0 (Physical pin 13)
 
-   "Set" Momentary Switch on the right: (to set the time and date)
+   "Set" Momentary Switch on the right: (to set things/start stop)
    GND - sw1 - PA3 (Physical pin 10)
    "Mode" Momentary Switch on the left: (to change mode)
    GND - SW2 - PA4 (Physical pin 9)
@@ -45,7 +45,7 @@
    set CLOCK on/off with short push, accept with long push
    -->OFF option keeps clock off (battery saving -> MCU will sleep in between functions)
    -->BATT status will display (in %)
-
+   
    When the ALARM rings, the MODE button stops the alarm. The SET button is a 5-minute snooze bar.
 
    The following are the ATtiny84 pins by function:
@@ -106,18 +106,24 @@
 //#define loop_until_bit_is_set(sfr, bit) do { } while (bit_is_clear(sfr, bit))
 //#define loop_until_bit_is_clear(sfr, bit) do { } while (bit_is_set(sfr, bit))
 
-#define TOFFSET 10.9  // Temperature offset for core temperature routine. Individually calibrated per chip. Start with 0.0 and measure temperature against a real thermometer. Enter offset here. \
-                      // There is no separate device or calibation program for this procedure. This sketch is simply uploaded twice.
+#define TOFFSET 8.0  // Temperature offset for core temperature routine. Individually calibrated per chip. Start with 0.0 and measure temperature against a real thermometer. Enter offset here. \
+                     // There is no separate device or calibation program for this procedure. This sketch is simply uploaded twice.
 
 #include <TM1637Display.h>  // For TM1637 display library (Avishay Orpaz v. 1.2.0)
 #define CLK 2               // use PA2 for CLK (physical pin 11)
 #define DIO 1               // use PA1 for DIO (physical pin 12)
 #define TMVCC 0             // use PA0 for Vcc of TM1637 (physical pin 13)
 
-// for USB version of this device: mode=0, brightness=3, clockmode=true
-// for non-USB version of this device: mode=2, brightness=8, clockMode=false
-byte mode = 0;          // mode=0: clock, mode=1: temperature, mode=2: timer, mode=3: stopwatch
-byte brightness = 3;    // initial brightness setting for TM1637 (0-7) (to save batteries, use a lower number). 8=keep module off normally (most power savings). Use 2 for rechargeable, 3 for alkaline
+byte mode = 0;  // default mode is clock (see list below)
+enum modes {    // define mode options as enum
+  CLOCK,        // clock mode (=0)
+  TIMER,        // timer mode (=1)
+  STOPWATCH,    // stopwatch mode (=2)
+  TEMPERATURE   // temperature mode (=3)
+};
+bool modeChanged = false;  // to capture a change in mode
+
+byte brightness = 3;    // initial brightness setting for TM1637 (0-7) (to save batteries, use a lower number). Use 2 for rechargeable, 3 for alkaline
 bool clockMode = true;  // flag to turn on/off clock. To save battery, clock can be turned off and sleep mode used with timer and stopwatch (sleep mode interferes with millis() function).
 #define flashcolon 0    // 1: flash colon on clock, 0: don't flash colon on clock
 
@@ -126,10 +132,11 @@ TM1637Display display(CLK, DIO);
 //Active Piezo Buzzer Parameters:
 #define BEEPTIME 100  // duration of beep in milliseconds
 #define buzzPin 5     // use PA5 for active piezo buzzer (physical pin 8)
+//Define momentary switches:
+#define sw1 3  // use PA3 for set switch (physical pin 10) - add time to timer, etc.
+#define sw2 4  // use PA4 for mode switch (physical pin 9) - toggle mode
 
-#define sw2 4  // use PA4 for mode switch (physical pin 9) - toggle mode btw clock and timer
-#define sw1 3  // use PA3 for set switch (physical pin 10) - set clock, add time to timer, etc.
-
+//Clock and Alarm Parameters:
 // Set the starting time and date here (default is Jan 1st, 12:00 am)
 byte mo = 1;  // #month (default: 1)
 byte dy = 1;  // #day for display (default: 1)
@@ -144,33 +151,12 @@ int h_SNOOZE = 0;    // #hr for snooze function (must be able to hold negative n
 int m_SNOOZE = 0;    // #min for snooze function (must be able to hold negative number)
 #define T_SNOOZE 5   // duration of snooze button (in minutes)
 bool alarm = false;  // initial state for alarm: alarm on(true) or off(false)? default:false
-
-
 //toffset will bring the #of seconds up to the #h, m, s (set above), to display the correct time as you should perceive it.
 unsigned long toffset = (h * 3600UL) + (m * 60UL) + s;  // calculate total seconds.
 unsigned long tstart = millis() / 1000UL;               // start time for clock
-
-byte hlastloop = 0;  // for hour rollover in the main loop function
-byte d = 1;          // #day for counter (default: 1)
-
-//timer variables
-unsigned long tDur = 0;       // for setting duration of timer
-volatile bool beeped = true;  // whether or not device beeped. start out in true state upon device reset
-unsigned long tEnd = 0UL;     // for timer routine, end time in msec
-
-//stopwatch variables
-unsigned long toffsetSW = 0UL;  // to hold offset time for stopwatch
-
-//programmed delays
-#define DISPTIME_SLOW 800  // time to flash user information e.g. time, date
-#define DISPTIME_FAST 300  // time to flash menu item between clicks
-#define DEBOUNCE 20        // time to debounce a button
-
-#define DISPLAY_ON_IF_SAVING \
-  if (brightness == 8) TMVCCon();
-#define DISPLAY_OFF_IF_SAVING \
-  if (brightness == 8) TMVCCoff();
-
+byte hlastloop = 0;                                     // for hour rollover in the main loop function
+byte d = 1;                                             // #day for counter (default: 1)
+// Calendar byte variable
 byte cal[12] = {
   // to hold # days in each month
   31,  // Jan  month 1
@@ -187,12 +173,35 @@ byte cal[12] = {
   31   // Dec  month 12
 };
 
+//timer variables
+unsigned long tDur = 0;        // for setting duration of timer
+volatile bool pushed = false;  // for storing if button has been pushed
+volatile bool beeped = true;   // whether or not device beeped. start out in true state upon device reset
+unsigned long tEnd = 0UL;      // for timer routine, end time in msec
+
+//stopwatch variables
+unsigned long toffsetSW = 0UL;  // to hold offset time for stopwatch
+
+//programmed delays
+#define DISPTIME_SLOW 800  // time to flash user information e.g. time, date
+#define DISPTIME_FAST 300  // time to flash menu item between clicks
+#define DEBOUNCE 20        // time to debounce a button
+#define WARMUP 50          // time to warm up after sleeping/etc.
+
+// For clock, calendar, and alarm:
 // Special text to display on 4-digit, 7-segment LED:
+const uint8_t SEG_CLOC[] PROGMEM = {
+  SEG_A | SEG_F | SEG_E | SEG_D,                  // C
+  SEG_F | SEG_E | SEG_D,                          // L
+  SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F,  // O
+  SEG_A | SEG_F | SEG_E | SEG_D                   // C
+};
+
 const uint8_t SEG_12A[] PROGMEM = {
   SEG_B | SEG_C,                                 // 1
   SEG_A | SEG_B | SEG_G | SEG_E | SEG_D,         // 2
   0x00,                                          // space
-  SEG_E | SEG_F | SEG_A | SEG_G | SEG_B | SEG_C  // A
+  SEG_C | SEG_F | SEG_A | SEG_B | SEG_E | SEG_G,  // A
 };
 
 const uint8_t SEG_12P[] PROGMEM = {
@@ -204,13 +213,13 @@ const uint8_t SEG_12P[] PROGMEM = {
 
 const uint8_t SEG_CAL[] PROGMEM = {
   SEG_A | SEG_F | SEG_E | SEG_D,                  // C
-  SEG_E | SEG_F | SEG_A | SEG_B | SEG_C | SEG_G,  // A
+  SEG_C | SEG_F | SEG_A | SEG_B | SEG_E | SEG_G,  // A
   SEG_F | SEG_E | SEG_D,                          // L
   0x00                                            // space
 };
 
 const uint8_t SEG_AL[] PROGMEM = {
-  SEG_E | SEG_F | SEG_A | SEG_B | SEG_C | SEG_G,  // A
+  SEG_C | SEG_F | SEG_A | SEG_B | SEG_E | SEG_G,  // A
   SEG_F | SEG_E | SEG_D,                          // L
   0x00,                                           // space
   0x00                                            // space
@@ -223,13 +232,7 @@ const uint8_t SEG_ON[] PROGMEM = {
   SEG_E | SEG_G | SEG_C                           // n
 };
 
-const uint8_t SEG_OFF[] PROGMEM = {
-  0x00,                                           // space
-  SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F,  // O
-  SEG_E | SEG_F | SEG_A | SEG_G,                  // F
-  SEG_E | SEG_F | SEG_A | SEG_G                   // F
-};
-
+// for Timer:
 const uint8_t SEG_PUSH[] PROGMEM = {
   SEG_E | SEG_F | SEG_A | SEG_B | SEG_G,  // P
   SEG_F | SEG_E | SEG_D | SEG_C | SEG_B,  // U
@@ -255,31 +258,32 @@ const uint8_t SEG_LED[] PROGMEM = {
 const uint8_t SEG_BATT[] PROGMEM = {
   // for brightness
   SEG_F | SEG_E | SEG_D | SEG_G | SEG_C,          // b
-  SEG_E | SEG_F | SEG_A | SEG_B | SEG_C | SEG_G,  // A
+  SEG_C | SEG_F | SEG_A | SEG_B | SEG_E | SEG_G,  // A
   SEG_F | SEG_E | SEG_D | SEG_G,                  // t
   SEG_F | SEG_E | SEG_D | SEG_G                   // t
 };
 
-const uint8_t SEG_CLOC[] PROGMEM = {
-  SEG_A | SEG_F | SEG_E | SEG_D,                  // C
-  SEG_F | SEG_E | SEG_D,                          // L
-  SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F,  // O
-  SEG_A | SEG_F | SEG_E | SEG_D                   // C
-};
-
-const uint8_t SEG_DEGC[] PROGMEM = {
+const byte SEG_DEGC[] PROGMEM = {
   0x00,                           // space
   0x00,                           // space
   SEG_A | SEG_F | SEG_G | SEG_B,  // degree sign
   SEG_A | SEG_F | SEG_E | SEG_D   // C
 };
 
+
+const byte SEG_OFF[] PROGMEM = {
+  0x00,                                           // space
+  SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F,  // O
+  SEG_E | SEG_F | SEG_A | SEG_G,                  // F
+  SEG_E | SEG_F | SEG_A | SEG_G                   // F
+};
+
 void setup() {
-  //run the procedure outlined in tinyClockCal.ino to determine value for OSCCAL.
-  //OSCCAL=161 ; // internal 8MHz clock calibrated to 3.3V at room temperature. Comment out if you didn't calibrate.
-  //mySerial.begin(9600);                  // start the serial monitor
+  //mySerial.begin(9600);             // start the serial monitor
+  tEnd = millis();    // initialize end time
   cbi(ADCSRA, ADEN);  // disable ADC to save power (not needed for this sketch)
   TMVCCon();          // turn on Vcc for the TM1637 display
+  display.clear();    // clear the display
   if (brightness == 8) {
     display.setBrightness(3);  // For LED off, use an intermediate brightness
   } else {
@@ -301,214 +305,189 @@ void setup() {
 }
 
 void loop() {
-  bool resetTimer = false;   // if true, reset the timer
-  byte p = buttonRead(sw2);  // read MODE button and store to p
-  buttonReset(sw2);          // user should let go of MODE button
+  bool resetTimer = false;  // if true, reset the timer
+  byte p2 = 0;              // to hold sw2 push
+  byte p1 = 0;              // to hold sw1 push
+  p2 = buttonRead(sw2);     // read MODE button and store to p1
+  buttonReset(sw2);         // user should let go of MODE button
 
-  if (p == 1 || mode == 127) {          // if mode button pushed (short) or if you left a routine early by pushing the mode button
-    mode++;                             // change the mode
+  if (p2 == 1) {                        // if sw2 mode button pushed (short). This routine runs when first switched to new mode.
+    mode++;                             // increment mode
     if (mode > 3) {                     // wrap around the mode. Skip clock if clockMode is false.
       clockMode ? mode = 0 : mode = 1;  // ternary operator (condition?then:else;)
     }
+    modeChanged = true;  // change in mode happened
+  } else if (p2 == 2) {  // if long push on mode button
+    setLED();            // set brightness
+  }
 
-    if (mode == 0 && brightness == 8) {  // changing to clock mode while in LED battery saving mode
-      TMVCCon();                         // turn on Vcc to the TM1637 display
-      showTime(h, m, s, false, false);   // report the time
-      delay(DISPTIME_SLOW);              // show the time for DISPTIME
-      TMVCCoff();                        // turn off power to the TM1637 display
+  if (modeChanged) {  // user has changed the mode
+    if (mode == CLOCK) {
+      TMVCCon();                        // turn on Vcc to the TM1637 display
+      showTime(h, m, s, false, false);  // report the time
+      delay(DISPTIME_SLOW);             // show the time for DISPTIME
+      if (brightness == 8)              // changing to clock mode while in LED battery saving mode
+        TMVCCoff();                     // turn off power to the TM1637 display
     }
 
-    if (mode == 1) {                 // mode=1: temperature mode
-      DISPLAY_ON_IF_SAVING;          // turn on Vcc to the TM1637 display
-      showTemp(readCoreTemp(100));   // show avg of 100 core temperature readings
-      safeWait(sw2, DISPTIME_SLOW);  // show the time for DISPTIME
-      DISPLAY_OFF_IF_SAVING;         // turn off power to the TM1637 display
-    }
-
-    if (mode == 2) {  // mode=2: timer
+    if (mode == TIMER) {
       resetTimer = true;
-    }
-
-    if (mode == 3) {      // mode=3: stopwatch
-      stopWatch_reset();  // reset stopwatch on mode change
-    }
-
-  } else if (p == 2) {  // if long push on mode button
-    setLED();           // set brightness
-  }
-
-  if (mode == 0) {                                             // mode=0 is clock mode
-    unsigned long t = (millis() / 1000UL) + toffset - tstart;  // update time in sec.
-    // first convert seconds into hours, minutes, seconds
-    d = (t / 86400UL);                                  // calculate days
-    h = (t / 3600UL) - (d * 24UL);                      // calculate #hrs
-    m = (t / 60UL) - (d * 1440UL) - (h * 60UL);         // calculate #min
-    s = t - (d * 86400UL) - (h * 3600UL) - (m * 60UL);  // calculate #sec
-
-    if (h == 0 && hlastloop == 23) {  // if the day has just rolled over
-      dy++;                           // advance the calendar day
-      if (dy > cal[mo - 1]) {         // if #days in month exceeded
-        dy = 1;                       // reset calendar day to 1
-        mo++;                         // increment month
-        if (mo > 12) mo = 1;          // roll over month if month>12
-      }
-    }
-    if (brightness != 8) {
-      showTime(h, m, s, flashcolon, false);  // report the time
-    }
-    if (h == (h_AL + h_SNOOZE) && m == (m_AL + m_SNOOZE) && s == 0 && alarm) {  // sound the alarm!
-      byte x = beepBuzz(buzzPin, 20);                                           // a longish alarm
-      if (x == 1) {                                                             // SET button will be the snooze button
-        m_SNOOZE += T_SNOOZE;                                                   // add T_SNOOZE minutes to snooze
-        if ((m_AL + m_SNOOZE) > 59) {
-          h_SNOOZE++;      // add 1 to hours
-          m_SNOOZE -= 60;  // subtract 60 from minutes
-        }
-        if (h_AL + h_SNOOZE > 23) h_SNOOZE = -23;  // overflow hours (23h + 1 wraps around to 23-23 =0h
-        //flashcolon=true;                    // flash the colon to show snooze is active
-      } else {         // if x != 1, reset snooze function
-        h_SNOOZE = 0;  // reset snooze if no button pushed
-        m_SNOOZE = 0;
-        //flashcolon=false;                   // stop flashing the colon to show snooze is off
-      }
-      buttonReset(sw1);  // make sure sw1 isn't pressed
-      buttonReset(sw2);  // make sure sw2 isn't pressed
-    }
-    p = buttonRead(sw1);     // take a button reading
-    if (p == 2) {            // long push to set time
-      buttonReset(sw1);      // debounce sw1
-      p = 0;                 // reset p
-      flashTime();           // show user flashing time (set mode)
-      DISPLAY_ON_IF_SAVING;  // turn on Vcc for the TM1637 display
-      setAll();              // clock setting routine
-      if (brightness == 8) {
-        TMVCCon();                        // turn on Vcc for the TM1637 display
-        showTime(h, m, s, false, false);  // report the time
-        delay(DISPTIME_SLOW);             // wait a bit
-        TMVCCoff();                       // turn off Vcc for the TM1637 display
-      }
-    } else if (p == 1) {
-      if (brightness == 8) {
-        TMVCCon();                        // turn on Vcc for the TM1637 display
-        showTime(h, m, s, false, false);  // report the time
-        delay(DISPTIME_SLOW);             // wait a bit
-      }
-      showSegments_P(SEG_CAL);  // show "CAL" message
-      delay(DISPTIME_SLOW);
-      showCal(mo, dy);         // show the month and day
-      showSegments_P(SEG_AL);  // show "AL" message
-      delay(DISPTIME_SLOW);
-      if (alarm) {
-        showTime(h_AL + h_SNOOZE, m_AL + m_SNOOZE, 0, false, true);  // show alarm time. true here forces a display.
-      } else {
-        showSegments_P(SEG_OFF);  // show "OFF" message
-      }
-      delay(DISPTIME_SLOW);
-      DISPLAY_OFF_IF_SAVING;
-    } else {
-      //do nothing
-    }
-    p = 0;          // reset button push
-    hlastloop = h;  // store current values
-  }
-
-  if (mode == 1) {                               // mode=1 is temperature mode
-    if (brightness == 8 && !digitalRead(sw1)) {  // battery saver mode
-      TMVCCon();                                 // turn on Vcc to the TM1637 display
-      showTemp(readCoreTemp(100));               // show avg of 100 core temperature readings
-      safeWait(sw2, DISPTIME_SLOW);              // show the time for DISPTIME
-      TMVCCoff();                                // turn off power to the TM1637 display
-      if (!clockMode) {                          // no sleep in clockMode
-        sleep_interrupt();                       // go to sleep here (waits in sleep mode, with 0.8 uA current draw)
-        TMVCCon();
-      }
-    } else if (brightness != 8) {   // any other brightness
-      showTemp(readCoreTemp(100));  // show avg of 100 core temperature readings
-      safeWait(sw2, 5000);          // wait interruptable by mode button
-    }
-  }
-
-  if (mode == 2) {        // mode=2 is timer mode
-    p = buttonRead(sw1);  // take a button reading
-    if (p == 2) {         // if long push
-      resetTimer = true;  // reset the timer
-    } else if (p == 1) {  // short push adds time to the timer
-      TMVCCon();          // turn on Vcc to the TM1637 display
-      beeped = false;     // rearm the buzzer
-      unsigned long now = millis();
-      unsigned long remaining = (tEnd > now) ? (tEnd - now) : 0;
-
-      // convert ms to sec and round up any fraction
-      unsigned long totalSec = (remaining + 999) / 1000;
-
-      // decide new duration based on bucketed approach
-      unsigned long tDurSec;
-
-      if (totalSec >= 6UL * 60UL * 60UL) {         // 6+ hours
-        tDurSec = ((totalSec / 3600) + 1) * 3600;  // round up to next hour
-      } else if (totalSec >= 60UL * 60UL) {        // 1–5 hours
-        tDurSec = ((totalSec / 900) + 1) * 900;    // round up to next 15 min
-      } else if (totalSec >= 20UL * 60UL) {        // 20–59 min
-        tDurSec = ((totalSec / 300) + 1) * 300;    // round up to next 5 min
-      } else {                                     // <20 min
-        tDurSec = ((totalSec / 60) + 1) * 60;      // round up to next minute
-      }
-
-      tDur = tDurSec;
-      DISPLAY_ON_IF_SAVING;
-      showTimeTMR(tDur * 1000UL, true);
-      delay(DEBOUNCE);
-      safeWait(sw1, 1000 - DEBOUNCE);
-      tEnd = millis() + (tDur * 1000UL);
-    } else if (p == 0) {  // if button not pushed
-      long remaining = (long)(tEnd - millis());
-      if (remaining > 1000) {  // after waiting the allotted time (don't include last second).
-        showTimeTMR((unsigned long)remaining, false);
-      } else if (!beeped) {  // 20 second timer
-        beeped = true;       // yes! we beeped!
-        for (int i = 0; i < 10; i++) {
-          if (i % 2 == 0) {         // if i is even
-            showTimeTMR(0, false);  // show zero
-          } else {
-            showSegments_P(SEG_DONE);  // show "done" message
-          }
-          if (beepBuzz(buzzPin, 3) > 0) {  // flash and beep 3x
-            resetTimer = true;             // flag the timer to reset
-            break;                         // leave early (user silenced alarm)
-          }
-        }
-      } else {              // what the sketch does after time runs out, and the timer beeped
-        resetTimer = true;  // flag the timer to reset
-      }
-    }
-    if (resetTimer) {
       timer_reset();
-      DISPLAY_ON_IF_SAVING;      // turn on Vcc for the TM1637 display
-      showSegments_P(SEG_PUSH);  // show "PUSH" message
-      delay(DISPTIME_FAST);      // wait a bit
-      buttonReset(sw1);          // wait until user lets go of SET button
-      DISPLAY_OFF_IF_SAVING
-      if (clockMode) {
-        while (digitalRead(sw1) && digitalRead(sw2))
-          ;  // wait until any button pushed (in clock mode, waits in limbo with 2 mA current draw)
-      } else {
-        TMVCCoff();         // turn off Vcc for the TM1637 display
-        sleep_interrupt();  // go to sleep here (waits in sleep mode, with 0.8 uA current draw)
-        TMVCCon();          // turn on Vcc for the TM1637 display
-      }
-      DISPLAY_ON_IF_SAVING;  // turn on Vcc for the TM1637 display
+    } else if (mode == STOPWATCH) {
+      stopWatch_reset();               // reset stopwatch on mode change
+    } else if (mode == TEMPERATURE) {  // first occurrence of temperature after switching mode
+      TMVCCon();                       // turn on Vcc to the TM1637 display
+      showTemp(readCoreTemp(100));     // show avg of 100 core temperature readings
+      safeWait(sw2, DISPTIME_SLOW);    // show the temperature
+      display.clear();                 // Clear segments
+      TMVCCoff();                      // turn off power to the TM1637 display
     }
-  }  // end of if mode==2
 
-  if (mode == 3) {                     // mode=3 is stopwatch mode
-    showTimeSW(millis() - toffsetSW);  // show time elapsed
-    p = buttonRead(sw1);               // read the SET button
-    if (p == 1) {                      // short push
-      stopWatch_pause();               // pause stopwatch
-    } else if (p == 2) {
-      stopWatch_reset();
+    modeChanged = false;
+
+  } else {  // Mode is not changing. Steady-state behaviour starts here (regular loop)
+
+    if (mode == CLOCK) {                                         // mode=0 is clock mode
+      unsigned long t = (millis() / 1000UL) + toffset - tstart;  // update time in sec.
+      // first convert seconds into hours, minutes, seconds
+      d = (t / 86400UL);                                  // calculate days
+      h = (t / 3600UL) - (d * 24UL);                      // calculate #hrs
+      m = (t / 60UL) - (d * 1440UL) - (h * 60UL);         // calculate #min
+      s = t - (d * 86400UL) - (h * 3600UL) - (m * 60UL);  // calculate #sec
+
+      if (h == 0 && hlastloop == 23) {  // if the day has just rolled over
+        dy++;                           // advance the calendar day
+        if (dy > cal[mo - 1]) {         // if #days in month exceeded
+          dy = 1;                       // reset calendar day to 1
+          mo++;                         // increment month
+          if (mo > 12) mo = 1;          // roll over month if month>12
+        }
+      }
+      if (brightness != 8) {
+        showTime(h, m, s, flashcolon, false);  // report the time
+      }
+      if (h == (h_AL + h_SNOOZE) && m == (m_AL + m_SNOOZE) && s == 0 && alarm) {  // sound the alarm!
+        byte x = beepBuzz(buzzPin, 20);                                           // a longish alarm
+        if (x == 1) {                                                             // SET button will be the snooze button
+          m_SNOOZE += T_SNOOZE;                                                   // add T_SNOOZE minutes to snooze
+          if ((m_AL + m_SNOOZE) > 59) {
+            h_SNOOZE++;      // add 1 to hours
+            m_SNOOZE -= 60;  // subtract 60 from minutes
+          }
+          if (h_AL + h_SNOOZE > 23) h_SNOOZE = -23;  // overflow hours (23h + 1 wraps around to 23-23 =0h
+          //flashcolon=true;                    // flash the colon to show snooze is active
+        } else {         // if x != 1, reset snooze function
+          h_SNOOZE = 0;  // reset snooze if no button pushed
+          m_SNOOZE = 0;
+          //flashcolon=false;                   // stop flashing the colon to show snooze is off
+        }
+        buttonReset(sw1);  // make sure sw1 isn't pressed
+        buttonReset(sw2);  // make sure sw2 isn't pressed
+      }
+      p1 = buttonRead(sw1);              // take a button reading
+      if (p1 == 2) {                     // long push to set time
+        buttonReset(sw1);                // debounce sw1
+        p1 = 0;                          // reset p1
+        flashTime();                     // show user flashing time (set mode)
+        if (brightness == 8) TMVCCon();  // turn on Vcc for the TM1637 display
+        setAll();                        // clock setting routine
+        if (brightness == 8) {
+          TMVCCon();                        // turn on Vcc for the TM1637 display
+          showTime(h, m, s, false, false);  // report the time
+          delay(DISPTIME_SLOW);             // wait a bit
+          TMVCCoff();                       // turn off Vcc for the TM1637 display
+        }
+      } else if (p1 == 1) {
+        if (brightness == 8) {
+          TMVCCon();                        // turn on Vcc for the TM1637 display
+          showTime(h, m, s, false, false);  // report the time
+          delay(DISPTIME_SLOW);             // wait a bit
+        }
+        showSegments_P(SEG_CAL);  // show "CAL" message
+        delay(DISPTIME_SLOW);
+        showCal(mo, dy);         // show the month and day
+        showSegments_P(SEG_AL);  // show "AL" message
+        delay(DISPTIME_SLOW);
+        if (alarm) {
+          showTime(h_AL + h_SNOOZE, m_AL + m_SNOOZE, 0, false, true);  // show alarm time. true here forces a display.
+        } else {
+          showSegments_P(SEG_OFF);  // show "OFF" message
+        }
+        delay(DISPTIME_SLOW);
+        if (brightness == 8) TMVCCoff();
+      }
+      p1 = 0;         // reset button push
+      p2 = 0;         // reset button push
+      hlastloop = h;  // store current values
     }
-    buttonReset(sw1);  // wait until suser lets go of sw1
+
+    // Now the regular loop:
+    if (mode == TIMER) {
+      p1 = buttonRead(sw1);  // take a button reading
+      if (p1 == 2) {         // if long push
+        resetTimer = true;   // reset the timer
+      } else if (p1 == 1) {  // short push adds time to the timer
+        TMVCCon();           // turn on Vcc to the TM1637 display
+        beeped = false;      // rearm the buzzer
+        if (tEnd > millis()) {
+          unsigned long remaining = (tEnd - millis() + 999) / 1000UL;
+          remaining += 30;  // Add 30 seconds directly, then round result up to 30-sec boundary
+          tDur = ((remaining + 29) / 30) * 30;
+        } else {
+          tDur = 30;
+        }
+        showTimeTMR(tDur * 1000UL, true);          // show start time remaining (true=force display)
+        delay(DEBOUNCE);                           // have a small real delay. This prevents double presses.
+        safeWait(sw1, 1000 - DEBOUNCE);            // button-interruptable wait function
+        tEnd = millis() + (tDur * 1000UL);         // calculate new tEnd time
+      } else if (p1 == 0) {                        // if button not pushed
+        if (tDur > 0 && millis() < tEnd - 1000) {  // after waiting the allotted time (don't include last second).
+          showTimeTMR(tEnd - millis(), false);     // show time remaining
+        } else if (!beeped) {                      // 20 second timer
+          beeped = true;                           // yes! we beeped!
+          for (int i = 0; i < 10; i++) {
+            if (i % 2 == 0) {         // if i is even
+              showTimeTMR(0, false);  // show zero
+            } else {
+              showSegments_P(SEG_DONE);  // show "done" message
+            }
+            if (beepBuzz(buzzPin, 3) > 0) {  // flash and beep 3x
+              resetTimer = true;             // flag the timer to reset
+              break;                         // leave early (user silenced alarm)
+            }
+          }
+        } else {              // what the sketch does after time runs out, and the timer beeped
+          resetTimer = true;  // flag the timer to reset
+        }
+      }
+      if (resetTimer) timer_reset();
+    } else if (mode == STOPWATCH) {
+      showTimeSW(millis() - toffsetSW);  // show time elapsed
+      p1 = buttonRead(sw1);              // read the SET button
+      if (p1 == 1) {                     // short push
+        stopWatch_pause();               // pause stopwatch
+      } else if (p1 == 2) {
+        stopWatch_reset();
+      }
+      buttonReset(sw1);  // wait until suser lets go of sw1
+
+    } else if (mode == TEMPERATURE) {
+      p1 = buttonRead(sw1);            // read button sw1
+      if (p1 == 1) {                   // if short push
+        TMVCCon();                     // turn on Vcc to the TM1637 display
+        display.clear();               // clear the display
+        showTemp(readCoreTemp(100));   // show avg of 100 core temperature readings
+        safeWait(sw1, DISPTIME_SLOW);  // show the temperature for DISPTIME, interruptable with sw1
+        buttonReset(sw1);              // wait until user lets go of SET button
+        TMVCCoff();                    // turn off Vcc for the TM1637 display
+        if (!clockMode) {              // no sleep in clockMode
+          sleep_interrupt();           // go to sleep here (waits in sleep mode, with 0.8 uA current draw)
+          TMVCCon();                   // turn on Vcc for the TM1637 display
+        } else {
+          while (digitalRead(sw1) && digitalRead(sw2));  // wait until a button is pushed (while both buttons are not pushed)
+        }
+      }
+    }
   }
 }
 
@@ -584,6 +563,20 @@ void showTimeDay(byte d1) {                // time in min
   display.showNumberDec(d1, false, 2, 2);  // true: show leading zero
 }
 
+void flashTime() {
+  // Note: a "12-o'clock flasher" is someone who has 12:00 flashing on all of their appliances at home.
+  // These people generally rely on the technical problem solving skills of others.
+  if (brightness == 8) TMVCCon();    // turn on Vcc for the TM1637 display
+  while (buttonRead(sw2) == 0) {     // while MODE button not pushed (MODE button used to exit flashTime)
+    showTime(h, m, s, false, true);  // show current time with colon
+    //    display.showNumberDecEx(1200,0x80>>1,false,4,0);  // show 12:00
+    safeWait(sw2, 500);  // wait 500 msec
+    display.clear();     // clear the display
+    safeWait(sw2, 500);  // wait 500 msec
+  }
+  if (brightness == 8) TMVCCoff();  // turn off Vcc for the TM1637 display
+}
+
 void showBoolState(bool a) {  // time in min
   display.clear();            // clear the display
   if (a) {
@@ -629,7 +622,7 @@ void setItemBool(bool &item, void (*f)(bool)) {  // sets an individual bool item
     }                         // end if
   }                           // end while
   buttonReset(sw1);           // don't leave until user lets go of sw1
-  buttonReset(sw2);           // don't leave until user lets go of sw1
+  buttonReset(sw2);           // don't leave until user lets go of sw2
   delay(100);                 // extra delay
 }
 
@@ -681,8 +674,8 @@ void setAll() {
 }
 
 void setLED() {
-  DISPLAY_ON_IF_SAVING;  // turn on Vcc for the TM1637 display
-  byte push = 0;         // push will store button result (0: no push, 1: short push, 2: long push)
+  TMVCCon();           // turn on Vcc for the TM1637 display
+  byte p1 = 0;         // push will store button result (0: no push, 1: short push, 2: long push)
   buttonReset(sw1);      // make sure sw1 isn't pushed
   //reset the brightness level (2-7)
   showSegments_P(SEG_LED);  // show "LED" message
@@ -695,8 +688,8 @@ void setLED() {
     display.showNumberDec(brightness, true, 2, 2);  // show user current brightness
   }
   while (digitalRead(sw2)) {               // MODE button exits
-    push = buttonRead(sw1);                // read button
-    if (push == 1) {                       // if there was a short push
+    p1 = buttonRead(sw1);                  // read button
+    if (p1 == 1) {                         // if there was a short push
       brightness++;                        // add 1 to hours
       if (brightness > 8) brightness = 0;  // wrap around brightness
       display.clear();                     // clear display
@@ -707,7 +700,7 @@ void setLED() {
         display.setBrightness(brightness);              // 0:MOST DIM, 7: BRIGHTEST
         display.showNumberDec(brightness, true, 2, 2);  // show user current brightness
       }
-    }                //end if (push==1)
+    }                //end if (p1==1)
   }                  // end while
   buttonReset(sw1);  // debounce sw1
   buttonReset(sw2);  // debounce sw1
@@ -787,10 +780,7 @@ byte beepBuzz(byte pin, int n) {  // pin is digital pin wired to buzzer. n is nu
   byte x = 0;
   pinMode(pin, OUTPUT);  // set pin to OUTPUT mode
   for (int j = 0; j < n; j++) {
-    for (int i = 0; i < 3; i++) {                // 3 beeps
-      if (mode == 0) {                           // if clock mode
-        showTime(h, m, ++s, flashcolon, false);  // report the time
-      }
+    for (int i = 0; i < 3; i++) {  // 3 beeps
       digitalWrite(pin, HIGH);
       x = anyKeyWait(BEEPTIME);  // interruptable wait
       if (x > 0) {
@@ -819,77 +809,74 @@ byte beepBuzz(byte pin, int n) {  // pin is digital pin wired to buzzer. n is nu
   return 0;  // exit normally
 }
 
-int readCoreTemp(int n) {  // returns whole °C
-  sbi(ADCSRA, ADEN);
-  delay(50);
-
-  byte ADMUX_P = ADMUX;
+int readCoreTemp(int n) {  // Calculates and reports the chip temperature of ATtiny84
+  sbi(ADCSRA, ADEN);       // enable ADC (comment out if already on)
+  delay(WARMUP);           // wait for ADC to warm up
+  byte ADMUX_P = ADMUX;    // store present values of these two registers
   byte ADCSRA_P = ADCSRA;
-
-  ADMUX = B00100010;
-  cbi(ADMUX, ADLAR);
+  ADMUX = B00100010;  // Page 149 of ATtiny84 datasheet - enable temperature sensor
+  cbi(ADMUX, ADLAR);  // Right-adjust result
   sbi(ADMUX, REFS1);
-  cbi(ADMUX, REFS0);
-  delay(2);
-
-  cbi(ADCSRA, ADATE);
-  cbi(ADCSRA, ADIE);
-
-  long avg = 0;
-
+  cbi(ADMUX, REFS0);   // set internal ref to 1.1V
+  delay(WARMUP);       // wait for Vref to settle
+  cbi(ADCSRA, ADATE);  // disable autotrigger
+  cbi(ADCSRA, ADIE);   // disable interrupt
+  long avg = 0;        // to calculate mean of n readings
   for (int i = 0; i < n; i++) {
-    sbi(ADCSRA, ADSC);
-    loop_until_bit_is_clear(ADCSRA, ADSC);
-
-    uint8_t low = ADCL;
-    uint8_t high = ADCH;
-    int adc = (high << 8) | low;
-
-    // 0.8929 * ADC - 244.5  (scaled x1000)
-    long temp = (893L * adc) / 1000L - 244 + (int)TOFFSET;
-
-    avg += (temp - avg) / (i + 1);
+    sbi(ADCSRA, ADSC);                                      // single conversion or free-running mode: write this bit to one to start a conversion.
+    loop_until_bit_is_clear(ADCSRA, ADSC);                  // ADSC will read as one as long as a conversion is in progress. When the conversion is complete, it returns a zero. This waits until the ADSC conversion is done.
+    uint8_t low = ADCL;                                     // read ADCL first (17.13.3.1 ATtiny85 datasheet)
+    uint8_t high = ADCH;                                    // read ADCL second (17.13.3.1 ATtiny85 datasheet)
+    int adc = (high << 8) | low;                            // combine high and low bits
+    long TdegC = (893L * adc) / 1000 - 244 + (int)TOFFSET;  // Temperature formula, p149 of datasheet.
+    avg += (TdegC - avg) / (i + 1);                         // calculate iterative mean
   }
-
-  ADMUX = ADMUX_P;
+  ADMUX = ADMUX_P;  // restore original values of these two registers
   ADCSRA = ADCSRA_P;
-  cbi(ADCSRA, ADEN);
+  cbi(ADCSRA, ADEN);  // disable ADC to save power (comment out to leave ADC on)
 
-  return (int)avg;
-}
+  // According to Table 16-2 in the ATtiny84 datasheet, the function to change the ADC reading to
+  // temperature is linear. A best-fit line for the data in Table 16-2 yields the following equation:
+  //
+  //  Temperature (degC) = 0.8929 * ADC - 244.5
+  //
+  // These coefficients can be replaced by performing a 2-point calibration, and fitting a straight line
+  // to solve for kVal and Tos. These are used to convert the ADC reading to degrees Celsius (or another temperature unit).
 
-void flashTime() {
-  // Note: a "12-o'clock flasher" is someone who has 12:00 flashing on all of their appliances at home.
-  // These people generally rely on the technical problem solving skills of others.
-  DISPLAY_ON_IF_SAVING;              // turn on Vcc for the TM1637 display
-  while (buttonRead(sw2) == 0) {     // while MODE button not pushed (MODE button used to exit flashTime)
-    showTime(h, m, s, false, true);  // show current time with colon
-    //    display.showNumberDecEx(1200,0x80>>1,false,4,0);  // show 12:00
-    safeWait(sw2, 500);  // wait 500 msec
-    display.clear();     // clear the display
-    safeWait(sw2, 500);  // wait 500 msec
-  }
-  DISPLAY_OFF_IF_SAVING;  // turn off Vcc for the TM1637 display
+  return (int)avg + TOFFSET;  // return temperature in degC. TOFFSET is a fudge factor defined at the top of the program.
 }
 
 // Show temperature function
-void showTemp(int T) {                      // temperature
-  static byte Tlast;                        // to hold previous temperature
-  if (T != Tlast) {                         // only change the display if the temperature changes
-    showSegments_P(SEG_DEGC);               // show degree message
-    display.showNumberDec(T, false, 2, 0);  // false: don't show leading zeros, Start at first digit (position 0).
-    delayMicroseconds(50);
-  }
-  Tlast = T;  // store current temperature
+void showTemp(float T) {  // temperature
+  int Tint = (int)T;
+  showSegments_P(SEG_DEGC);                  // show degree message
+  display.showNumberDec(Tint, false, 2, 0);  // false: don't show leading zeros, Start at first digit (position 0).
 }
 
 // Timer Functions
+void timer_reset() {  // reset on the fly without the PUSH screen
+  tDur = 0;           // reset timer on mode change (comment out if you'd like to change this)
+  tEnd = millis();
+  beeped = true;
+  TMVCCon();                 // turn on Vcc for the TM1637 display
+  showSegments_P(SEG_PUSH);  // show "PUSH" message
+  delay(DISPTIME_FAST);      // wait a bit
+  buttonReset(sw1);          // wait until user lets go of SET button
+  TMVCCoff();                // turn off Vcc for the TM1637 display
+  if (!clockMode) {          // no sleep in clockMode
+    sleep_interrupt();       // go to sleep here (waits in sleep mode, with 0.8 uA current draw)
+    TMVCCon();               // turn on Vcc for the TM1637 display
+  } else {
+    while (digitalRead(sw1) && digitalRead(sw2));  // wait until a button is pushed (while both buttons are not pushed)
+  }
+}
+
 void showTimeTMR(unsigned long msec, bool force) {  // time remaining in msec. force=true forces the display.
   // this function converts milliseconds to h, m, s
   // For a function that takes h,m,s as input arguments, see PB860.pbworks.com
-  static unsigned long hlast;
-  static unsigned long mlast;
-  static unsigned long slast;
+  static unsigned long hlast = 999;
+  static unsigned long mlast = 999;
+  static unsigned long slast = 999;
   unsigned long h = (msec / 3600000UL);                                   // calculate hours left (rounds down)
   unsigned long m = ((msec - (h * 3600000UL)) / 60000UL);                 // calculate minutes left (rounds down)
   unsigned long s = ((msec - (h * 3600000UL) - (m * 60000UL))) / 1000UL;  // calculate seconds left (rounds down)
@@ -905,24 +892,17 @@ void showTimeTMR(unsigned long msec, bool force) {  // time remaining in msec. f
       display.showNumberDec(s, false);  // false: don't show leading zero
     }
   }
-  delayMicroseconds(50);
   hlast = h;  // store current hrs
   mlast = m;  // store current min
   slast = s;  // store current sec
 }
 
-void timer_reset() {  // reset on the fly without the PUSH screen
-  tDur = 0;           // reset timer on mode change (comment out if you'd like to change this)
-  tEnd = millis();
-  beeped = true;
-}
-
 //Stopwatch functions
 void showTimeSW(unsigned long msec) {  // show time (input argument: msec) for the stopwatch mode
   // This function converts milliseconds to h, m, s
-  static byte hlast;
-  static byte mlast;
-  static byte slast;
+  static byte hlast = 255;
+  static byte mlast = 255;
+  static byte slast = 255;
 
   byte h = (msec / 3600000UL);                                             // calculate hours left (rounds down)
   byte m = ((msec - (h * 3600000UL)) / 60000UL);                           // calculate minutes left (rounds down)
@@ -946,7 +926,6 @@ void showTimeSW(unsigned long msec) {  // show time (input argument: msec) for t
   if (h == 0 && m == 0) {                   // just update msec here (prevents LCD flashing)
     display.showNumberDec(ms, true, 2, 2);  // false: don't show leading zero, 2: start 2 spaces over
   }
-  delayMicroseconds(50);
   hlast = h;  // store current hrs
   mlast = m;  // store current min
   slast = s;  // store current sec
@@ -960,7 +939,6 @@ void stopWatch_pause() {
     ;                       // wait for user to press a button again (HIGH=UNPUSHED)
   if (!digitalRead(sw2)) {  // if user presses the mode button here
     toffsetSW = millis();   // new starting point
-    mode = 127;             // change mode (will wrap around)
     return;                 // get outta dodge
   }
   byte push = buttonRead(sw1);  // if user presses the sw1 button to resume
@@ -972,39 +950,39 @@ void stopWatch_pause() {
 }
 
 void stopWatch_reset() {
+  TMVCCon();             // turn on Vcc for the TM1637 display
   display.clear();
-  display.showNumberDec(0, true, 2, 2);  // tell user clock is reset
+  display.showNumberDec(0, true, 2, 2);  // tell user stopwatch is reset
   while (!digitalRead(sw1))
-    ;                     // wait for user to let go of button
-  delay(DEBOUNCE);        // debounce. Pin should be in HIGH state now.
-  delay(DISPTIME_FAST);   // delay to show 00
-  DISPLAY_OFF_IF_SAVING;  // turn off Vcc for the TM1637 display
-  if (clockMode) {
-    while (digitalRead(sw1) && digitalRead(sw2))
-      ;  // wait for user to press a button again (HIGH=UNPUSHED)
+    ;                    // wait for user to let go of button
+  delay(DEBOUNCE);       // debounce. Pin should be in HIGH state now.
+  delay(DISPTIME_FAST);  // delay to show 00
+  TMVCCoff();            // turn off Vcc for the TM1637 display
+  if (!clockMode) {      // no sleep in clockMode
+    sleep_interrupt();   // sleep here to save battery life
+    TMVCCon();           // turn on Vcc for the TM1637 display
   } else {
-    TMVCCoff();         // turn off Vcc for the TM1637 display
-    sleep_interrupt();  // sleep here to save battery life
-    TMVCCon();          // turn on Vcc for the TM1637 display
+    while (digitalRead(sw1) && digitalRead(sw2));  // wait until a button is pushed (while both buttons are not pushed)
+    if (!digitalRead(sw2)) {
+      return;  // leave routine
+    }
+    TMVCCon();        // turn on Vcc for the TM1637 display
+    display.clear();  // clear the display
+    while (!digitalRead(sw1) || !digitalRead(sw2))
+      ;  // make sure user is not touching button
+    delay(DEBOUNCE);
+    toffsetSW = millis();  // new starting point
   }
-  if (!digitalRead(sw2)) {
-    mode = 127;  // change mode
-  }
-  DISPLAY_ON_IF_SAVING;  // turn on Vcc for the TM1637 display
-  while (!digitalRead(sw1) || !digitalRead(sw2))
-    ;  // make sure user is not touching button
-  delay(DEBOUNCE);
-  toffsetSW = millis();  // new starting point
 }
 
 void TMVCCon() {
-  pinMode(TMVCC, OUTPUT);     // set TMVCC pin to output mode
+  pinMode(TMVCC, OUTPUT);     // to turn on Vcc to LED display
   digitalWrite(TMVCC, HIGH);  // turn on TM1637 LED display
-  delay(10);                  // wait for TM1637 to warm up
+  delay(WARMUP);              // wait for TM1637 to warm up
   display.clear();
 }
 
-void TMVCCoff() {
+void TMVCCoff() {            // to turn off Vcc to LED display
   display.clear();           // clear the display
   digitalWrite(TMVCC, LOW);  // turn off TM1637 LED display to save power
   pinMode(TMVCC, INPUT);     // set TMVCC pin to input mode
@@ -1012,11 +990,11 @@ void TMVCCoff() {
 
 long readVcc() {         // back-calculates voltage (in mV) applied to Vcc of ATtiny84
   sbi(ADCSRA, ADEN);     // enable ADC (comment out if already on)
-  delay(50);             // wait for ADC to warm up
+  delay(WARMUP);         // wait for ADC to warm up
   byte ADMUX_P = ADMUX;  // store present values of these two registers
   byte ADCSRA_P = ADCSRA;
   ADMUX = _BV(MUX5) | _BV(MUX0);          // set Vbg to positive input of analog comparator (bandgap reference voltage=1.1V). Table 16.4 ATtiny24A/44A/84A Datasheet, p151
-  delay(2);                               // Wait for Vref to settle
+  delay(WARMUP);                          // Wait for Vref to settle
   sbi(ADCSRA, ADSC);                      // Single conversion or free-running mode: write this bit to one to start a conversion.
   loop_until_bit_is_clear(ADCSRA, ADSC);  // ADSC will read as one as long as a conversion is in progress. When the conversion is complete, it returns a zero. This waits until the ADSC conversion is done.
   uint8_t low = ADCL;                     // read ADCL first (17.13.3.1 ATtiny85 datasheet)
@@ -1026,7 +1004,7 @@ long readVcc() {         // back-calculates voltage (in mV) applied to Vcc of AT
   ADMUX = ADMUX_P;                        // restore original values of these two registers
   ADCSRA = ADCSRA_P;
   cbi(ADCSRA, ADEN);  // disable ADC to save power (comment out to leave ADC on)
-  delay(2);           // wait a bit
+  delay(WARMUP);      // wait a bit
   return result;      // Vcc in millivolts
 }
 
@@ -1057,18 +1035,12 @@ void sleep_interrupt() {  // interrupt sleep routine - this one restores millis(
 ISR(PCINT0_vect) {  // This ISR is always called after waking from sleep mode.
 }
 
-
-/*void showSegments_P(const uint8_t *p) {
-  uint8_t buf[4];
-  memcpy_P(buf, p, 4);
-  showSegments_P(buf);
-}*/
-
 void showSegments_P(const uint8_t *p) {
-  uint8_t buf[4];
+  delayMicroseconds(50);   // wait a bit (in case waking up from sleep)
+  uint8_t buf[4] = { 0 };  // define buffer as 4 bytes and clear it out
   for (uint8_t i = 0; i < 4; i++) {
-    buf[i] = pgm_read_byte(&p[i]);
+    buf[i] = pgm_read_byte(&p[i]);  // read next byte in progmem
   }
-  display.setSegments(buf);
-  delayMicroseconds(50);
+  display.setSegments(buf);  // display 4 bytes
+  delayMicroseconds(50);     // wait a bit
 }
