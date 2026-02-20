@@ -129,21 +129,21 @@ unsigned long toffsetSW = 0UL;  // to hold offset time for stopwatch
 #define DEBOUNCE 20        // time to debounce a button
 #define WARMUP 50          // time to warm up after sleeping/etc.
 
-const uint8_t PROGMEM SEG_PUSH[] = {
+const uint8_t SEG_PUSH[] PROGMEM = {
   SEG_E | SEG_F | SEG_A | SEG_B | SEG_G,  // P
   SEG_F | SEG_E | SEG_D | SEG_C | SEG_B,  // U
   SEG_A | SEG_F | SEG_G | SEG_C | SEG_D,  // S
   SEG_F | SEG_E | SEG_G | SEG_B | SEG_C   // H
 };
 
-const uint8_t PROGMEM SEG_DONE[] = {
+const uint8_t SEG_DONE[] PROGMEM = {
   SEG_B | SEG_C | SEG_D | SEG_E | SEG_G,          // d
   SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F,  // O
   SEG_C | SEG_E | SEG_G,                          // n
   SEG_A | SEG_D | SEG_E | SEG_F | SEG_G           // E
 };
 
-const uint8_t PROGMEM SEG_LED[] = {
+const uint8_t SEG_LED[] PROGMEM = {
   // for brightness
   SEG_F | SEG_E | SEG_D,                  // L
   SEG_A | SEG_D | SEG_E | SEG_F | SEG_G,  // E
@@ -151,7 +151,7 @@ const uint8_t PROGMEM SEG_LED[] = {
   0x00                                    // space
 };
 
-const uint8_t PROGMEM SEG_BATT[] = {
+const uint8_t SEG_BATT[] PROGMEM = {
   // for brightness
   SEG_F | SEG_E | SEG_D | SEG_G | SEG_C,          // b
   SEG_E | SEG_F | SEG_A | SEG_B | SEG_C | SEG_G,  // A
@@ -159,21 +159,21 @@ const uint8_t PROGMEM SEG_BATT[] = {
   SEG_F | SEG_E | SEG_D | SEG_G                   // t
 };
 
-const byte PROGMEM SEG_DEGC[] = {
+const byte SEG_DEGC[] PROGMEM = {
   0x00,                           // space
   0x00,                           // space
   SEG_A | SEG_F | SEG_G | SEG_B,  // degree sign
   SEG_A | SEG_F | SEG_E | SEG_D   // C
 };
 
-const byte PROGMEM SEG_ON[] = {
+const byte SEG_ON[] PROGMEM = {
   0x00,                                           // space
   0x00,                                           // space
   SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F,  // O
   SEG_E | SEG_G | SEG_C                           // n
 };
 
-const byte PROGMEM SEG_OFF[] = {
+const byte SEG_OFF[] PROGMEM = {
   0x00,                                           // space
   SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F,  // O
   SEG_E | SEG_F | SEG_A | SEG_G,                  // F
