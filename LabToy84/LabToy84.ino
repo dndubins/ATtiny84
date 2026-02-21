@@ -92,7 +92,6 @@
 //SoftwareSerial mySerial(rxPin, txPin);
 
 // For fast pin modes, writes, and reads for the ATtiny84:
-// 0: INPUT, 1: OUTPUT, 2: INPUT_PULLUP
 #define pinModeFast(p, m) \
   if ((p) < 8) { \
     if ((m)&1) DDRA |= 1 << (p); \
@@ -313,8 +312,8 @@ void setup() {
     display.setBrightness(brightness);  // 0:MOST DIM, 7: BRIGHTEST
   }
 
-  pinModeFast(sw1, 2);                  // input pullup mode for sw1
-  pinModeFast(sw2, 2);                  // input pullup mode for sw2
+  pinModeFast(sw1, INPUT_PULLUP);       // input pullup mode for sw1
+  pinModeFast(sw2, INPUT_PULLUP);                  // input pullup mode for sw2
   if (h == 0 && m == 0 && clockMode) {  // force user to set the time on startup if default values used
     flashTime();                        // flash time on screen to notify user that clock needs to be set
     setAll();                           // clock setting routine (time, calendar, alarm)
@@ -471,7 +470,6 @@ void loop() {
           if (secondsPart > 50000UL) minutes++;
           tDur = minutes * 60UL;
         }
-
         if (tDur >= 6UL * 60UL * 60UL) {
           tDur += 60UL * 60UL;
         } else if (tDur >= 60UL * 60UL) {
@@ -825,21 +823,21 @@ byte anyKeyWait(unsigned long dly) {  // delay that is interruptable by either b
 
 byte beepBuzz(byte pin, int n) {  // pin is digital pin wired to buzzer. n is number of series of beeps.
   byte x = 0;
-  pinModeFast(pin, 1);  // set pin to OUTPUT mode
+  pinModeFast(pin, OUTPUT);  // set pin to OUTPUT mode
   for (int j = 0; j < n; j++) {
     for (int i = 0; i < 3; i++) {  // 3 beeps
       digitalWriteFast(pin, HIGH);
       x = anyKeyWait(BEEPTIME);  // interruptable wait
       if (x > 0) {
         digitalWriteFast(pin, LOW);  // stop the beep
-        pinModeFast(pin, 0);
+        pinModeFast(pin, INPUT);
         return x;  // leave routine here if user pressed button
       }
       digitalWriteFast(pin, LOW);
       if (n > 1) {
         x = anyKeyWait(BEEPTIME);  // interruptable wait
         if (x > 0) {
-          pinModeFast(pin, 0);
+          pinModeFast(pin, INPUT);
           return x;  // leave routine here if user pressed button
         }
       }
@@ -848,11 +846,11 @@ byte beepBuzz(byte pin, int n) {  // pin is digital pin wired to buzzer. n is nu
     x = anyKeyWait(250);  // final interruptable wait
     if (x > 0) {
       digitalWriteFast(pin, LOW);  // stop the beep
-      pinModeFast(pin, 0);
+      pinModeFast(pin, INPUT);
       return x;  // leave routine here if user pressed button
     }
   }
-  pinModeFast(pin, 0);
+  pinModeFast(pin, INPUT);
   return 0;  // exit normally
 }
 
@@ -1025,7 +1023,7 @@ void stopWatch_reset() {
 }
 
 void TMVCCon() {
-  pinModeFast(TMVCC, 1);          // to turn on Vcc to LED display
+  pinModeFast(TMVCC, OUTPUT);     // to turn on Vcc to LED display
   digitalWriteFast(TMVCC, HIGH);  // turn on TM1637 LED display
   delay(WARMUP);                  // wait for TM1637 to warm up
   display.clear();
@@ -1034,7 +1032,7 @@ void TMVCCon() {
 void TMVCCoff() {                // to turn off Vcc to LED display
   display.clear();               // clear the display
   digitalWriteFast(TMVCC, LOW);  // turn off TM1637 LED display to save power
-  pinModeFast(TMVCC, 0);         // set TMVCC pin to input mode
+  pinModeFast(TMVCC, INPUT);     // set TMVCC pin to input mode
 }
 
 long readVcc() {         // back-calculates voltage (in mV) applied to Vcc of ATtiny84
@@ -1093,4 +1091,3 @@ void showSegments_P(const uint8_t *p) {
   display.setSegments(buf);  // display 4 bytes
   delayMicroseconds(50);     // wait a bit
 }
-
