@@ -91,6 +91,28 @@
 //#define txPin 6   // PA6 is PP 7
 //SoftwareSerial mySerial(rxPin, txPin);
 
+// For fast pin modes, writes, and reads for the ATtiny84:
+#define pinModeFast(p, m) \
+  if ((p) < 8) { \
+    if ((m)&1) DDRA |= 1 << (p); \
+    else DDRA &= ~(1 << (p)); \
+    if (!((m)&1)) ((m)& 2 ? PORTA |= 1 << (p) : PORTA &= ~(1 << (p))); \
+  } else { \
+    if ((m)&1) DDRB |= 1; \
+    else DDRB &= ~1; \
+    if (!((m)&1)) ((m)& 2 ? PORTB |= 1 : PORTB &= ~1); \
+  }
+
+#define digitalWriteFast(p, v) \
+  if ((p) < 8) { \
+    (v) ? PORTA |= 1 << (p) : PORTA &= ~(1 << (p)); \
+  } else { \
+    (v) ? PORTB |= 1 : PORTB &= ~1; \
+  }
+
+#define digitalReadFast(p) \
+  ((p) < 8 ? ((PINA & (1 << (p))) ? 1 : 0) : ((PINB & 1) ? 1 : 0))
+
 //for sleep functions
 #include <avr/sleep.h>  // sleep library
 #include <avr/power.h>  // power library
@@ -198,9 +220,9 @@ const uint8_t SEG_CLOC[] PROGMEM = {
 };
 
 const uint8_t SEG_12A[] PROGMEM = {
-  SEG_B | SEG_C,                                 // 1
-  SEG_A | SEG_B | SEG_G | SEG_E | SEG_D,         // 2
-  0x00,                                          // space
+  SEG_B | SEG_C,                                  // 1
+  SEG_A | SEG_B | SEG_G | SEG_E | SEG_D,          // 2
+  0x00,                                           // space
   SEG_C | SEG_F | SEG_A | SEG_B | SEG_E | SEG_G,  // A
 };
 
@@ -290,8 +312,8 @@ void setup() {
     display.setBrightness(brightness);  // 0:MOST DIM, 7: BRIGHTEST
   }
 
-  pinMode(sw1, INPUT_PULLUP);           // input pullup mode for sw1
-  pinMode(sw2, INPUT_PULLUP);           // input pullup mode for sw2
+  pinModeFast(sw1, 2);                  // input pullup mode for sw1
+  pinModeFast(sw2, 2);                  // input pullup mode for sw2
   if (h == 0 && m == 0 && clockMode) {  // force user to set the time on startup if default values used
     flashTime();                        // flash time on screen to notify user that clock needs to be set
     setAll();                           // clock setting routine (time, calendar, alarm)
@@ -425,13 +447,40 @@ void loop() {
       } else if (p1 == 1) {  // short push adds time to the timer
         TMVCCon();           // turn on Vcc to the TM1637 display
         beeped = false;      // rearm the buzzer
-        if (tEnd > millis()) {
+
+        // Uncomment section for desired timer button behaviour:
+
+        // Strategy 1: SET button adds 30 seconds with each push:
+        /*if (tEnd > millis()) {
           unsigned long remaining = (tEnd - millis() + 999) / 1000UL;
           remaining += 30;  // Add 30 seconds directly, then round result up to 30-sec boundary
           tDur = ((remaining + 29) / 30) * 30;
         } else {
           tDur = 30;
+        }*/
+
+        // Strategy 2: Bucketed approach:
+        if (tEnd > millis()) {
+          uint32_t remaining = tEnd - millis();
+          uint32_t minutes = remaining / 60000UL;
+          uint32_t secondsPart = remaining % 60000UL;
+
+          // If more than 50 seconds into current minute,
+          // round to next minute
+          if (secondsPart > 50000UL) minutes++;
+          tDur = minutes * 60UL;
         }
+
+        if (tDur >= 6UL * 60UL * 60UL) {
+          tDur += 60UL * 60UL;
+        } else if (tDur >= 60UL * 60UL) {
+          tDur += 15UL * 60UL;
+        } else if (tDur >= 20UL * 60UL) {
+          tDur += 5UL * 60UL;
+        } else {
+          tDur += 60UL;
+        }
+
         showTimeTMR(tDur * 1000UL, true);          // show start time remaining (true=force display)
         delay(DEBOUNCE);                           // have a small real delay. This prevents double presses.
         safeWait(sw1, 1000 - DEBOUNCE);            // button-interruptable wait function
@@ -480,7 +529,8 @@ void loop() {
           sleep_interrupt();           // go to sleep here (waits in sleep mode, with 0.8 uA current draw)
           TMVCCon();                   // turn on Vcc for the TM1637 display
         } else {
-          while (digitalRead(sw1) && digitalRead(sw2));  // wait until a button is pushed (while both buttons are not pushed)
+          while (digitalRead(sw1) && digitalRead(sw2))
+            ;  // wait until a button is pushed (while both buttons are not pushed)
         }
       }
     }
@@ -670,9 +720,9 @@ void setAll() {
 }
 
 void setLED() {
-  TMVCCon();           // turn on Vcc for the TM1637 display
-  byte p1 = 0;         // push will store button result (0: no push, 1: short push, 2: long push)
-  buttonReset(sw1);      // make sure sw1 isn't pushed
+  TMVCCon();         // turn on Vcc for the TM1637 display
+  byte p1 = 0;       // push will store button result (0: no push, 1: short push, 2: long push)
+  buttonReset(sw1);  // make sure sw1 isn't pushed
   //reset the brightness level (2-7)
   showSegments_P(SEG_LED);  // show "LED" message
   delay(DISPTIME_SLOW);
@@ -765,7 +815,7 @@ byte anyKeyWait(unsigned long dly) {  // delay that is interruptable by either b
   } else {
     ret = 0;  // if the delay ended without a button push, return 0
   }
-  digitalWrite(buzzPin, LOW);  // prevents buzzer from being stuck on
+  digitalWriteFast(buzzPin, LOW);  // prevents buzzer from being stuck on
   while (!digitalRead(sw1) || !digitalRead(sw2))
     ;               // wait until both buttons not pushed
   delay(DEBOUNCE);  // debounce
@@ -774,21 +824,21 @@ byte anyKeyWait(unsigned long dly) {  // delay that is interruptable by either b
 
 byte beepBuzz(byte pin, int n) {  // pin is digital pin wired to buzzer. n is number of series of beeps.
   byte x = 0;
-  pinMode(pin, OUTPUT);  // set pin to OUTPUT mode
+  pinModeFast(pin, 1);  // set pin to OUTPUT mode
   for (int j = 0; j < n; j++) {
     for (int i = 0; i < 3; i++) {  // 3 beeps
-      digitalWrite(pin, HIGH);
+      digitalWriteFast(pin, HIGH);
       x = anyKeyWait(BEEPTIME);  // interruptable wait
       if (x > 0) {
-        digitalWrite(pin, LOW);  // stop the beep
-        pinMode(pin, INPUT);
+        digitalWriteFast(pin, LOW);  // stop the beep
+        pinModeFast(pin, 0);
         return x;  // leave routine here if user pressed button
       }
-      digitalWrite(pin, LOW);
+      digitalWriteFast(pin, LOW);
       if (n > 1) {
         x = anyKeyWait(BEEPTIME);  // interruptable wait
         if (x > 0) {
-          pinMode(pin, INPUT);
+          pinModeFast(pin, 0);
           return x;  // leave routine here if user pressed button
         }
       }
@@ -796,12 +846,12 @@ byte beepBuzz(byte pin, int n) {  // pin is digital pin wired to buzzer. n is nu
 
     x = anyKeyWait(250);  // final interruptable wait
     if (x > 0) {
-      digitalWrite(pin, LOW);  // stop the beep
-      pinMode(pin, INPUT);
+      digitalWriteFast(pin, LOW);  // stop the beep
+      pinModeFast(pin, 0);
       return x;  // leave routine here if user pressed button
     }
   }
-  pinMode(pin, INPUT);
+  pinModeFast(pin, 0);
   return 0;  // exit normally
 }
 
@@ -863,7 +913,8 @@ void timer_reset() {  // reset on the fly without the PUSH screen
     sleep_interrupt();       // go to sleep here (waits in sleep mode, with 0.8 uA current draw)
     TMVCCon();               // turn on Vcc for the TM1637 display
   } else {
-    while (digitalRead(sw1) && digitalRead(sw2));  // wait until a button is pushed (while both buttons are not pushed)
+    while (digitalRead(sw1) && digitalRead(sw2))
+      ;  // wait until a button is pushed (while both buttons are not pushed)
   }
 }
 
@@ -946,7 +997,7 @@ void stopWatch_pause() {
 }
 
 void stopWatch_reset() {
-  TMVCCon();             // turn on Vcc for the TM1637 display
+  TMVCCon();  // turn on Vcc for the TM1637 display
   display.clear();
   display.showNumberDec(0, true, 2, 2);  // tell user stopwatch is reset
   while (!digitalRead(sw1))
@@ -958,7 +1009,8 @@ void stopWatch_reset() {
     sleep_interrupt();   // sleep here to save battery life
     TMVCCon();           // turn on Vcc for the TM1637 display
   } else {
-    while (digitalRead(sw1) && digitalRead(sw2));  // wait until a button is pushed (while both buttons are not pushed)
+    while (digitalRead(sw1) && digitalRead(sw2))
+      ;  // wait until a button is pushed (while both buttons are not pushed)
     if (!digitalRead(sw2)) {
       return;  // leave routine
     }
@@ -972,16 +1024,16 @@ void stopWatch_reset() {
 }
 
 void TMVCCon() {
-  pinMode(TMVCC, OUTPUT);     // to turn on Vcc to LED display
-  digitalWrite(TMVCC, HIGH);  // turn on TM1637 LED display
-  delay(WARMUP);              // wait for TM1637 to warm up
+  pinModeFast(TMVCC, 1);          // to turn on Vcc to LED display
+  digitalWriteFast(TMVCC, HIGH);  // turn on TM1637 LED display
+  delay(WARMUP);                  // wait for TM1637 to warm up
   display.clear();
 }
 
-void TMVCCoff() {            // to turn off Vcc to LED display
-  display.clear();           // clear the display
-  digitalWrite(TMVCC, LOW);  // turn off TM1637 LED display to save power
-  pinMode(TMVCC, INPUT);     // set TMVCC pin to input mode
+void TMVCCoff() {                // to turn off Vcc to LED display
+  display.clear();               // clear the display
+  digitalWriteFast(TMVCC, LOW);  // turn off TM1637 LED display to save power
+  pinModeFast(TMVCC, 0);         // set TMVCC pin to input mode
 }
 
 long readVcc() {         // back-calculates voltage (in mV) applied to Vcc of ATtiny84
