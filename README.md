@@ -30,4 +30,4 @@ With a bit of help from **ChatGPT**, I wrote a few barebones `#define` functions
 #define digitalReadFast(p) \
   ((p) < 8 ? ((PINA & (1 << (p))) ? 1 : 0) : ((PINB & 1) ? 1 : 0))
 ```
-Caveat: Be careful when putting these inside if() statements, because they themselves contain if statements and the compiler might get confused.
+**Caveat:** Be careful when putting these inside if() statements, because they themselves contain if statements and the compiler might get confused.
