@@ -92,6 +92,7 @@
 //SoftwareSerial mySerial(rxPin, txPin);
 
 // For fast pin modes, writes, and reads for the ATtiny84:
+// 0: INPUT, 1: OUTPUT, 2: INPUT_PULLUP
 #define pinModeFast(p, m) \
   if ((p) < 8) { \
     if ((m)&1) DDRA |= 1 << (p); \
@@ -1092,3 +1093,4 @@ void showSegments_P(const uint8_t *p) {
   display.setSegments(buf);  // display 4 bytes
   delayMicroseconds(50);     // wait a bit
 }
+
