@@ -91,27 +91,35 @@
 //#define txPin 6   // PA6 is PP 7
 //SoftwareSerial mySerial(rxPin, txPin);
 
-// For fast pin modes, writes, and reads for the ATtiny84:
+// Fast pin modes, writes, and reads for the ATtiny84 (digital pins 0-11)
+// Modes: 0 = INPUT, 1 = OUTPUT, 2 = INPUT_PULLUP
 #define pinModeFast(p, m) \
-  if ((p) < 8) { \
-    if ((m)&1) DDRA |= 1 << (p); \
-    else DDRA &= ~(1 << (p)); \
-    if (!((m)&1)) ((m)& 2 ? PORTA |= 1 << (p) : PORTA &= ~(1 << (p))); \
-  } else { \
-    if ((m)&1) DDRB |= 1; \
-    else DDRB &= ~1; \
-    if (!((m)&1)) ((m)& 2 ? PORTB |= 1 : PORTB &= ~1); \
-  }
+  do { \
+    if ((p) <= 7) { \
+      if ((m)&1) DDRA |= (1 << (p)); \
+      else DDRA &= ~(1 << (p)); \
+      if (!((m)&1)) ((m)& 2 ? PORTA |= (1 << (p)) : PORTA &= ~(1 << (p))); \
+    } else if ((p) >=8 && (p) <= 11) { \
+      if ((m)&1) DDRB |= (1 << ((p) - 8)); \
+      else DDRB &= ~(1 << ((p) - 8)); \
+      if (!((m)&1)) ((m)& 2 ? PORTB |= (1 << ((p) - 8)) : PORTB &= ~(1 << ((p) - 8))); \
+    } \
+  } while(0)
 
 #define digitalWriteFast(p, v) \
-  if ((p) < 8) { \
-    (v) ? PORTA |= 1 << (p) : PORTA &= ~(1 << (p)); \
-  } else { \
-    (v) ? PORTB |= 1 : PORTB &= ~1; \
-  }
+  do { \
+    if ((p) <= 7) { \
+      (v) ? PORTA |= (1 << (p)) : PORTA &= ~(1 << (p)); \
+    } else if ((p) >= 8 && (p) <= 11) { \
+      (v) ? PORTB |= (1 << ((p) - 8)) : PORTB &= ~(1 << ((p) - 8)); \
+    } \
+  } while(0)
 
 #define digitalReadFast(p) \
-  ((p) < 8 ? ((PINA & (1 << (p))) ? 1 : 0) : ((PINB & 1) ? 1 : 0))
+  (((p) <= 7) ? \
+    ((PINA & (1 << (p))) ? 1 : 0) : \
+   ((p) >= 8 && (p) <= 11) ? \
+    ((PINB & (1 << ((p) - 8))) ? 1 : 0) : 0)
 
 //for sleep functions
 #include <avr/sleep.h>  // sleep library
@@ -1091,3 +1099,4 @@ void showSegments_P(const uint8_t *p) {
   display.setSegments(buf);  // display 4 bytes
   delayMicroseconds(50);     // wait a bit
 }
+
