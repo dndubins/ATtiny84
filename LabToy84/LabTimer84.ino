@@ -470,7 +470,6 @@ void loop() {
           if (secondsPart > 50000UL) minutes++;
           tDur = minutes * 60UL;
         }
-
         if (tDur >= 6UL * 60UL * 60UL) {
           tDur += 60UL * 60UL;
         } else if (tDur >= 60UL * 60UL) {
