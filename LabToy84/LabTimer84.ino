@@ -230,6 +230,27 @@ void loop() {
       } else if (p1 == 1) {  // short push adds time to the timer
         TMVCCon();           // turn on Vcc to the TM1637 display
         beeped = false;      // rearm the buzzer
+
+        // Uncomment section for desired timer button behaviour:
+        
+        // Strategy 1: Bucketed approach:
+        if(tEnd>millis()){              // tEnd = 0 for the first button push. This fixes the logic.
+          float minLeft=float(tEnd-millis())/60000;        // calculate the remaining minutes as a float number
+          float minRounded=minLeft - floor(minLeft);       // get just the decimal
+          tDur=(60*ceil((float)(tEnd-millis())/60000.0));  // round up to nearest minute and write back to tDur (for adding a minute)
+          if(minRounded<(50.0/60.0))tDur-=60;              // round up to nearest minute if more than 10 seconds elapsed, otherwise round up to nearest 2.
+        }
+        if (tDur >= 6 * 60 * 60) {      // if tDur>=6h
+          tDur += 60 * 60;              // add 1 hr
+        } else if (tDur >= 60 * 60) {   // if tDur>=1h
+          tDur += 15 * 60;              // add 15 min
+        } else if (tDur >= 20 * 60) {   // if tDur>=20 min
+          tDur += 5 * 60;               // add 5 min
+        } else {
+          tDur += 60;                   // add 1 min
+        }
+
+        // Strategy 2: SET button adds 30 seconds with each push:
         if (tEnd > millis()) {
           unsigned long remaining = (tEnd - millis() + 999) / 1000UL;
           remaining += 30;  // Add 30 seconds directly, then round result up to 30-sec boundary
@@ -237,8 +258,7 @@ void loop() {
         } else {
           tDur = 30;
         }
-
-        TMVCCon();                                 // turn on Vcc for the TM1637 display
+         
         showTimeTMR(tDur * 1000UL, true);          // show start time remaining (true=force display)
         delay(DEBOUNCE);                           // have a small real delay. This prevents double presses.
         safeWait(sw1, 1000 - DEBOUNCE);            // button-interruptable wait function
