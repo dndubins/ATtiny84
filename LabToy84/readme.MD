@@ -28,7 +28,7 @@ Here is a list of components for this project:
 - BT1: MPD BS-7 coincell holder (CR2032)
 - SW1: SPDT Top Slide 6A 250VAC 28VDC 0.4VA PC Pins Thru-Hole Bulk
 - microUSB jack (4 post anchor)
-- 1 x 0.36" TM1637 7-Segment 4-digit White Digital Tube LED Display Module for Arduino (Clock Version)
+- 1 x 0.36" TM1637 7-Segment 4-digit White Digital Tube LED Display Module for Arduino (Clock Version). The onboard power indicator LED should be scratched off to preserve battery life.
 - 4 x PCB Support Flat Spacer Plastic Rivet Nylon Natural Ø4mm
 - 1 x CR2032 battery (optional)
 
