@@ -234,6 +234,7 @@ void loop() {
     modeChanged = true;     // change in mode happened
   } else if (p2 == 2) {     // if long push on mode button
     setLED();               // set brightness
+    modeChanged = true;     // resets stopwatch if leaving setLED()
   }
 
   if (modeChanged) {  // user has changed the mode
