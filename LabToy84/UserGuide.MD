@@ -42,7 +42,7 @@ Setting the clock mode to "OFF" will put the microprocessor to sleep when not us
    - BATT status will display (in %). If using USB, this will just display 100%.
 
 ## Temperature Mode
-  - Temperature will report every 5 seconds.
+  - Temperature will report the temperature once, then the display will turn off. Press the SET button to display the temperature again. 
   - To leave this mode, press the MODE button.
   - The SET button does nothing here.
 
