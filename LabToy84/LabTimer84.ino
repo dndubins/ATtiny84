@@ -189,21 +189,21 @@ const uint8_t SEG_BATT[] PROGMEM = {
   SEG_F | SEG_E | SEG_D | SEG_G                   // t
 };
 
-const byte SEG_DEGC[] PROGMEM = {
+const uint8_t SEG_DEGC[] PROGMEM = {
   0x00,                           // space
   0x00,                           // space
   SEG_A | SEG_F | SEG_G | SEG_B,  // degree sign
   SEG_A | SEG_F | SEG_E | SEG_D   // C
 };
 
-const byte SEG_ON[] PROGMEM = {
+const uint8_t SEG_ON[] PROGMEM = {
   0x00,                                           // space
   0x00,                                           // space
   SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F,  // O
   SEG_E | SEG_G | SEG_C                           // n
 };
 
-const byte SEG_OFF[] PROGMEM = {
+const uint8_t SEG_OFF[] PROGMEM = {
   0x00,                                           // space
   SEG_A | SEG_B | SEG_C | SEG_D | SEG_E | SEG_F,  // O
   SEG_E | SEG_F | SEG_A | SEG_G,                  // F
@@ -246,7 +246,6 @@ void loop() {
       TMVCCon();                       // turn on Vcc to the TM1637 display
       showTemp(readCoreTemp(100));     // show avg of 100 core temperature readings
       safeWait(sw2, DISPTIME_SLOW);    // show the temperature
-      display.clear();                 // Clear segments
       TMVCCoff();                      // turn off power to the TM1637 display
     }
     modeChanged = false;
@@ -331,7 +330,6 @@ void loop() {
       p1 = buttonRead(sw1);            // read button sw1
       if (p1 == 1) {                   // if short push
         TMVCCon();                     // turn on Vcc to the TM1637 display
-        display.clear();               // clear the display
         showTemp(readCoreTemp(100));   // show avg of 100 core temperature readings
         safeWait(sw1, DISPTIME_SLOW);  // show the temperature for DISPTIME, interruptable with sw1
         buttonReset(sw1);              // wait until user lets go of SET button
@@ -661,8 +659,7 @@ void stopWatch_reset() {
   if (!digitalReadFast(sw2)) {
     return;  // leave routine
   }
-  TMVCCon();        // turn on Vcc for the TM1637 display
-  display.clear();  // clear the display
+  TMVCCon();        // turn on Vcc for the TM1637 displau
   while (!digitalReadFast(sw1) || !digitalReadFast(sw2))
     ;  // make sure user is not touching button
   delay(DEBOUNCE);
