@@ -348,6 +348,7 @@ void loop() {
     modeChanged = true;  // change in mode happened
   } else if (p2 == 2) {  // if long push on mode button
     setLED();            // set brightness
+    modeChanged = true;  // resets stopwatch if leaving setLED()
   }
 
   if (modeChanged) {  // user has changed the mode
@@ -1094,5 +1095,6 @@ void showSegments_P(const uint8_t *p) {
   display.setSegments(buf);  // display 4 bytes
   delayMicroseconds(50);     // wait a bit
 }
+
 
 
