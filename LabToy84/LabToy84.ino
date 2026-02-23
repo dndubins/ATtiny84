@@ -227,16 +227,16 @@ const uint8_t SEG_CLOC[] PROGMEM = {
   SEG_A | SEG_F | SEG_E | SEG_D                   // C
 };
 
-const uint8_t SEG_12A[] PROGMEM = {
-  SEG_B | SEG_C,                                  // 1
-  SEG_A | SEG_B | SEG_G | SEG_E | SEG_D,          // 2
+const uint8_t SEG_AM[] PROGMEM = {
+  0x00,                                           // space
+  0x00,                                           // space
   0x00,                                           // space
   SEG_C | SEG_F | SEG_A | SEG_B | SEG_E | SEG_G,  // A
 };
 
-const uint8_t SEG_12P[] PROGMEM = {
-  SEG_B | SEG_C,                          // 1
-  SEG_A | SEG_B | SEG_G | SEG_E | SEG_D,  // 2
+const uint8_t SEG_PM[] PROGMEM = {
+  0x00,                                   // space
+  0x00,                                   // space
   0x00,                                   // space
   SEG_E | SEG_F | SEG_A | SEG_G | SEG_B   // P
 };
@@ -590,13 +590,12 @@ void showTimeHr(byte h1) {  // time in h
   }
   byte dotsMask = 0x80 >> 1;  // show colon
   display.clear();            // clear the display
-  if (h1 == 0) {
-    showSegments_P(SEG_12A);  // show "12a" message
-  } else if (h1 == 12) {
-    showSegments_P(SEG_12P);  // show "12P" message
-  } else {
-    display.showNumberDecEx(h2, dotsMask, false, 2, 0);  // false: don't show leading zeros, first number is string length, second number is position (01:23)
+  if (h1 >= 0 && h <= 11) {
+    showSegments_P(SEG_AM);  // show "A" message for AM
+  } else if (h1 >= 12) {
+    showSegments_P(SEG_PM);  // show "P" message for PM
   }
+  display.showNumberDecEx(h2, dotsMask, false, 2, 0);  // false: don't show leading zeros, first number is string length, second number is position (01:23)
 }
 
 void showTimeMin(byte m1) {               // time in min
@@ -1095,6 +1094,3 @@ void showSegments_P(const uint8_t *p) {
   display.setSegments(buf);  // display 4 bytes
   delayMicroseconds(50);     // wait a bit
 }
-
-
-
