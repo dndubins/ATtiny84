@@ -1022,6 +1022,7 @@ void stopWatch_reset() {
       ;  // make sure user is not touching button
     delay(DEBOUNCE);
   }
+  delay(DEBOUNCE);
   toffsetSW = millis();  // new starting point
 }
 
@@ -1094,4 +1095,5 @@ void showSegments_P(const uint8_t *p) {
   display.setSegments(buf);  // display 4 bytes
   delayMicroseconds(50);     // wait a bit
 }
+
 
