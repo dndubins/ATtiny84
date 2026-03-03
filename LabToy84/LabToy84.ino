@@ -1021,8 +1021,8 @@ void stopWatch_reset() {
     while (!digitalRead(sw1) || !digitalRead(sw2))
       ;  // make sure user is not touching button
     delay(DEBOUNCE);
-    toffsetSW = millis();  // new starting point
   }
+  toffsetSW = millis();  // new starting point
 }
 
 void TMVCCon() {
@@ -1094,3 +1094,4 @@ void showSegments_P(const uint8_t *p) {
   display.setSegments(buf);  // display 4 bytes
   delayMicroseconds(50);     // wait a bit
 }
+
