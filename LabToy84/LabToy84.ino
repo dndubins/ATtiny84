@@ -154,7 +154,7 @@ enum modes {    // define mode options as enum
 bool modeChanged = false;  // to capture a change in mode
 
 byte brightness = 3;    // initial brightness setting for TM1637 (0-7) (to save batteries, use a lower number). Use 2 for rechargeable, 3 for alkaline
-bool clockMode = false;  // flag to turn on/off clock. To save battery, clock can be turned off and sleep mode used with timer and stopwatch (sleep mode interferes with millis() function).
+bool clockMode = true;  // flag to turn on/off clock. To save battery, clock can be turned off and sleep mode used with timer and stopwatch (sleep mode interferes with millis() function).
 #define flashcolon 0    // 1: flash colon on clock, 0: don't flash colon on clock
 
 TM1637Display display(CLK, DIO);
@@ -1099,3 +1099,4 @@ void showSegments_P(const uint8_t *p) {
   display.setSegments(buf);  // display 4 bytes
   delayMicroseconds(50);     // wait a bit
 }
+
