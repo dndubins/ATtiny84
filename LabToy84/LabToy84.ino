@@ -136,7 +136,7 @@
 //#define loop_until_bit_is_set(sfr, bit) do { } while (bit_is_clear(sfr, bit))
 //#define loop_until_bit_is_clear(sfr, bit) do { } while (bit_is_set(sfr, bit))
 
-#define TOFFSET 8.0  // Temperature offset for core temperature routine. Individually calibrated per chip. Start with 0.0 and measure temperature against a real thermometer. Enter offset here. \
+#define TOFFSET 4    // Temperature offset for core temperature routine. Individually calibrated per chip. Start with 0.0 and measure temperature against a real thermometer. Enter offset here. \
                      // There is no separate device or calibation program for this procedure. This sketch is simply uploaded twice.
 
 #include <TM1637Display.h>  // For TM1637 display library (Avishay Orpaz v. 1.2.0)
@@ -154,7 +154,7 @@ enum modes {    // define mode options as enum
 bool modeChanged = false;  // to capture a change in mode
 
 byte brightness = 3;    // initial brightness setting for TM1637 (0-7) (to save batteries, use a lower number). Use 2 for rechargeable, 3 for alkaline
-bool clockMode = true;  // flag to turn on/off clock. To save battery, clock can be turned off and sleep mode used with timer and stopwatch (sleep mode interferes with millis() function).
+bool clockMode = false;  // flag to turn on/off clock. To save battery, clock can be turned off and sleep mode used with timer and stopwatch (sleep mode interferes with millis() function).
 #define flashcolon 0    // 1: flash colon on clock, 0: don't flash colon on clock
 
 TM1637Display display(CLK, DIO);
@@ -354,6 +354,9 @@ void loop() {
   if (modeChanged) {  // user has changed the mode
     if (mode == CLOCK && clockMode) {
       TMVCCon();                        // turn on Vcc to the TM1637 display
+      display.clear();
+      showSegments_P(SEG_CLOC);         // show "CLOC" message
+      delay(DISPTIME_FAST);
       showTime(h, m, s, false, false);  // report the time
       delay(DISPTIME_SLOW);             // show the time for DISPTIME
       if (brightness == 8)              // changing to clock mode while in LED battery saving mode
@@ -457,16 +460,7 @@ void loop() {
 
         // Uncomment section for desired timer button behaviour:
 
-        // Strategy 1: SET button adds 30 seconds with each push:
-        /*if (tEnd > millis()) {
-          unsigned long remaining = (tEnd - millis() + 999) / 1000UL;
-          remaining += 30;  // Add 30 seconds directly, then round result up to 30-sec boundary
-          tDur = ((remaining + 29) / 30) * 30;
-        } else {
-          tDur = 30;
-        }*/
-
-        // Strategy 2: Bucketed approach:
+        // Strategy 1: Bucketed approach:
         if (tEnd > millis()) {
           uint32_t remaining = tEnd - millis();
           uint32_t minutes = remaining / 60000UL;
@@ -486,6 +480,15 @@ void loop() {
         } else {
           tDur += 60UL;
         }
+
+        // Strategy 2: SET button adds 30 seconds with each push:
+        /*if (tEnd > millis()) {
+          unsigned long remaining = (tEnd - millis() + 999) / 1000UL;
+          remaining += 30;  // Add 30 seconds directly, then round result up to 30-sec boundary
+          tDur = ((remaining + 29) / 30) * 30;
+        } else {
+          tDur = 30;
+        }*/
 
         showTimeTMR(tDur * 1000UL, true);          // show start time remaining (true=force display)
         delay(DEBOUNCE);                           // have a small real delay. This prevents double presses.
@@ -512,6 +515,7 @@ void loop() {
         }
       }
       if (resetTimer) timer_reset();
+      
     } else if (mode == STOPWATCH) {
       showTimeSW(millis() - toffsetSW);  // show time elapsed
       p1 = buttonRead(sw1);              // read the SET button
@@ -1095,5 +1099,3 @@ void showSegments_P(const uint8_t *p) {
   display.setSegments(buf);  // display 4 bytes
   delayMicroseconds(50);     // wait a bit
 }
-
-
