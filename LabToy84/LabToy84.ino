@@ -2,7 +2,7 @@
    (with clock function, day and date, alarm, temperature, timer, and stopwatch)
    Author: D. Dubins
    Date: 28-Apr-21
-   Last Updated:20-Feb-26
+   Last Updated: 03-Mar-26
    This sketch uses the TM1637 library by Avishay Orpaz version 1.2.0
    (available through the Library Manager)
 
@@ -1096,3 +1096,4 @@ void showSegments_P(const uint8_t *p) {
   display.setSegments(buf);  // display 4 bytes
   delayMicroseconds(50);     // wait a bit
 }
+
