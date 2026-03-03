@@ -99,27 +99,25 @@
       if ((m)&1) DDRA |= (1 << (p)); \
       else DDRA &= ~(1 << (p)); \
       if (!((m)&1)) ((m)& 2 ? PORTA |= (1 << (p)) : PORTA &= ~(1 << (p))); \
-    } else if ((p) >=8 && (p) <= 11) { \
-      if ((m)&1) DDRB |= (1 << ((p) - 8)); \
-      else DDRB &= ~(1 << ((p) - 8)); \
-      if (!((m)&1)) ((m)& 2 ? PORTB |= (1 << ((p) - 8)) : PORTB &= ~(1 << ((p) - 8))); \
+    } else if ((p) >= 8 && (p) <= 11) { \
+      if ((m)&1) DDRB |= (1 << ((p)-8)); \
+      else DDRB &= ~(1 << ((p)-8)); \
+      if (!((m)&1)) ((m)& 2 ? PORTB |= (1 << ((p)-8)) : PORTB &= ~(1 << ((p)-8))); \
     } \
-  } while(0)
+  } while (0)
 
 #define digitalWriteFast(p, v) \
   do { \
     if ((p) <= 7) { \
       (v) ? PORTA |= (1 << (p)) : PORTA &= ~(1 << (p)); \
     } else if ((p) >= 8 && (p) <= 11) { \
-      (v) ? PORTB |= (1 << ((p) - 8)) : PORTB &= ~(1 << ((p) - 8)); \
+      (v) ? PORTB |= (1 << ((p)-8)) : PORTB &= ~(1 << ((p)-8)); \
     } \
-  } while(0)
+  } while (0)
 
 #define digitalReadFast(p) \
-  (((p) <= 7) ? \
-    ((PINA & (1 << (p))) ? 1 : 0) : \
-   ((p) >= 8 && (p) <= 11) ? \
-    ((PINB & (1 << ((p) - 8))) ? 1 : 0) : 0)
+  (((p) <= 7) ? ((PINA & (1 << (p))) ? 1 : 0) : ((p) >= 8 && (p) <= 11) ? ((PINB & (1 << ((p)-8))) ? 1 : 0) \
+                                                                        : 0)
 
 //for sleep functions
 #include <avr/sleep.h>  // sleep library
@@ -136,7 +134,7 @@
 //#define loop_until_bit_is_set(sfr, bit) do { } while (bit_is_clear(sfr, bit))
 //#define loop_until_bit_is_clear(sfr, bit) do { } while (bit_is_set(sfr, bit))
 
-#define TOFFSET 4    // Temperature offset for core temperature routine. Individually calibrated per chip. Start with 0.0 and measure temperature against a real thermometer. Enter offset here. \
+#define TOFFSET 4  // Temperature offset for core temperature routine. Individually calibrated per chip. Start with 0.0 and measure temperature against a real thermometer. Enter offset here. \
                      // There is no separate device or calibation program for this procedure. This sketch is simply uploaded twice.
 
 #include <TM1637Display.h>  // For TM1637 display library (Avishay Orpaz v. 1.2.0)
@@ -235,10 +233,10 @@ const uint8_t SEG_AM[] PROGMEM = {
 };
 
 const uint8_t SEG_PM[] PROGMEM = {
-  0x00,                                   // space
-  0x00,                                   // space
-  0x00,                                   // space
-  SEG_E | SEG_F | SEG_A | SEG_G | SEG_B   // P
+  0x00,                                  // space
+  0x00,                                  // space
+  0x00,                                  // space
+  SEG_E | SEG_F | SEG_A | SEG_G | SEG_B  // P
 };
 
 const uint8_t SEG_CAL[] PROGMEM = {
@@ -320,7 +318,7 @@ void setup() {
   }
 
   pinModeFast(sw1, INPUT_PULLUP);       // input pullup mode for sw1
-  pinModeFast(sw2, INPUT_PULLUP);                  // input pullup mode for sw2
+  pinModeFast(sw2, INPUT_PULLUP);       // input pullup mode for sw2
   if (h == 0 && m == 0 && clockMode) {  // force user to set the time on startup if default values used
     flashTime();                        // flash time on screen to notify user that clock needs to be set
     setAll();                           // clock setting routine (time, calendar, alarm)
@@ -353,10 +351,11 @@ void loop() {
 
   if (modeChanged) {  // user has changed the mode
     if (mode == CLOCK && clockMode) {
-      TMVCCon();                        // turn on Vcc to the TM1637 display
+      TMVCCon();  // turn on Vcc to the TM1637 display
       display.clear();
-      showSegments_P(SEG_CLOC);         // show "CLOC" message
+      showSegments_P(SEG_CLOC);  // show "CLOC" message
       delay(DISPTIME_FAST);
+      display.clear();
       showTime(h, m, s, false, false);  // report the time
       delay(DISPTIME_SLOW);             // show the time for DISPTIME
       if (brightness == 8)              // changing to clock mode while in LED battery saving mode
@@ -515,7 +514,7 @@ void loop() {
         }
       }
       if (resetTimer) timer_reset();
-      
+
     } else if (mode == STOPWATCH) {
       showTimeSW(millis() - toffsetSW);  // show time elapsed
       p1 = buttonRead(sw1);              // read the SET button
@@ -1005,7 +1004,7 @@ void stopWatch_pause() {
 }
 
 void stopWatch_reset() {
-  TMVCCon();  // turn on Vcc for the TM1637 display
+  TMVCCon();                             // turn on Vcc for the TM1637 display
   display.showNumberDec(0, true, 2, 2);  // tell user stopwatch is reset
   while (!digitalRead(sw1))
     ;                    // wait for user to let go of button
@@ -1014,18 +1013,16 @@ void stopWatch_reset() {
   TMVCCoff();            // turn off Vcc for the TM1637 display
   if (!clockMode) {      // no sleep in clockMode
     sleep_interrupt();   // sleep here to save battery life
-    TMVCCon();           // turn on Vcc for the TM1637 display
   } else {
     while (digitalRead(sw1) && digitalRead(sw2))
       ;  // wait until a button is pushed (while both buttons are not pushed)
-    if (!digitalRead(sw2)) {
-      return;  // leave routine
-    }
-    TMVCCon();        // turn on Vcc for the TM1637 display
-    while (!digitalRead(sw1) || !digitalRead(sw2))
-      ;  // make sure user is not touching button
-    delay(DEBOUNCE);
   }
+  if (!digitalRead(sw2)) {
+      return;  // leave routine if mode button pressed
+  }
+  TMVCCon();  // turn on Vcc for the TM1637 display
+  while (!digitalRead(sw1) || !digitalRead(sw2))
+    ;  // make sure user is not touching button
   delay(DEBOUNCE);
   toffsetSW = millis();  // new starting point
 }
@@ -1099,4 +1096,3 @@ void showSegments_P(const uint8_t *p) {
   display.setSegments(buf);  // display 4 bytes
   delayMicroseconds(50);     // wait a bit
 }
-
