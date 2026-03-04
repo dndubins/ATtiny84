@@ -2,7 +2,7 @@
    (temperature, timer, and stopwatch)
    Author: D. Dubins
    Date: 28-Apr-21
-   Last Updated:20-Feb-26
+   Last Updated:04-Mar-26
    This sketch uses the TM1637 library by Avishay Orpaz version 1.2.0
    (available through the Library Manager)
 
@@ -133,7 +133,7 @@ enum modes {    // define mode options as enum
 };
 bool modeChanged = false;  // to capture a change in mode
 
-byte brightness = 0;  // initial brightness setting for TM1637 (0-7) (to save batteries, use a lower number). Use 2 for rechargeable, 3 for alkaline
+byte brightness = 4;  // initial brightness setting for TM1637 (0-7) (to save batteries, use a lower number).
 
 TM1637Display display(CLK, DIO);
 
@@ -264,16 +264,16 @@ void loop() {
         // Uncomment section for desired timer button behaviour:
 
         // Strategy 1: SET button adds 30 seconds with each push:
-        if (tEnd > millis()) {
+        /*if (tEnd > millis()) {
           unsigned long remaining = (tEnd - millis() + 999) / 1000UL;
           remaining += 30;  // Add 30 seconds directly, then round result up to 30-sec boundary
           tDur = ((remaining + 29) / 30) * 30;
         } else {
           tDur = 30;
-        }
+        }*/
 
         // Strategy 2: Bucketed approach:
-        /*if (tEnd > millis()) {
+        if (tEnd > millis()) {
           uint32_t remaining = tEnd - millis();
           uint32_t minutes = remaining / 60000UL;
           uint32_t secondsPart = remaining % 60000UL;
@@ -291,7 +291,7 @@ void loop() {
           tDur += 5UL * 60UL;
         } else {
           tDur += 60UL;
-        }*/
+        }
 
         showTimeTMR(tDur * 1000UL, true);          // show start time remaining (true=force display)
         delay(DEBOUNCE);                           // have a small real delay. This prevents double presses.
