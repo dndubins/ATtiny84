@@ -116,7 +116,7 @@ struct controlVals {  // declare struct in global space
   bool slaveFlag;     // if slave, accept external signal on PB2
   bool driveDir;      // Drive direction. 0: engage drive below CTR1.SETPOINT, 1: engage drive above CTR1.SETPOINT. (default: 0)
   bool driveMode;     // 0: ON-OFF mode; 1: pulsed mode (PI)
-  bool maintPulse;    // 0: no maintenance pulse within tolerance; 1: maintenance pulse within tolerance
+  bool ssPulse;       // 0: no steady-state maintenance pulse within tolerance; 1: steady-state maintenance pulse within tolerance
   float driveMin;     // minimum duty cycle, expressed as a ratio, for heating element (to maintain setpoint) (default: 0.0)
   float driveMax;     // maximum duty cycle, expressed as a ratio, for heating element (to prevent overheating) (default: 0.75)
   float PERIOD;       // CTR1.PERIOD in msec for pulsing drive (default: 3000)
@@ -188,7 +188,7 @@ void loadDefaults(controlVals &CTRX) {  //& prefix gives the void function acces
   CTR1.slaveFlag          false      false       false        false       false      false           false
   CTR1.driveDir          0:below     0:below     0:below      1:above     1:above    0:below         0:below
   CTR1.driveMode         1:pulsed    1:pulsed    1:pulsed     0:full      0:full     1:pulsed        1:pulsed
-  CTR1.maintPulse        1:yes       1:yes       1:yes        0:no        0:no       1:yes           0:no
+  CTR1.ssPulse           1:yes       1:yes       1:yes        0:no        0:no       1:yes           0:no
   CTR1.driveMin          0.05        0.4         0.4          -           -          0.05            0.5
   CTR1.driveMax          0.4         1.0         0.4          -           -          0.6             1.0
   CTR1.PERIOD            5000        2000        3000         -           -          5000            10000
@@ -206,7 +206,7 @@ void loadDefaults() {
   CTR1.slaveFlag = false;  // master (false) or slave (true). Slave accepts external signal to drivePin (PB2). Default: false
   CTR1.driveDir = 0;       // Drive direction. 0: engage drive below SETPOINT, 1: engage drive above CTR1.SETPOINT. (default: 0)
   CTR1.driveMode = 1;      // 0: ON-OFF mode; 1: pulsed mode (PI)
-  CTR1.maintPulse = 0;     // 0: no maintenance pulse within tolerance; 1: maintenance pulse within tolerance
+  CTR1.ssPulse = 0;        // 0: no steady-state maintenance pulse within tolerance; 1: steady-state maintenance pulse within tolerance
   CTR1.driveMin = 0.5;     // maximum duty cycle, expressed as a ratio, for heating element (to maintain setpoint) (default: 0.30)
   CTR1.driveMax = 1.0;     // maximum duty cycle, expressed as a ratio, for heating element (to prevent overheating) (default: 0.75)
   CTR1.PERIOD = 10000;     // PERIOD in msec for pulsing drive (default: 3000, 5000 for toaster). Also acts as a delay in drive mode when setpoint is attained.
@@ -237,7 +237,7 @@ void loop() {
       MES_GT_SET();                  // run the routine when MEASURED too high
     } else {
       if (CTR1.driveMode == 1) {                   // if driveMode is 1 (pulsed)
-        if(CTR1.maintPulse)drivePulse(CTR1.driveMin, CTR1.PERIOD);
+        if(CTR1.ssPulse)drivePulse(CTR1.driveMin, CTR1.PERIOD);
       } else {
         anyKeyWait(CTR1.PERIOD);  // make sure there's a delay if you are within TOL so the LCD doesn't flicker
       }
@@ -526,7 +526,7 @@ void setupMenu() {
       if (CTR1.driveMode > 0) { // if pulsed mode is on
         setItemFloat(CTR1.driveMin, "MINPULSE", 0.0, 0.75, 0.05, 2);
         setItemFloat(CTR1.driveMax, "MAXPULSE", 0.2, 1.0, 0.05, 2);
-        setItemBool(CTR1.maintPulse, "MNTPULSE", "OFF", "ON");  // maintenance pulse
+        setItemBool(CTR1.ssPulse, "SSPULSE", "OFF", "ON");  // steady-state maintenance pulse
         setItemFloat(CTR1.PERIOD, "PERIOD", 100, 20000, 100, 0);
         setItemFloat(CTR1.KP, "KP", 0.01, 10.0, 0.05, 2);
         setItemFloat(CTR1.KI, "KI", 0.0, 1.0, 0.01, 2);
