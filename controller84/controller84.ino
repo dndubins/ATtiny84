@@ -237,7 +237,7 @@ void loop() {
       MES_GT_SET();                  // run the routine when MEASURED too high
     } else {
       if (CTR1.driveMode == 1) {                   // if driveMode is 1 (pulsed)
-        //drivePulse(CTR1.driveMin, CTR1.PERIOD);  // comment this out if you don't want a maintenance pulse (or just set CTR1.driveMin to zero)
+        if(CTR1.maintPulse)drivePulse(CTR1.driveMin, CTR1.PERIOD);
       } else {
         anyKeyWait(CTR1.PERIOD);  // make sure there's a delay if you are within TOL so the LCD doesn't flicker
       }
