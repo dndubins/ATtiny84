@@ -1,7 +1,9 @@
 /*
 ATtiny84 Project: controller84+
+Author: D. Dubins
+Last Updated: 31-Mar-26
 This project is to make a (somewhat) universal PI controller for various pieces of 
-equipment around the lab. To date, we have used it to control:
+equipment around the lab. To date, I have used it to control:
 -PC Fan with blue control wire
 -A lab chiller, for cooling during sonication
 -A toaster, to convert it to a low-temperature incubator
