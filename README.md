@@ -2,7 +2,7 @@
 
 The **ATtiny84** is a very capable and inexpensive little chip that I like to use in small projects.  
 
-With a bit of help from **ChatGPT**, I wrote a few barebones `#define` functions that help keep memory usage minimal:  
+With a bit of help from **ChatGPT** and **Claude.AI**, I wrote a few barebones `#define` functions that help keep memory usage minimal:  
 
 ```cpp
 // Fast pin modes, writes, and reads for the ATtiny84 (digital pins 0-11)
