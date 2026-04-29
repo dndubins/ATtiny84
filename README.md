@@ -10,21 +10,31 @@ With a bit of help from **ChatGPT**, I wrote a few barebones `#define` functions
 #define pinModeFast(p, m) \
   do { \
     if ((p) <= 7) { \
-      if ((m)&1) DDRA |= (1 << (p)); \
-      else DDRA &= ~(1 << (p)); \
-      if (!((m)&1)) ((m)& 2 ? PORTA |= (1 << (p)) : PORTA &= ~(1 << (p))); \
-    } else if ((p) >=8 && (p) <= 11) { \
-      if ((m)&1) DDRB |= (1 << ((p) - 8)); \
-      else DDRB &= ~(1 << ((p) - 8)); \
-      if (!((m)&1)) ((m)& 2 ? PORTB |= (1 << ((p) - 8)) : PORTB &= ~(1 << ((p) - 8))); \
+      if ((m) & 1) { \
+        DDRA  |=  (1 << (p));          /* OUTPUT: set DDR */ \
+        PORTA &= ~(1 << (p));          /* OUTPUT: drive low initially */ \
+      } else { \
+        DDRA  &= ~(1 << (p));          /* INPUT: clear DDR */ \
+        if ((m) & 2) PORTA |=  (1 << (p));  /* INPUT_PULLUP: enable pull-up */ \
+        else         PORTA &= ~(1 << (p));  /* INPUT: disable pull-up */ \
+      } \
+    } else if ((p) >= 8 && (p) <= 10) { \
+      if ((m) & 1) { \
+        DDRB  |=  (1 << ((p) - 8)); \
+        PORTB &= ~(1 << ((p) - 8)); \
+      } else { \
+        DDRB  &= ~(1 << ((p) - 8)); \
+        if ((m) & 2) PORTB |=  (1 << ((p) - 8)); \
+        else         PORTB &= ~(1 << ((p) - 8)); \
+      } \
     } \
-  } while(0)
+  } while (0)
 
 #define digitalWriteFast(p, v) \
   do { \
     if ((p) <= 7) { \
       (v) ? PORTA |= (1 << (p)) : PORTA &= ~(1 << (p)); \
-    } else if ((p) >= 8 && (p) <= 11) { \
+    } else if ((p) >= 8 && (p) <= 10) { \
       (v) ? PORTB |= (1 << ((p) - 8)) : PORTB &= ~(1 << ((p) - 8)); \
     } \
   } while(0)
@@ -32,7 +42,7 @@ With a bit of help from **ChatGPT**, I wrote a few barebones `#define` functions
 #define digitalReadFast(p) \
   (((p) <= 7) ? \
     ((PINA & (1 << (p))) ? 1 : 0) : \
-   ((p) >= 8 && (p) <= 11) ? \
+   ((p) >= 8 && (p) <= 10) ? \
     ((PINB & (1 << ((p) - 8))) ? 1 : 0) : 0)
 
 // Here are the classic bit functions:
