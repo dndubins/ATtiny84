@@ -11,21 +11,21 @@ With a bit of help from **ChatGPT** and **Claude.AI**, I wrote a few barebones `
   do { \
     if ((p) <= 7) { \
       if ((m) & 1) { \
-        DDRA  |=  (1 << (p));          /* OUTPUT: set DDR */ \
-        PORTA &= ~(1 << (p));          /* OUTPUT: drive low initially */ \
+        DDRA  |=  (1 << (p)); \
+        PORTA &= ~(1 << (p)); \
       } else { \
-        DDRA  &= ~(1 << (p));          /* INPUT: clear DDR */ \
-        if ((m) & 2) PORTA |=  (1 << (p));  /* INPUT_PULLUP: enable pull-up */ \
-        else         PORTA &= ~(1 << (p));  /* INPUT: disable pull-up */ \
+        DDRA  &= ~(1 << (p)); \
+        if ((m) & 2) PORTA |=  (1 << (p)); \
+        else         PORTA &= ~(1 << (p)); \
       } \
     } else if ((p) >= 8 && (p) <= 10) { \
       if ((m) & 1) { \
-        DDRB  |=  (1 << ((p) - 8)); \
-        PORTB &= ~(1 << ((p) - 8)); \
+        DDRB  |=  (1 << (10 - (p))); \
+        PORTB &= ~(1 << (10 - (p))); \
       } else { \
-        DDRB  &= ~(1 << ((p) - 8)); \
-        if ((m) & 2) PORTB |=  (1 << ((p) - 8)); \
-        else         PORTB &= ~(1 << ((p) - 8)); \
+        DDRB  &= ~(1 << (10 - (p))); \
+        if ((m) & 2) PORTB |=  (1 << (10 - (p))); \
+        else         PORTB &= ~(1 << (10 - (p))); \
       } \
     } \
   } while (0)
@@ -35,7 +35,7 @@ With a bit of help from **ChatGPT** and **Claude.AI**, I wrote a few barebones `
     if ((p) <= 7) { \
       (v) ? PORTA |= (1 << (p)) : PORTA &= ~(1 << (p)); \
     } else if ((p) >= 8 && (p) <= 10) { \
-      (v) ? PORTB |= (1 << ((p) - 8)) : PORTB &= ~(1 << ((p) - 8)); \
+      (v) ? PORTB |= (1 << (10 - (p))) : PORTB &= ~(1 << (10 - (p))); \
     } \
   } while(0)
 
@@ -43,7 +43,7 @@ With a bit of help from **ChatGPT** and **Claude.AI**, I wrote a few barebones `
   (((p) <= 7) ? \
     ((PINA & (1 << (p))) ? 1 : 0) : \
    ((p) >= 8 && (p) <= 10) ? \
-    ((PINB & (1 << ((p) - 8))) ? 1 : 0) : 0)
+    ((PINB & (1 << (10 - (p)))) ? 1 : 0) : 0)
 
 // Here are the classic bit functions:
 #define sbi(sfr, bit) (_SFR_BYTE(sfr) |= _BV(bit))
