@@ -67,7 +67,7 @@ void receiveFromSlave(char* a){
   Wire.requestFrom(I2C_ADDR1,sizeof(myStruct));  // Request of size of struct (10 bytes here)
   int i=0;
   while(Wire.available()) {    
-    RXdata.myCharArr[i++] = Wire.read();  // Read the next byte from the slave
+    a[i++] = Wire.read();  // Read the next byte from the slave
   }
   if(i==sizeof(myStruct))rcv=true;  // new data has been received of the correct size
   // Use this if you only want to receive a single response character from the slave:
