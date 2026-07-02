@@ -1,7 +1,7 @@
 /*
 ATtiny84 Project: controller84+
 Author: D. Dubins
-Last Updated: 31-Mar-26
+Last Updated: 02-Jul-26
 This project is to make a (somewhat) universal PI controller for various pieces of 
 equipment around the lab. To date, I have used it to control:
 -PC Fan with blue control wire
@@ -183,26 +183,26 @@ void loadDefaults(controlVals &CTRX) {  //& prefix gives the void function acces
 */
 
 /* DEFAULTS FOR VARIOUS DEVICES:
-                         Toaster     Cooler      Imager      Chiller     Fridge    Lab Oven (Pulse)  Lab Oven (slow pulse)
-  CTR1.SETPOINT            37           37          60          14         5         60              60     
-  CTR1.slaveFlag          false      false       false        false       false      false           false
-  CTR1.driveDir          0:below     0:below     0:below      1:above     1:above    0:below         0:below
-  CTR1.driveMode         1:pulsed    1:pulsed    1:pulsed     0:full      0:full     1:pulsed        1:pulsed
-  CTR1.ssPulse           1:yes       1:yes       1:yes        0:no        0:no       1:yes           0:no
-  CTR1.driveMin          0.05        0.4         0.4          -           -          0.05            0.5
-  CTR1.driveMax          0.4         1.0         0.4          -           -          0.6             1.0
-  CTR1.PERIOD            5000        2000        3000         -           -          5000            10000
-  CTR1.KP                0.1         0.3         0.1          -           -          0.1             0.1
-  CTR1.KI                0.0         0.0         0.0          -           -          0.01            0.01
-  CTR1.TOL               0.5         0.5         0.5          1.0         1.0        0.5             0.5
-  CTR1.OFFSET            0.0         0.0         0.0          0.0         0.0        0.0             0.0
-  CTR1.fanSpeed          100           5           1            1           0        0               0
-  CTR1.numReads          500         500         500          500         500        500             500
+                         Toaster     Cooler      Imager      Chiller     Fridge    Lab Oven (Pulse)  Lab Oven (slow pulse)  Lab Oven (high SP)
+  CTR1.SETPOINT            37           37          60          14         5         60              60                     105
+  CTR1.slaveFlag          false      false       false        false       false      false           false                  false
+  CTR1.driveDir          0:below     0:below     0:below      1:above     1:above    0:below         0:below                0:below
+  CTR1.driveMode         1:pulsed    1:pulsed    1:pulsed     0:full      0:full     1:pulsed        1:pulsed               1:pulsed
+  CTR1.ssPulse           1:yes       1:yes       1:yes        0:no        0:no       1:yes           0:no                   0:no
+  CTR1.driveMin          0.05        0.4         0.4          -           -          0.05            0.5                    0.4
+  CTR1.driveMax          0.4         1.0         0.4          -           -          0.6             1.0                    1.0
+  CTR1.PERIOD            5000        2000        3000         -           -          5000            10000                  10000
+  CTR1.KP                0.1         0.3         0.1          -           -          0.1             0.1                    0.05
+  CTR1.KI                0.0         0.0         0.0          -           -          0.01            0.01                   0.00
+  CTR1.TOL               0.5         0.5         0.5          1.0         1.0        0.5             0.5                    1.0
+  CTR1.OFFSET            0.0         0.0         0.0          0.0         0.0        0.0             0.0                    5.0
+  CTR1.fanSpeed          100           5           1            1           0        0               0                      0
+  CTR1.numReads          500         500         500          500         500        500             500                    500
 */
 
 // Option 3 for defaults (most memory efficient)
 void loadDefaults() {
-  CTR1.SETPOINT = 60.0;    // SETPOINT temperature: what you would like temperature to be (default: 25)
+  CTR1.SETPOINT = 105.0;    // SETPOINT temperature: what you would like temperature to be (default: 25)
   CTR1.slaveFlag = false;  // master (false) or slave (true). Slave accepts external signal to drivePin (PB2). Default: false
   CTR1.driveDir = 0;       // Drive direction. 0: engage drive below SETPOINT, 1: engage drive above CTR1.SETPOINT. (default: 0)
   CTR1.driveMode = 1;      // 0: ON-OFF mode; 1: pulsed mode (PI)
@@ -210,10 +210,10 @@ void loadDefaults() {
   CTR1.driveMin = 0.5;     // maximum duty cycle, expressed as a ratio, for heating element (to maintain setpoint) (default: 0.30)
   CTR1.driveMax = 1.0;     // maximum duty cycle, expressed as a ratio, for heating element (to prevent overheating) (default: 0.75)
   CTR1.PERIOD = 10000;     // PERIOD in msec for pulsing drive (default: 3000, 5000 for toaster). Also acts as a delay in drive mode when setpoint is attained.
-  CTR1.KP = 0.1;           // proportional gain constant (default: 0.1)
-  CTR1.KI = 0.01;          // integral gain constant (default: 0.01)
-  CTR1.TOL = 0.5;          // tolerance of control (default: 1.0)
-  CTR1.OFFSET = 0.0;       // offset adjustment for measurement (default: 0.0)
+  CTR1.KP = 0.05;          // proportional gain constant (default: 0.1)
+  CTR1.KI = 0.00;          // integral gain constant (default: 0.01)
+  CTR1.TOL = 1.0;          // tolerance of control (default: 1.0)
+  CTR1.OFFSET = 5.0;       // offset adjustment for measurement (default: 0.0)
   CTR1.fanSpeed = 0;       // fanSpeed=ICR1-(DC*ICR1) x 100 (in percent) (default: 1)
   CTR1.numReads = 500;     // number of readings for data smoothing
   EEPROM.put(0, CTR1);     // write CTRX to EEPROM at addr=0
@@ -237,7 +237,11 @@ void loop() {
       MES_GT_SET();                  // run the routine when MEASURED too high
     } else {
       if (CTR1.driveMode == 1) {                   // if driveMode is 1 (pulsed)
-        if(CTR1.ssPulse)drivePulse(CTR1.driveMin, CTR1.PERIOD);
+        if(CTR1.ssPulse){
+          drivePulse(CTR1.driveMin, CTR1.PERIOD);
+        } else { 
+          anyKeyWait(CTR1.PERIOD);  // allows you to change setpoint if within tolerance
+        }
       } else {
         anyKeyWait(CTR1.PERIOD);  // make sure there's a delay if you are within TOL so the LCD doesn't flicker
       }
@@ -404,12 +408,12 @@ void anyKeyWait(unsigned long dly) {  // delay that is interruptable by either b
 void updateLCD() {
   lcd.clear();
   lcd.print("S:");
-  lcd.setCursor(3, 0);
+  lcd.setCursor(2, 0);
   lcd.print(CTR1.SETPOINT, 1);
   //lcd.print(DRIVE, 1); // for debugging DRIVE term
   lcd.setCursor(0, 1);
   lcd.print("M:");
-  lcd.setCursor(3, 1);
+  lcd.setCursor(2, 1);
   lcd.print(MEASURED, 1);
   driveIndicator(driveState);  // redraw the driveState
 }
