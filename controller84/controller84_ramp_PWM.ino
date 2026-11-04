@@ -86,11 +86,15 @@ Digital Pin 9 (PB1, PP3) - SW2 - GND
 PP4 (RESET) - SW3 - GND 
 */
 
+#define LOGGING                       // Comment out to remove Serial commands for logging (saves memory)
+
 #include <EEPROM.h>                   // Include the EEPROM.h library
 #include <LiquidCrystal.h>            // Include the LiquidCrystal.h library
 LiquidCrystal lcd(0, 1, 2, 3, 4, 5);  // pins PA0-5
-#include <SendOnlySoftwareSerial.h>   // Include Nick Gammon's SendOnlySoftwareSerial.h library
-SendOnlySoftwareSerial mySerial(6);   // Tx pin for PA6 (PP7)
+#ifdef LOGGING
+#include <SendOnlySoftwareSerial.h>  // Include Nick Gammon's SendOnlySoftwareSerial.h library
+SendOnlySoftwareSerial mySerial(6);  // Tx pin for PA6 (PP7)
+#endif
 
 #define DEBOUNCE 20                    // time to debounce a button
 #define drivePin 8                     // Digital pin for PWM temperature control (heater). Note - for pinMode to work, use digital pin numbers here.
@@ -147,7 +151,9 @@ void setup() {
   pinMode(SW1, INPUT_PULLUP);  // set SW1 to INPUT_PULLUP mode
   pinMode(SW2, INPUT_PULLUP);  // set SW2 to INPUT_PULLUP mode
   lcd.begin(8, 2);             // initialize LCD
-  mySerial.begin(9600);        // initialize Serial Monitor
+#ifdef LOGGING
+  mySerial.begin(9600);  // initialize Serial Monitor
+#endif
 }
 
 // load the default values
@@ -170,12 +176,13 @@ void loadDefaults() {
   CTR1.OFFSET = 0.0;       // offset adjustment for measurement (default: 0.0)
   CTR1.numReads = 1000;    // number of readings for data smoothing
   EEPROM.put(0, CTR1);     // write CTRX to EEPROM at addr=0
-  expRun=false;            // cancel current experiment
+  expRun = false;          // cancel current experiment
 }
 
 void loop() {
-  if (!CTR1.slaveFlag) {                                // if device not in slave mode
-    MEASURED = readTemp(CTR1.numReads);                 // take average of n readings
+  if (!CTR1.slaveFlag) {                 // if device not in slave mode
+    MEASURED = readTemp(CTR1.numReads);  // take average of n readings
+#ifdef LOGGING
     if (millis() - logTimer > LOGINTERVAL && expRun) {  // log the temperature if its logging time
       mySerial.print(millis() / 1000);                  // seconds elapsed since reset
       mySerial.print(", ");                             // CSV format
@@ -184,6 +191,7 @@ void loop() {
       mySerial.println(100.0 * DRIVE, 1);               // print DRIVE to see what control loop is doing
       logTimer = millis();                              // reset the log timer
     }
+#endif
     if (MEASURED < -200.0 || MEASURED > 120.0) {  // unrealistic measurement, something went wrong
       heaterOff();                                // turn heater off
       lcd.clear();
@@ -261,9 +269,9 @@ float readR(int n) {  // function to read thermistor temperature
   return RSENSE * volts / (5.0 - volts);  // return resistance
 }
 
-void MES_LT_SET() {                              // What to do when MEASURED less than SETPOINT. This function relies heavily on global variables.
-  DRIVE = CTR1.KF*CTR1.SETPOINT + CTR1.KP*ERROR + CTR1.KI*INTEGRAL;  // the larger the error, the larger the drive
-  drivePWM(DRIVE);                               // send PWM DRIVE signal to the plant (MES<SET)
+void MES_LT_SET() {                                                        // What to do when MEASURED less than SETPOINT. This function relies heavily on global variables.
+  DRIVE = CTR1.KF * CTR1.SETPOINT + CTR1.KP * ERROR + CTR1.KI * INTEGRAL;  // the larger the error, the larger the drive
+  drivePWM(DRIVE);                                                         // send PWM DRIVE signal to the plant (MES<SET)
   anyKeyWait(CTR1.PERIOD);
 }
 
@@ -457,12 +465,14 @@ void setupMenu() {
       setItemBool(CTR1.hystFlag, "Hyst?", "NO", "YES");      // hysteresis curve back down to starting temperature?
       setItemFloat(CTR1.KP, "KP", 0.1, 1.0, 0.05, 2);        // set proportional gain constant
       setItemFloat(CTR1.KI, "KI", 0.0, 0.1, 0.005, 3);       // set integral gain constant
-      setItemFloat(CTR1.KF, "KF", 0.0, 0.01, 0.001, 3);        // set feed forward gain constant
+      setItemFloat(CTR1.KF, "KF", 0.0, 0.01, 0.001, 3);      // set feed forward gain constant
 
       setItemBool(expRun, "Begin?", "NO", "YES");
       if (expRun) {
-        expStart = millis();            // time=0 min for experiment start
+        expStart = millis();  // time=0 min for experiment start
+#ifdef LOGGING
         mySerial.println("Exp start");  // welcome message
+#endif
       }
       /* // Advanced setup options (don't need - students will be using this equipment?)
       setItemBool(CTR1.slaveFlag, "DEVICE", "MASTER", "SLAVE");  // unit to master or slave operation
@@ -541,10 +551,14 @@ float getSP() {
   } else if (expTime < t5) {
     return CTR1.TSTART;
   } else {
+#ifdef LOGGING
     if (expRun) {                // first time this happens
       mySerial.println("End.");  // stop logging
     }
+#endif
     expRun = false;      // experiment is over, set global flag to false
     return CTR1.TSTART;  // failsafe
   }
 }
+
+
