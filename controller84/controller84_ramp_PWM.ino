@@ -248,7 +248,7 @@ float readR(int n) {  // function to read thermistor temperature
 }
 
 void MES_LT_SET() {                                                        // What to do when MEASURED less than SETPOINT. This function relies heavily on global variables.
-  DRIVE = CTR1.KF * CTR1.SETPOINT + CTR1.KP * ERROR + CTR1.KI * INTEGRAL;  // the larger the error, the larger the drive
+  DRIVE = (0.135 + CTR1.KF * CTR1.SETPOINT) + CTR1.KP * ERROR + CTR1.KI * INTEGRAL;  // the larger the error, the larger the drive
   drivePWM(DRIVE);                                                         // send PWM DRIVE signal to the plant (MES<SET)
   anyKeyWait(CTR1.PERIOD);
 }
