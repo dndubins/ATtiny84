@@ -163,7 +163,7 @@ void loadDefaults() {
   CTR1.PERIOD = 5000;    // PERIOD in msec for pulsing drive (default: 3000, 5000 for toaster). Also acts as a delay in drive mode when setpoint is attained.
   CTR1.KP = 0.2;         // proportional gain constant (default: 0.1)
   CTR1.KI = 0.035;       // integral gain constant (default: 0.01)
-  CTR1.KF = 0.005;       // feed forward gain constant (default: 0.005)
+  CTR1.KF = 0.003;       // feed forward gain constant (default: 0.003)
   CTR1.TOL = 0.5;        // tolerance of control (default: 0.1) Since this is a ramp we want tighter tolerance on the way down
   CTR1.OFFSET = 0.0;     // offset adjustment for measurement (default: 0.0)
   CTR1.numReads = 1000;  // number of readings for data smoothing
@@ -205,7 +205,7 @@ void loop() {
     MES_GT_SET();                       // run the routine when MEASURED too high
   } else {                              // MES within TOL of SETPOINT
     INTEGRAL = 0;                       // we are at the setpoint, reset INTEGRAL
-    drivePWM(CTR1.KF * CTR1.SETPOINT);  // feedforward carries the steady-state load
+    drivePWM(0.15 + CTR1.KF * CTR1.SETPOINT);  // feedforward carries the steady-state load
     anyKeyWait(CTR1.PERIOD);            // make sure there's a delay if you are within TOL so the LCD doesn't flicker
   }
 }
@@ -248,7 +248,7 @@ float readR(int n) {  // function to read thermistor temperature
 }
 
 void MES_LT_SET() {                                                        // What to do when MEASURED less than SETPOINT. This function relies heavily on global variables.
-  DRIVE = (0.135 + CTR1.KF * CTR1.SETPOINT) + CTR1.KP * ERROR + CTR1.KI * INTEGRAL;  // the larger the error, the larger the drive
+  DRIVE = (0.15 + CTR1.KF * CTR1.SETPOINT) + CTR1.KP * ERROR + CTR1.KI * INTEGRAL;  // the larger the error, the larger the drive
   drivePWM(DRIVE);                                                         // send PWM DRIVE signal to the plant (MES<SET)
   anyKeyWait(CTR1.PERIOD);
 }
