@@ -5,7 +5,7 @@ Last Updated: 30-Oct-26
 AI Help: Claude.AI Sonnet v.5.5 Medium helped diagnose and tune the control strategy.
 A ramping temperature controller for melting DNA duplex.
 The control loop is feed forward and feedback (PI controller):
-  DRIVE = KF*SETPOINT + KP*ERROR + KI*INTEGRAL;
+  DRIVE = KF_INT + KF*SETPOINT + KP*ERROR + KI*INTEGRAL;
 Libraries Used: SendOnlySoftwareSerial Library v1.0.5 by Nick Gammon
 Available at: https://github.com/nickgammon/SendOnlySoftwareSerial
 
@@ -115,6 +115,7 @@ float ERROR = 0.0;        // To store error (=SETPOINT-MEASURED)
 float INTEGRAL = 0.0;     // To store the integral term for the PI controller
 float DRIVE = 0.0;        // To store the DRIVE signal
 bool driveState = false;  // To keep track of drive state
+#define KF_INT 0.175      // intercept for Feed Forward Gain Constant (default 0.175)
 
 // Process control variables to remember:
 struct controlVals {  // declare struct in global space
@@ -163,7 +164,7 @@ void loadDefaults() {
   CTR1.PERIOD = 5000;    // PERIOD in msec for pulsing drive (default: 3000, 5000 for toaster). Also acts as a delay in drive mode when setpoint is attained.
   CTR1.KP = 0.2;         // proportional gain constant (default: 0.1)
   CTR1.KI = 0.035;       // integral gain constant (default: 0.01)
-  CTR1.KF = 0.003;       // feed forward gain constant (default: 0.003)
+  CTR1.KF = 0.002;       // feed forward gain constant (default: 0.002)
   CTR1.TOL = 0.5;        // tolerance of control (default: 0.1) Since this is a ramp we want tighter tolerance on the way down
   CTR1.OFFSET = 0.0;     // offset adjustment for measurement (default: 0.0)
   CTR1.numReads = 1000;  // number of readings for data smoothing
@@ -174,13 +175,13 @@ void loadDefaults() {
 void loop() {
   MEASURED = readTemp(CTR1.numReads);  // take average of n readings
 #ifdef LOGGING
-  if (millis() - logTimer > LOGINTERVAL && expRun) {  // log the temperature if its logging time
-    mySerial.print(millis() / 1000);                  // seconds elapsed since reset
-    mySerial.print(", ");                             // CSV format
-    mySerial.print(MEASURED, 1);                      // print temperature with 1 decimal precision
-    mySerial.print(", ");                             // CSV format
-    mySerial.println(100.0 * DRIVE, 1);               // print DRIVE to see what control loop is doing
-    logTimer = millis();                              // reset the log timer
+  if (millis()-logTimer>(LOGINTERVAL-2000)&&expRun) {  // log the temperature if its logging time (2 sec loop time)
+    mySerial.print(millis() / 1000);                   // seconds elapsed since reset
+    mySerial.print(", ");                              // CSV format
+    mySerial.print(MEASURED, 1);                       // print temperature with 1 decimal precision
+    mySerial.print(", ");                              // CSV format
+    mySerial.println(100.0 * DRIVE, 1);                // print DRIVE to see what control loop is doing
+    logTimer = millis();                               // reset the log timer
   }
 #endif
   if (MEASURED < -200.0 || MEASURED > 120.0) {  // unrealistic measurement, something went wrong
@@ -205,7 +206,7 @@ void loop() {
     MES_GT_SET();                       // run the routine when MEASURED too high
   } else {                              // MES within TOL of SETPOINT
     INTEGRAL = 0;                       // we are at the setpoint, reset INTEGRAL
-    drivePWM(0.15 + CTR1.KF * CTR1.SETPOINT);  // feedforward carries the steady-state load
+    drivePWM(KF_INT + CTR1.KF * CTR1.SETPOINT);  // feedforward carries the steady-state load
     anyKeyWait(CTR1.PERIOD);            // make sure there's a delay if you are within TOL so the LCD doesn't flicker
   }
 }
@@ -248,7 +249,7 @@ float readR(int n) {  // function to read thermistor temperature
 }
 
 void MES_LT_SET() {                                                        // What to do when MEASURED less than SETPOINT. This function relies heavily on global variables.
-  DRIVE = (0.15 + CTR1.KF * CTR1.SETPOINT) + CTR1.KP * ERROR + CTR1.KI * INTEGRAL;  // the larger the error, the larger the drive
+  DRIVE = (KF_INT + CTR1.KF * CTR1.SETPOINT) + CTR1.KP * ERROR + CTR1.KI * INTEGRAL;  // the larger the error, the larger the drive
   drivePWM(DRIVE);                                                         // send PWM DRIVE signal to the plant (MES<SET)
   anyKeyWait(CTR1.PERIOD);
 }
@@ -442,7 +443,7 @@ void setupMenu() {
     setItemBool(CTR1.hystFlag, "Hyst?", "NO", "YES");      // hysteresis curve back down to starting temperature?
     setItemFloat(CTR1.KP, "KP", 0.1, 1.0, 0.05, 2);        // set proportional gain constant
     setItemFloat(CTR1.KI, "KI", 0.0, 0.1, 0.005, 3);       // set integral gain constant
-    setItemFloat(CTR1.KF, "KF", 0.0, 0.01, 0.001, 3);      // set feed forward gain constant
+    setItemFloat(CTR1.KF, "KF", 0.0, 0.01, 0.0005, 4);     // set feed forward gain constant
 
     setItemBool(expRun, "Begin?", "NO", "YES");
     if (expRun) {
