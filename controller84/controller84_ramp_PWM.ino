@@ -3,7 +3,8 @@ ATtiny84 Project: controller84_ramp_PWM.ino
 Author: D. Dubins
 Last Updated: 05-Nov-26
 AI Help: Claude.AI Sonnet v.5.5 Medium helped diagnose and tune the control strategy.
-A ramping temperature controller for melting DNA duplex.
+Perplexity.AI helped troubleshoot the feed forward strategy.
+Description: A ramping temperature controller for melting DNA duplex.
 The control loop is feed forward and feedback (PI controller):
   DRIVE = KF_INT + KF*SETPOINT + KP*ERROR + KI*INTEGRAL;
 Libraries Used: SendOnlySoftwareSerial Library v1.0.5 by Nick Gammon
@@ -101,7 +102,7 @@ SendOnlySoftwareSerial mySerial(6);  // Tx pin for PA6 (PP7)
 #define SW1 10                         // Digital pin for SW1 (PB0). This is the DOWN (or SET) button
 #define SW2 9                          // Digital pin for SW1 (PB1). This is the UP button.
 #define MESPin 7                       // Analog pin PA7 for temperature acquisition (PP6)
-#define NUMREADS 500                   // number of readings for data smoothing
+#define NUMREADS 1000                  // number of readings for data smoothing (default: 1000)
 #define LOGINTERVAL 30000              // interval in millis() for logging (default 30 seconds)
 unsigned long logTimer = LOGINTERVAL;  // to time logging event. Start with a reading.
 unsigned long expStart = 0UL;          // to keep track of experiment start time (benchmark for ramp function)
@@ -159,7 +160,7 @@ void loadDefaults() {
   CTR1.TWAIT = 5.0;      // holding time at startand end (default 5 min)
   CTR1.hystFlag = true;  // hysteresis flag (false: no ramp down, true: ramp down)
   CTR1.SETPOINT = 25.0;  // SETPOINT temperature: what you would like temperature to be (default: 25 degC)
-  CTR1.driveMin = 0.2;   // minimum duty cycle, expressed as a ratio, for heating element (to maintain setpoint) (default: 0.20)
+  CTR1.driveMin = 0.1;   // minimum duty cycle, expressed as a ratio, for heating element (to maintain setpoint) (default: 0.10)
   CTR1.driveMax = 1.0;   // maximum duty cycle, expressed as a ratio, for heating element (to prevent overheating) (default: 1.0)
   CTR1.PERIOD = 5000;    // PERIOD in msec for pulsing drive (default: 5000). Also acts as a delay in drive mode when setpoint is attained.
   CTR1.KP = 0.2;         // proportional gain constant (default: 0.2)
