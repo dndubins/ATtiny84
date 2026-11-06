@@ -177,7 +177,7 @@ void loop() {
   if (MEASURED < -200.0 || MEASURED > 120.0) {  // unrealistic measurement, something went wrong
     heaterOff();                                // turn heater off
     lcd.clear();
-    lcd.print("FAULT");
+    lcd.print("ERR");
     delay(1000);
     return;  // exit loop here (runs loop again, not a permanent lockout)
   }
