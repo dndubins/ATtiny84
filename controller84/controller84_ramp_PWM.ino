@@ -1,7 +1,7 @@
 /*
 ATtiny84 Project: controller84_ramp_PWM.ino
 Author: D. Dubins
-Last Updated: 30-Oct-26
+Last Updated: 05-Nov-26
 AI Help: Claude.AI Sonnet v.5.5 Medium helped diagnose and tune the control strategy.
 A ramping temperature controller for melting DNA duplex.
 The control loop is feed forward and feedback (PI controller):
