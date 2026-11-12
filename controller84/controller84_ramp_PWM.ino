@@ -1,7 +1,7 @@
 /*
 ATtiny84 Project: controller84_ramp_PWM.ino
 Author: D. Dubins
-Last Updated: 05-Nov-26
+Last Updated: 12-Nov-26
 AI Help: Claude.AI Sonnet v.5.5 Medium helped diagnose and tune the control strategy.
 Perplexity.AI helped troubleshoot the feed forward strategy.
 Description: A ramping temperature controller for melting DNA duplex.
@@ -103,15 +103,20 @@ SendOnlySoftwareSerial mySerial(6);  // Tx pin for PA6 (PP7)
 #define SW2 9                          // Digital pin for SW1 (PB1). This is the UP button.
 #define MESPin 7                       // Analog pin PA7 for temperature acquisition (PP6)
 #define NUMREADS 1000                  // number of readings for data smoothing (default: 1000)
-#define LOGINTERVAL 30000              // interval in millis() for logging (default 30 seconds)
+#define LOGINTERVAL 15000              // interval in millis() for logging (default 30 seconds)
 unsigned long logTimer = LOGINTERVAL;  // to time logging event. Start with a reading.
 unsigned long expStart = 0UL;          // to keep track of experiment start time (benchmark for ramp function)
-float expTime = 0.0;                   // to keep track of experiment time in minutes
 bool expRun = false;                   // run state of ramp experiment. Logging only happens during experiment.
 
 // Controller definitions
 #define INTTHRESH 3.0     // integral threshold where INTEGRAL term will engage
-#define KF_INT 0.15       // intercept for Feed Forward Gain Constant (default 0.15)
+#define KF_INT 0.07       // intercept for Feed Forward Gain Constant (default 0.15). Heating curve gets a boost.
+#define DRIVEMIN 0.1      // minimum duty cycle, expressed as a ratio, for heating element (to maintain setpoint) (default: 0.10)
+#define DRIVEMAX 1.0      // maximum duty cycle, expressed as a ratio, for heating element (to prevent overheating) (default: 1.0)
+#define PERIOD 5000       // PERIOD in msec for pulsing drive (default: 5000). Also acts as a delay in drive mode when setpoint is attained.
+#define TOL 0.5           // tolerance of control (default: 0.1) Since this is a ramp we want tighter tolerance on the way down
+#define OFFSET 0.0        // offset adjustment for measurement (default: 0.0)
+
 float MEASURED = 0.0;     // To store measured value
 float ERROR = 0.0;        // To store error (=SETPOINT-MEASURED)
 float INTEGRAL = 0.0;     // To store the integral term for the PI controller
@@ -127,14 +132,9 @@ struct controlVals {  // declare struct in global space
   float TWAIT;        // holding time at startand end (default 5 min)
   bool hystFlag;      // hysteresis flag (false: no ramp down, true: ramp down)
   float SETPOINT;     // SETPOINT temperature: what you would like temperature to be (default: 25)
-  float driveMin;     // minimum duty cycle, expressed as a ratio, for heating element (to maintain setpoint) (default: 0.0)
-  float driveMax;     // maximum duty cycle, expressed as a ratio, for heating element (to prevent overheating) (default: 1.0)
-  float PERIOD;       // CTR1.PERIOD in msec for pulsing drive (default: 3000)
   float KP;           // proportional gain constant (default: 0.1)
   float KI;           // integral gain constant (default: 0.02)
   float KF;           // feed forward gain constant (default: 0.5)
-  float TOL;          // tolerance of control (default: 1.0)
-  float OFFSET;       // offset adjustment for measurement (default: 0.0)
 };                    // Note: semicolon required here
 controlVals CTR1;     // use calibration structure for CTR1 (controller1) (to read/write to EEPROM)
 
@@ -155,19 +155,14 @@ void setup() {
 // load the default values
 void loadDefaults() {
   CTR1.TSTART = 25.0;    // starting temperature (default: 25.0 degC)
-  CTR1.TEND = 70.0;      // ending temperature (default: 70.0 degC)
+  CTR1.TEND = 72.5;      // ending temperature (default: 72.5 degC)
   CTR1.TRATE = 0.9;      // ramp rate (default 0.9 degC/min)
   CTR1.TWAIT = 5.0;      // holding time at startand end (default 5 min)
   CTR1.hystFlag = true;  // hysteresis flag (false: no ramp down, true: ramp down)
   CTR1.SETPOINT = 25.0;  // SETPOINT temperature: what you would like temperature to be (default: 25 degC)
-  CTR1.driveMin = 0.1;   // minimum duty cycle, expressed as a ratio, for heating element (to maintain setpoint) (default: 0.10)
-  CTR1.driveMax = 1.0;   // maximum duty cycle, expressed as a ratio, for heating element (to prevent overheating) (default: 1.0)
-  CTR1.PERIOD = 5000;    // PERIOD in msec for pulsing drive (default: 5000). Also acts as a delay in drive mode when setpoint is attained.
   CTR1.KP = 0.2;         // proportional gain constant (default: 0.2)
   CTR1.KI = 0.035;       // integral gain constant (default: 0.035)
-  CTR1.KF = 0.003;       // feed forward gain constant (default: 0.003)
-  CTR1.TOL = 0.5;        // tolerance of control (default: 0.1) Since this is a ramp we want tighter tolerance on the way down
-  CTR1.OFFSET = 0.0;     // offset adjustment for measurement (default: 0.0)
+  CTR1.KF = 0.01;        // feed forward gain constant (default: 0.003)
   EEPROM.put(0, CTR1);   // write CTR1 to EEPROM at addr=0
   expRun = false;        // cancel current experiment (loadDefaults() is also a bail-out function for the experiment)
 }
@@ -177,27 +172,26 @@ void loop() {
   if (MEASURED < -200.0 || MEASURED > 120.0) {  // unrealistic measurement, something went wrong
     heaterOff();                                // turn heater off
     lcd.clear();
-    lcd.print("ERR");
-    delay(1000);
-    return;  // exit loop here (runs loop again, not a permanent lockout)
+    resetDefaults(); // ask user to reset, something went wrong
+    return;
   }
   if (expRun) CTR1.SETPOINT = getSP();  // get new setpoint
   ERROR = CTR1.SETPOINT - MEASURED;     // calculate the error
   updateLCD();
-  if (ERROR > CTR1.TOL && ERROR < INTTHRESH) {  // prevent integral wind-up by only engaging it close to SET.
+  if (ERROR > TOL && ERROR < INTTHRESH) {  // prevent integral wind-up by only engaging it close to SET.
     INTEGRAL = INTEGRAL + ERROR;                // accumulate the error integral
   } else {
     INTEGRAL = 0.0;                             // reset the integral term (too far from SETPOINT)
   }
   // Control Code Here:
-  if (ERROR > CTR1.TOL) {                        // if ERROR > TOL (MEASURED < SETPOINT - TOL)
+  if (ERROR > TOL) {                        // if ERROR > TOL (MEASURED < SETPOINT - TOL)
     MES_LT_SET();                                // run the routine when MEASURED too low
-  } else if (ERROR < -CTR1.TOL) {                // if ERROR < -TOL (MEASURED > SETPOINT + TOL)
+  } else if (ERROR < -TOL) {                // if ERROR < -TOL (MEASURED > SETPOINT + TOL)
     MES_GT_SET();                                // run the routine when MEASURED too high
   } else {                                       // MES within TOL of SETPOINT
     INTEGRAL = 0;                                // we are at the setpoint, reset INTEGRAL
-    drivePWM((hcflag?KF_INT:0) + CTR1.KF * CTR1.SETPOINT);  // feedforward carries the steady-state load
-    anyKeyWait(CTR1.PERIOD);                     // make sure there's a delay if you are within TOL so the LCD doesn't flicker
+    drivePWM(ff());  // feedforward carries the steady-state load. On the way down it's lower.
+    anyKeyWait(PERIOD);                     // make sure there's a delay if you are within TOL so the LCD doesn't flicker
   }
 }
 
@@ -218,7 +212,7 @@ float readTemp(int n) {  // function to read thermistor temperature
   float T = (1.0 / T0) + (1.0 / BCOEFF) * log(R2 / R0);  // first part of equation
   T = 1.0 / T;                                           // invert the answer
   T = T - 273.15;                                        // convert to celsius
-  return T + CTR1.OFFSET;                                // return average temperature
+  return T + OFFSET;                                // return average temperature
 }
 
 /*float readR(int n) {  // function to read and report thermistor resistance
@@ -232,18 +226,18 @@ float readTemp(int n) {  // function to read thermistor temperature
 }*/
 
 void MES_LT_SET() {                                                                   // What to do when MEASURED less than SETPOINT. This function relies heavily on global variables.
-  DRIVE = ((hcflag?KF_INT:0) + CTR1.KF * CTR1.SETPOINT) + CTR1.KP * ERROR + CTR1.KI * INTEGRAL;  // the larger the error, the larger the drive
+  DRIVE = ff() + CTR1.KP * ERROR + CTR1.KI * INTEGRAL;  // the larger the error, the larger the drive
   drivePWM(DRIVE);                                                                    // send PWM DRIVE signal to the plant (MES<SET)
-  anyKeyWait(CTR1.PERIOD);
+  anyKeyWait(PERIOD);
 }
 
 void MES_GT_SET() {  // What to do when MEASURED greater than SETPOINT. This function relies heavily on global variables.
   heaterOff();
-  anyKeyWait(CTR1.PERIOD);
+  anyKeyWait(PERIOD);
 }
 
 void drivePWM(float drive) {                               // drive here is a duty cycle, in percent
-  drive = constrain(drive, CTR1.driveMin, CTR1.driveMax);  // constrain drive to limits defined by program and user
+  drive = constrain(drive, DRIVEMIN, DRIVEMAX);  // constrain drive to limits defined by program and user
   DRIVE = drive;                                           // log what was actually applied
   analogWrite(drivePin, (int)(255 * drive));               // write PWM signal (1.0 drive = 255 PWM)
   if(drive > 0.0){                                         // drive is on now.
@@ -416,37 +410,24 @@ void setupMenu() {
   lcd.clear();
   lcd.print("SETUP");
   delay(1000);
-  bool restoreDefaults = false;
-  setItemBool(restoreDefaults, "RST?", "NO", "YES");  // set drive direction here
-  if (restoreDefaults) {
-    loadDefaults();
-  } else {
+  if (!resetDefaults()){
     // setItemFloat: four numbers at the end are low, high, delta, #decimals to display
-    setItemFloat(CTR1.TSTART, "TSTART", 10.0, 70.0, 2.5, 1);
-    setItemFloat(CTR1.TEND, "TEND", 10.0, 70.0, 2.5, 1);   // set the peak (end) temperature
+    setItemFloat(CTR1.TSTART, "TSTART", 10.0, 75.0, 2.5, 1);
+    setItemFloat(CTR1.TEND, "TEND", 10.0, 75.0, 2.5, 1);   // set the peak (end) temperature
     setItemFloat(CTR1.TRATE, "TRATE", 0.1, 1.0, 0.1, 1);   // set the temperature ramp rate
     setItemFloat(CTR1.TWAIT, "TWAIT", 0, 20, 5, 0);        // set the start, middle, and end wait times (all same duration)
     setItemBool(CTR1.hystFlag, "Hyst?", "NO", "YES");      // hysteresis curve back down to starting temperature?
-    setItemFloat(CTR1.KP, "KP", 0.1, 1.0, 0.05, 2);        // set proportional gain constant
-    setItemFloat(CTR1.KI, "KI", 0.0, 0.1, 0.005, 3);       // set integral gain constant
-    setItemFloat(CTR1.KF, "KF", 0.0, 0.01, 0.0005, 4);     // set feed forward gain constant
+    // Advanced functions for feedback control access (comment out for students)
+    //setItemFloat(CTR1.KP, "KP", 0.1, 1.0, 0.05, 2);        // set proportional gain constant
+    //setItemFloat(CTR1.KI, "KI", 0.0, 0.1, 0.005, 3);       // set integral gain constant
+    //setItemFloat(CTR1.KF, "KF", 0.0, 0.01, 0.001, 3);     // set feed forward gain constant
     setItemBool(expRun, "Begin?", "NO", "YES");
     if (expRun) {
       expStart = millis();  // time=0 min for experiment start
 #ifdef LOGGING
-      mySerial.println("Exp start");  // welcome message
+      mySerial.println("Start");  // welcome message
 #endif
     }
-    /* // Advanced setup options (don't need - students will be using this equipment?)
-      setItemFloat(CTR1.driveMin, "MINPULSE", 0.0, 0.75, 0.05, 2);
-      setItemFloat(CTR1.driveMax, "MAXPULSE", 0.2, 1.0, 0.05, 2);
-      setItemFloat(CTR1.PERIOD, "PERIOD", 100, 20000, 100, 0);
-      setItemFloat(CTR1.KP, "KP", 0.01, 10.0, 0.05, 2);
-      setItemFloat(CTR1.KI, "KI", 0.0, 1.0, 0.01, 2);
-      setItemFloat(CTR1.TOL, "TOL:", 0.0, 10.0, 0.25, 2);
-      setItemFloat(CTR1.OFFSET, "OFFSET:", -10.0, 10.0, 0.1, 1);
-      setItemInt(CTR1.numReads, "#READS:", 1, 1000, 50); // this used to exist and now its hard coded.
-      */
 
     // calibration option (last)
     /*bool calibrate = false;
@@ -519,7 +500,7 @@ float getSP() {
   } else {
 #ifdef LOGGING
     if (expRun) {                // first time this happens
-      mySerial.println("End.");  // stop logging
+      mySerial.println("End");  // stop logging
     }
 #endif
     hcflag = false;
@@ -535,8 +516,24 @@ void logData() {
     mySerial.print(", ");
     mySerial.print(MEASURED, 1);
     mySerial.print(", ");
+    mySerial.print(CTR1.SETPOINT, 1);
+    mySerial.print(", ");
     mySerial.println(100.0 * DRIVE, 1);
     logTimer = millis();
   }
 }
 #endif
+
+// Our clever feed-foward function:
+float ff() { return KF_INT + CTR1.KF*CTR1.SETPOINT - (hcflag ? 0.0 : 0.17); }
+
+bool resetDefaults() {
+  bool restoreDefaults=false;
+  setItemBool(restoreDefaults, "RST?", "NO", "YES");  // set drive direction here
+  if(restoreDefaults){
+    loadDefaults();
+    return true;
+  } else {
+    return false;
+  }
+}
